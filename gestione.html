@@ -1,3 +1,4 @@
+<!-- gestione.html -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -82,8 +83,6 @@
             border: 2px solid var(--border-color); border-radius: 12px; font-family: 'Nunito'; font-size: 1rem; background-color: #fbfdfe; 
         }
         .login-box input:focus { border-color: var(--primary); outline: none; background: #fff; }
-        .remember-container { display: flex; align-items: center; gap: 8px; margin-bottom: 1.2rem; font-size: 0.9rem; color: var(--text-muted); text-align: left; cursor: pointer; }
-        .remember-container input { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
         .login-box button { background-color: var(--primary); color: white; border: none; padding: 1rem; width: 100%; border-radius: 12px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: background 0.2s; }
         .login-box button:hover { background-color: var(--primary-dark); }
 
@@ -273,9 +272,6 @@
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Accesso Area Riservata</p>
             <input type="text" id="username" placeholder="Username">
             <input type="password" id="passcode" placeholder="Password">
-            <label class="remember-container">
-                <input type="checkbox" id="rememberMe"> Ricorda credenziali
-            </label>
             <button onclick="effettuaLogin()" id="btn-login">Accedi</button>
             <p id="login-err" style="color:#c53030; display:none; font-size:0.9rem; font-weight: bold; margin-top: 1rem;">Credenziali errate</p>
         </div>
@@ -605,7 +601,6 @@
             } else if (sessionUser && savedPass) {
                 document.getElementById('username').value = sessionUser;
                 document.getElementById('passcode').value = savedPass;
-                document.getElementById('rememberMe').checked = true;
                 effettuaLogin();
             }
         });
@@ -613,7 +608,6 @@
         function effettuaLogin() {
             const user = document.getElementById('username').value.trim();
             const pass = document.getElementById('passcode').value;
-            const remember = document.getElementById('rememberMe').checked;
             const btn = document.getElementById('btn-login');
 
             if(!user || !pass) return;
@@ -634,14 +628,6 @@
 
                     sessionStorage.setItem('wonderlad_active_user', currentUser);
                     sessionStorage.setItem('wonderlad_active_role', currentRole);
-
-                    if (remember) {
-                        localStorage.setItem('wonderlad_user', user);
-                        localStorage.setItem('wonderlad_pass', pass);
-                    } else {
-                        localStorage.removeItem('wonderlad_user');
-                        localStorage.removeItem('wonderlad_pass');
-                    }
 
                     avviaInterfaccia();
                 } else {
@@ -1091,7 +1077,17 @@
             document.getElementById('user-modal').style.display = 'flex';
         }
 
-        function chiudiModale(modalId) { document.getElementById(modalId).style.display = 'none'; }
+        function chiudiModale(modalId) { 
+            document.getElementById(modalId).style.display = 'none'; 
+            
+            if (modalId === 'user-modal') {
+                document.getElementById('modal-username').value = '';
+                document.getElementById('modal-password').value = '';
+            } else if (modalId === 'edit-modal') {
+                document.getElementById('edit-pan').value = '';
+                document.getElementById('edit-pan-dori').value = '';
+            }
+        }
 
         function salvaModificaOrdine() {
             const row = document.getElementById('edit-row').value;
@@ -1255,7 +1251,12 @@
             chartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: { labels: ['Panettoni', 'Pandori'], datasets: [{ label: 'Prenotazioni Totali', data: [panettoni, pandori], backgroundColor: ['#5b8e72', '#94bdad'], borderRadius: 10 }] },
-                options: { responsive: true, plugins: { legend: { display: false }, title: { display: true, text: 'Confronto Prenotazioni Dolci', font: { family: 'Quicksand', size: 15 } } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+                options: { 
+                    responsive: true, 
+                    animation: false,
+                    plugins: { legend: { display: false }, title: { display: true, text: 'Confronto Prenotazioni Dolci', font: { family: 'Quicksand', size: 15 } } }, 
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
+                }
             });
         }
 
