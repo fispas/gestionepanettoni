@@ -31,12 +31,15 @@
         .stock-edit-btn { background: #f8f9fa; border: 1px solid #ced4da; padding: 2px 8px; border-radius: 5px; font-size: 0.75rem; cursor: pointer; font-weight: bold; margin-top: 5px; display: inline-block; color: #495057; }
         .stock-edit-btn:hover { background: #e9ecef; }
 
-        /* Box Status Cliccabili in Dashboard */
-        .status-summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.8rem; margin-bottom: 1.5rem; }
-        .status-summary-card { background: white; padding: 1rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); text-align: center; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; border: 2px solid transparent; }
+        /* Box Status Cliccabili in Dashboard (Disposti su 3 colonne o 2 flessibili) */
+        .status-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-bottom: 1.5rem; }
+        @media screen and (max-width: 600px) {
+            .status-summary-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        .status-summary-card { background: white; padding: 0.9rem 0.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); text-align: center; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; border: 2px solid transparent; }
         .status-summary-card:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.08); border-color: #e53935; }
-        .status-summary-title { font-size: 0.85rem; color: #7f8c8d; font-weight: 700; margin-bottom: 0.3rem; }
-        .status-summary-count { font-size: 1.4rem; font-weight: 800; color: #2c3e50; }
+        .status-summary-title { font-size: 0.75rem; color: #7f8c8d; font-weight: 700; margin-bottom: 0.3rem; text-transform: uppercase; }
+        .status-summary-count { font-size: 1.3rem; font-weight: 800; color: #2c3e50; }
 
         .alert-box { background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
 
@@ -55,11 +58,13 @@
         .btn-edit { background-color: #f39c12; color: white; border: none; padding: 0.5rem; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
         .btn-delete { background-color: #e74c3c; color: white; border: none; padding: 0.5rem; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-left: 5px; }
         
+        /* Badge Status */
         .badge-status { padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; display: inline-block; }
+        .status-prenotato { background-color: #e7f5ff; color: #1971c2; }
         .status-prenotato-da-pagare { background-color: #ffe3e3; color: #c92a2a; }
         .status-prenotato-pagare { background-color: #e6fcf5; color: #0ca678; }
         .status-in-preparazione { background-color: #fff3bf; color: #f59f00; }
-        .status-da-consegnare { background-color: #e7f5ff; color: #1971c2; }
+        .status-da-consegnare { background-color: #e3fafc; color: #0b7285; }
         .status-consegnato { background-color: #d8f5a2; color: #5c940d; }
         .status-annullato { background-color: #f1f3f5; color: #868e96; }
 
@@ -134,6 +139,10 @@
             <!-- Box di Riepilogo Status Cliccabili -->
             <h3 style="color: #2c3e50; font-size: 1.1rem; margin-bottom: 0.8rem;">Stato Ordini</h3>
             <div class="status-summary-grid">
+                <div class="status-summary-card" onclick="navigaVersoFiltro('Prenotato')">
+                    <div class="status-summary-title">Prenotati</div>
+                    <div class="status-summary-count" id="countPrenotato">0</div>
+                </div>
                 <div class="status-summary-card" onclick="navigaVersoFiltro('Prenotato - Da Pagare')">
                     <div class="status-summary-title">Da Pagare</div>
                     <div class="status-summary-count" id="countDaPagare">0</div>
@@ -143,18 +152,18 @@
                     <div class="status-summary-count" id="countPagati">0</div>
                 </div>
                 <div class="status-summary-card" onclick="navigaVersoFiltro('In Preparazione')">
-                    <div class="status-summary-title">In Preparazione</div>
+                    <div class="status-summary-title">In Prep.</div>
                     <div class="status-summary-count" id="countInPreparazione">0</div>
                 </div>
                 <div class="status-summary-card" onclick="navigaVersoFiltro('Da Consegnare')">
-                    <div class="status-summary-title">Da Consegnare</div>
+                    <div class="status-summary-title">Da Conseg.</div>
                     <div class="status-summary-count" id="countDaConsegnare">0</div>
                 </div>
                 <div class="status-summary-card" onclick="navigaVersoFiltro('Consegnato')">
                     <div class="status-summary-title">Consegnati</div>
                     <div class="status-summary-count" id="countConsegnati">0</div>
                 </div>
-                <div class="status-summary-card" onclick="navigaVersoFiltro('Annullato')">
+                <div class="status-summary-card" onclick="navigaVersoFiltro('Annullato')" style="grid-column: span 3;">
                     <div class="status-summary-title">Annullati</div>
                     <div class="status-summary-count" id="countAnnullati">0</div>
                 </div>
@@ -171,6 +180,7 @@
                 <input type="text" id="searchOrdini" class="search-input" placeholder="🔍 Cerca per nome, cognome o telefono..." onkeyup="filtraOrdini()">
                 <div class="filter-chips">
                     <button class="chip active" onclick="setFiltroStato('Tutti', this)">Tutti</button>
+                    <button class="chip" onclick="setFiltroStato('Prenotato', this)">Prenotati</button>
                     <button class="chip" onclick="setFiltroStato('Prenotato - Da Pagare', this)">Da Pagare</button>
                     <button class="chip" onclick="setFiltroStato('Prenotato - Pagato', this)">Pagati</button>
                     <button class="chip" onclick="setFiltroStato('In Preparazione', this)">In Preparazione</button>
@@ -227,6 +237,7 @@
             <input type="number" id="edit-pan-dori" min="0">
             <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Status e Pagamento</label>
             <select id="edit-status">
+                <option value="Prenotato">Prenotato</option>
                 <option value="Prenotato - Da Pagare">Prenotato - Da Pagare</option>
                 <option value="Prenotato - Pagato">Prenotato - Pagato</option>
                 <option value="In Preparazione">In Preparazione</option>
@@ -347,9 +358,8 @@
         function navigaVersoFiltro(stato) {
             filtroStatoAttuale = stato;
             
-            // Aggiorna i bottoni chip nella vista ordini
             document.querySelectorAll('.filter-chips .chip').forEach(c => {
-                if(c.textContent.toLowerCase().includes(stato.toLowerCase().replace('prenotato - ', '')) || c.textContent.toLowerCase() === stato.toLowerCase()) {
+                if(c.textContent.toLowerCase() === stato.toLowerCase() || (stato === 'Prenotato' && c.textContent.toLowerCase() === 'prenotati')) {
                     c.classList.add('active');
                 } else {
                     c.classList.remove('active');
@@ -358,7 +368,6 @@
 
             filtraOrdini();
 
-            // Cambia vista alla tab Ordini attivando il bottone corrispondente nella bottom nav
             const navButtons = document.querySelectorAll('.bottom-nav .nav-item');
             navButtons.forEach(btn => {
                 if(btn.textContent.includes('Ordini')) {
@@ -387,15 +396,16 @@
         }
 
         function getBadgeClass(status) {
-            if(!status) return 'status-prenotato-da-pagare';
+            if(!status) return 'status-prenotato';
             const s = status.toLowerCase();
+            if(s === 'prenotato') return 'status-prenotato';
             if(s.includes('da pagare')) return 'status-prenotato-da-pagare';
             if(s.includes('pagato')) return 'status-prenotato-pagare';
             if(s.includes('preparazione')) return 'status-in-preparazione';
             if(s.includes('da consegnare')) return 'status-da-consegnare';
             if(s.includes('consegnato')) return 'status-consegnato';
             if(s.includes('annullato')) return 'status-annullato';
-            return 'status-prenotato-da-pagare';
+            return 'status-prenotato';
         }
 
         function popolaTabellaOrdini(dati) {
@@ -449,7 +459,7 @@
                 
                 const tdAzioni = document.createElement('td');
                 tdAzioni.setAttribute('data-label', 'Azioni');
-                tdAzioni.innerHTML = `<button class="btn-edit" onclick="apriModaleOrdine(${ordine.rowNumber}, ${ordine.Panettoni || 0}, ${ordine.Pandori || 0}, '${ordine.Status || 'Prenotato - Da Pagare'}')">✏️ Modifica</button>`;
+                tdAzioni.innerHTML = `<button class="btn-edit" onclick="apriModaleOrdine(${ordine.rowNumber}, ${ordine.Panettoni || 0}, ${ordine.Pandori || 0}, '${ordine.Status || 'Prenotato'}')">✏️ Modifica</button>`;
                 tr.appendChild(tdAzioni);
                 tbody.appendChild(tr);
             });
@@ -467,7 +477,7 @@
                 const stato = tr.getAttribute('data-stato') || "";
                 
                 const matchTesto = testo.includes(query);
-                const matchFiltro = (filtroStatoAttuale === 'Tutti' || stato === filtroStatoAttuale);
+                const matchFiltro = (filtroStatoAttuale === 'Tutti' || stato.toLowerCase() === filtroStatoAttuale.toLowerCase());
                 
                 if(matchTesto && matchFiltro) {
                     tr.style.display = '';
@@ -519,7 +529,7 @@
             
             const sel = document.getElementById('edit-status');
             for(let i=0; i<sel.options.length; i++) {
-                if(sel.options[i].value === status) { sel.selectedIndex = i; break; }
+                if(sel.options[i].value.toLowerCase() === status.toLowerCase()) { sel.selectedIndex = i; break; }
             }
             document.getElementById('edit-modal').style.display = 'flex';
         }
@@ -622,12 +632,13 @@
             let totPanettoni = 0; let totPandori = 0;
             let ordiniDaPagareNonConsegnati = 0;
             
+            let countPrenotato = 0;
             let countDaPagare = 0;
             let countPagati = 0;
             let countInPreparazione = 0;
             let countDaConsegnare = 0;
             let countConsegnati = 0;
-            let countAnnullati = 0;
+            let countAnnullato = 0;
 
             dati.forEach(ordine => {
                 if(!ordine.Nome && !ordine.Cognome) return;
@@ -637,25 +648,26 @@
                 totPandori += pand;
 
                 const status = (ordine.Status || "").toLowerCase();
+                if(status === 'prenotato') countPrenotato++;
                 if(status.includes('da pagare')) countDaPagare++;
                 if(status.includes('pagato')) countPagati++;
                 if(status.includes('preparazione')) countInPreparazione++;
                 if(status.includes('da consegnare')) countDaConsegnare++;
                 if(status.includes('consegnato')) countConsegnati++;
-                if(status.includes('annullato')) countAnnullati++;
+                if(status.includes('annullato')) countAnnullato++;
 
                 if(status.includes('da pagare') && !status.includes('consegnato') && !status.includes('annullato')) {
                     ordiniDaPagareNonConsegnati++;
                 }
             });
 
-            // Aggiorna i contatori nei box cliccabili della dashboard
+            document.getElementById('countPrenotato').textContent = countPrenotato;
             document.getElementById('countDaPagare').textContent = countDaPagare;
             document.getElementById('countPagati').textContent = countPagati;
             document.getElementById('countInPreparazione').textContent = countInPreparazione;
             document.getElementById('countDaConsegnare').textContent = countDaConsegnare;
             document.getElementById('countConsegnati').textContent = countConsegnati;
-            document.getElementById('countAnnullati').textContent = countAnnullati;
+            document.getElementById('countAnnullati').textContent = countAnnullato;
 
             let stockInizialePanettoni = parseInt(impostazioni["Totale Panettoni"]) || 0;
             let stockInizialePandori = parseInt(impostazioni["Totale Pandori"]) || 0;
