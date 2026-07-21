@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prenotazione Panettoni</title>
+    <style>
+        body { font-family: sans-serif; max-width: 400px; margin: 2rem auto; padding: 1rem; }
+        input, button { width: 100%; margin-bottom: 1rem; padding: 0.5rem; box-sizing: border-box; }
+        #statusMsg { font-weight: bold; margin-bottom: 1rem; }
+        #contatoreOrdini { font-size: 0.9em; color: #555; }
+        .test-btn { background-color: #f0f0f0; margin-top: 2rem; border: 1px dashed #ccc; }
+    </style>
+</head>
+<body>
+    <h2>Prenota il tuo Panettone</h2>
+    
+    <div id="statusMsg"></div>
+    <div id="contatoreOrdini">Contatore ordini sessione corrente: 0</div><br>
+
+    <form id="ordineForm">
+        <input type="text" id="nome" placeholder="Nome" required>
+        <input type="text" id="cognome" placeholder="Cognome" required>
+        <input type="tel" id="telefono" placeholder="Numero di Telefono" required>
+        <input type="number" id="quantita" placeholder="Quantità" min="1" required>
+        <button type="submit">Prenota</button>
+    </form>
+
+    <button class="test-btn" onclick="eseguiTest()">Test Inserimento Dati</button>
+
+    <script>
+        let counterOrdini = 0;
+
+        function eseguiTest() {
+            document.getElementById('nome').value = "TestNome";
+            document.getElementById('cognome').value = "TestCognome";
+            document.getElementById('telefono').value = "3331234567";
+            document.getElementById('quantita').value = "2";
+            document.getElementById('ordineForm').dispatchEvent(new Event('submit', { cancelable: true }));
+        }
+        
+        document.getElementById('ordineForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const btn = this.querySelector('button');
+            const msg = document.getElementById('statusMsg');
+            btn.disabled = true;
+            msg.textContent = "Invio in corso...";
+            msg.style.color = "blue";
+
+            const url = 'https://script.google.com/macros/s/AKfycbwGcqx3YYR5bExxWd0weMoFpM9mKDjmD1JqdUmcLpsj6blvEN3kweON72r4qoGVD88HRw/exec'; 
+            const data = {
+                nome: document.getElementById('nome').value,
+                cognome: document.getElementById('cognome').value,
+                telefono: document.getElementById('telefono').value,
+                quantita: document.getElementById('quantita').value
+            };
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if(result.status === "success") {
+                    msg.textContent = "Prenotazione confermata!";
+                    msg.style.color = "green";
+                    document.getElementById('ordineForm').reset();
+                    
+                    counterOrdini++;
+                    document.getElementById('contatoreOrdini').textContent = `Contatore ordini sessione corrente: ${counterOrdini}`;
+                } else {
+                    throw new Error("Errore backend");
+                }
+            })
+            .catch(error => {
+                msg.textContent = "Errore durante la prenotazione.";
+                msg.style.color = "red";
+            })
+            .finally(() => {
+                btn.disabled = false;
+            });
+        });
+    </script>
+</body>
+</html>
