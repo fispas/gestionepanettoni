@@ -80,8 +80,10 @@ function calcolaStatistiche(dati, impostazioni) {
     });
 
     const impostaBoxFlow = (idCount, idSub, key) => {
-        document.getElementById(idCount).textContent = stats[key].count;
-        document.getElementById(idSub).textContent = `🥮 ${stats[key].pan} | 🍞 ${stats[key].pand}`;
+        const elCount = document.getElementById(idCount);
+        const elSub = document.getElementById(idSub);
+        if(elCount) elCount.textContent = stats[key].count;
+        if(elSub) elSub.textContent = `🥮 ${stats[key].pan} | 🍞 ${stats[key].pand}`;
     };
 
     impostaBoxFlow('countPrenotato', 'subPrenotato', 'prenotato');
@@ -95,28 +97,40 @@ function calcolaStatistiche(dati, impostazioni) {
     let stockInizialePanettoni = parseInt(impostazioni["Totale Panettoni"]) || 0;
     let stockInizialePandori = parseInt(impostazioni["Totale Pandori"]) || 0;
 
-    document.getElementById('valPanettoni').textContent = totPanettoni;
-    document.getElementById('lblTotPanettoni').textContent = `prenotati su ${stockInizialePanettoni}`;
-    document.getElementById('rimanenzePanettoni').textContent = `Rimanenza: ${stockInizialePanettoni - totPanettoni} pz`;
-    const percPan = stockInizialePanettoni > 0 ? Math.min(100, Math.round((totPanettoni / stockInizialePanettoni) * 100)) : 0;
-    document.getElementById('barPanettoni').style.width = percPan + '%';
+    const valPan = document.getElementById('valPanettoni');
+    const lblPan = document.getElementById('lblTotPanettoni');
+    const rimPan = document.getElementById('rimanenzePanettoni');
+    const barPan = document.getElementById('barPanettoni');
 
-    document.getElementById('valPandori').textContent = totPandori;
-    document.getElementById('lblTotPandori').textContent = `prenotati su ${stockInizialePandori}`;
-    document.getElementById('rimanenzePandori').textContent = `Rimanenza: ${stockInizialePandori - totPandori} pz`;
+    if(valPan) valPan.textContent = totPanettoni;
+    if(lblPan) lblPan.textContent = `prenotati su ${stockInizialePanettoni}`;
+    if(rimPan) rimPan.textContent = `Rimanenza: ${stockInizialePanettoni - totPanettoni} pz`;
+    const percPan = stockInizialePanettoni > 0 ? Math.min(100, Math.round((totPanettoni / stockInizialePanettoni) * 100)) : 0;
+    if(barPan) barPan.style.width = percPan + '%';
+
+    const valPand = document.getElementById('valPandori');
+    const lblPand = document.getElementById('lblTotPandori');
+    const rimPand = document.getElementById('rimanenzePandori');
+    const barPand = document.getElementById('barPandori');
+
+    if(valPand) valPand.textContent = totPandori;
+    if(lblPand) lblPand.textContent = `prenotati su ${stockInizialePandori}`;
+    if(rimPand) rimPand.textContent = `Rimanenza: ${stockInizialePandori - totPandori} pz`;
     const percPand = stockInizialePandori > 0 ? Math.min(100, Math.round((totPandori / stockInizialePandori) * 100)) : 0;
-    document.getElementById('barPandori').style.width = percPand + '%';
+    if(barPand) barPand.style.width = percPand + '%';
 
     const alertContainer = document.getElementById('alertContainer');
-    if(ordiniDaPagareNonConsegnati > 0) {
-        alertContainer.innerHTML = `
-            <div class="alert-box">
-                <span>⚠️</span>
-                <span>Attenzione: ci sono <strong>${ordiniDaPagareNonConsegnati} ordini</strong> con stato "Da Pagare" da saldare!</span>
-            </div>
-        `;
-    } else {
-        alertContainer.innerHTML = '';
+    if(alertContainer) {
+        if(ordiniDaPagareNonConsegnati > 0) {
+            alertContainer.innerHTML = `
+                <div class="alert-box">
+                    <span>⚠️</span>
+                    <span>Area Finanziaria: ci sono <strong>${ordiniDaPagareNonConsegnati} ordini</strong> in sospeso con stato "Da Pagare" da riscuotere.</span>
+                </div>
+            `;
+        } else {
+            alertContainer.innerHTML = '';
+        }
     }
 }
 
@@ -134,7 +148,7 @@ function esportaPDF() {
             <div style="text-align: center; border-bottom: 2px solid #5b8e72; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
                 <div style="text-align: left;">
                     <h2 style="color: #5b8e72; margin: 0; font-family: Quicksand, sans-serif; font-size: 22px;">WonderLAD Onlus</h2>
-                    <p style="font-size: 13px; color: #62756d; margin: 4px 0 0 0;">Report Generale e Statistiche - ${new Date().toLocaleDateString('it-IT')}</p>
+                    <p style="font-size: 13px; color: #62756d; margin: 4px 0 0 0;">Report Operativo - ${new Date().toLocaleDateString('it-IT')}</p>
                 </div>
                 <img src="https://www.wonderlad.org/wp-content/uploads/2020/05/logo-wonderlad.png" style="height: 38px;" />
             </div>
@@ -152,103 +166,10 @@ function esportaPDF() {
                     <div style="font-size: 11px; color: #62756d;">${document.getElementById('rimanenzePandori').textContent}</div>
                 </div>
             </div>
-
-            <h3 style="color: #5b8e72; font-family: Quicksand, sans-serif; margin-bottom: 10px; font-size: 16px;">Conteggio Ordini per Stato</h3>
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 12px;">
-                <thead>
-                    <tr style="background: #f0f4f1;">
-                        <th style="padding: 8px; border: 1px solid #e1eae5; text-align: left;">Stato Ordine</th>
-                        <th style="padding: 8px; border: 1px solid #e1eae5; text-align: center;">N° Ordini</th>
-                        <th style="padding: 8px; border: 1px solid #e1eae5; text-align: center;">Dettaglio (Pan / Pand)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td style="padding: 6px; border: 1px solid #e1eae5;">Prenotati Generici</td>
-                        <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center; font-weight: bold;">${document.getElementById('countPrenotato').textContent}</td>
-                        <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center;">${document.getElementById('subPrenotato').textContent}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 6px; border: 1px solid #e1eae5;">Da Pagare</td>
-                        <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center; font-weight: bold; color: #c53030;">${document.getElementById('countDaPagare').textContent}</td>
-                        <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center;">${document.getElementById('subDaPagare').textContent}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 6px; border: 1px solid #e1eae5;">Pagati</td>
-                        <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center; font-weight: bold; color: #276749;">${document.getElementById('countPagati').textContent}</td>
-                        <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center;">${document.getElementById('subPagati').textContent}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 6px; border: 1px solid #e1eae5;">In Preparazione</td>
-                        <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center; font-weight: bold; color: #b7791f;">${document.getElementById('countInPreparazione').textContent}</td>
-                        <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center;">${document.getElementById('subInPrep').textContent}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 6px; border: 1px solid #e1eae5;">Da Consegnare</td>
-                        <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center; font-weight: bold; color: #6b46c1;">${document.getElementById('countDaConsegnare').textContent}</td>
-                        <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center;">${document.getElementById('subDaConseg').textContent}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 6px; border: 1px solid #e1eae5;">Consegnati</td>
-                        <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center; font-weight: bold; color: #2e7d32;">${document.getElementById('countConsegnati').textContent}</td>
-                        <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center;">${document.getElementById('subConsegnati').textContent}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 6px; border: 1px solid #e1eae5;">Annullati</td>
-                        <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center; font-weight: bold; color: #718096;">${document.getElementById('countAnnullati').textContent}</td>
-                        <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center;">${document.getElementById('subAnnullati').textContent}</td>
-                    </tr>
-                </tbody>
-            </table>
         </div>
     `;
 
-    let rowsTableHTML = '';
-    datiGlobali.forEach((o, i) => {
-        if (!o.Nome && !o.Cognome) return;
-        let dStr = o.Data || '-';
-        if (dStr !== '-' && !isNaN(new Date(dStr))) {
-            const d = new Date(dStr);
-            dStr = d.toLocaleDateString('it-IT') + ' ' + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
-        }
-        rowsTableHTML += `
-            <tr style="background: ${i % 2 === 0 ? '#ffffff' : '#f6fff8'};">
-                <td style="padding: 6px; border: 1px solid #e1eae5; font-size: 10px;">${dStr}</td>
-                <td style="padding: 6px; border: 1px solid #e1eae5; font-size: 11px; font-weight: bold;">${o.Nome || ''} ${o.Cognome || ''}</td>
-                <td style="padding: 6px; border: 1px solid #e1eae5; font-size: 10px;">${o.Telefono || '-'}</td>
-                <td style="padding: 6px; border: 1px solid #e1eae5; font-size: 11px; text-align: center;">${o.Panettoni || 0}</td>
-                <td style="padding: 6px; border: 1px solid #e1eae5; font-size: 11px; text-align: center;">${o.Pandori || 0}</td>
-                <td style="padding: 6px; border: 1px solid #e1eae5; font-size: 10px; font-weight: bold;">${o.Status || 'Prenotato'}</td>
-                <td style="padding: 6px; border: 1px solid #e1eae5; font-size: 10px;">${o["Metodo Pagamento"] || '-'}</td>
-            </tr>
-        `;
-    });
-
-    let page2 = `
-        <div>
-            <div style="text-align: center; border-bottom: 2px solid #5b8e72; padding-bottom: 10px; margin-bottom: 15px;">
-                <h3 style="color: #5b8e72; margin: 0; font-family: Quicksand, sans-serif; font-size: 18px;">Elenco Completo Ordini Registrati</h3>
-            </div>
-            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
-                <thead>
-                    <tr style="background: #5b8e72; color: white;">
-                        <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Data</th>
-                        <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Cliente</th>
-                        <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Telefono</th>
-                        <th style="padding: 7px; border: 1px solid #3a6250; text-align: center;">Panettoni</th>
-                        <th style="padding: 7px; border: 1px solid #3a6250; text-align: center;">Pandori</th>
-                        <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Stato</th>
-                        <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Pagamento</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${rowsTableHTML}
-                </tbody>
-            </table>
-        </div>
-    `;
-
-    containerPDF.innerHTML = page1 + page2;
+    containerPDF.innerHTML = page1;
 
     const opt = {
         margin:       10,
