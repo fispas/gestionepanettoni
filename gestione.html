@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Ordini - WonderLAD</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <!-- Libreria per l'export in Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        body { 
+            font-family: 'Nunito', sans-serif; 
+            background-color: #f4f6f8; 
+            color: #333;
+            padding: 2rem;
+            margin: 0;
+        }
+        
+        .dashboard-container {
+            background: #ffffff;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border-top: 8px solid #e53935; 
+        }
+
+        h2 { color: #2c3e50; font-weight: 800; margin-top: 0; }
+        
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        button { 
+            padding: 0.8rem 1.5rem; 
+            background-color: #2ecc71; 
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        button:hover { background-color: #27ae60; transform: translateY(-2px); }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+            min-width: 700px;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        th { background-color: #f8f9fa; color: #7f8c8d; font-weight: 700; }
+        
+        .status-badge {
+            background-color: #f1c40f;
+            color: #fff;
+            padding: 0.3rem 0.6rem;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        /* Colori dinamici per lo status */
+        .status-prenotato { background-color: #f39c12; }
+        .status-consegnato { background-color: #2ecc71; }
+        .status-annullato { background-color: #e74c3c; }
+
+        #contatoreOrdini { font-size: 0.9em; color: #95a5a6; font-weight: 700; margin-bottom: 1rem; }
+        #loadingMsg { font-weight: bold; color: #3498db; margin-bottom: 1rem;}
+
+        .test-btn {
+            background-color: transparent; 
+            color: #adb5bd;
+            border: 2px dashed #dee2e6; 
+            margin-top: 2rem;
+            width: 100%;
+        }
+        .test-btn:hover { background-color: #e9ecef; color: #495057; border-color: #adb5bd; }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <div class="header-actions">
+            <h2>Gestione Ordini Panettoni</h2>
+            <button onclick="esportaExcel()">📥 Scarica in Excel</button>
+        </div>
+        
+        <div id="contatoreOrdini">Totale ordini caricati in tabella: 0</div>
+        <div id="loadingMsg">Caricamento dati in corso...</div>
+
+        <div class="table-responsive">
+            <table id="tabellaOrdini" style="display:none;">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Nome</th>
+                        <th>Cognome</th>
+                        <th>Telefono</th>
+                        <th>Quantità</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="corpoTabella">
+                    <!-- I dati verranno inseriti qui -->
+                </tbody>
+            </table>
+        </div>
+        
+        <button class="test-btn" onclick="eseguiTestLettura()">⚙️ Ricarica Dati dal Database</button>
+    </div>
+
+    <script>
+        // IL TUO NUOVO URL DEFINITIVO È STATO INSERITO QUI
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxBrYSYhlq31oegNQdVzrhA_M9cUpYP2-qIm5MBPyrOBoP1dA_mf1iYnXJr6K20hG_C4Q/exec'; 
+        let datiGlobali = [];
+        let rowCounter = 0;
+
+        function caricaDati() {
+            document.getElementById('loadingMsg').style.display = 'block';
+            document.getElementById('loadingMsg').textContent = "Caricamento dati in corso...";
+            document.getElementById('loadingMsg').style.color = "#3498db";
+            document.getElementById('tabellaOrdini').style.display = 'none';
+
+            fetch(API_URL)
+                .then(response => response.json())
+                .then(result => {
+                    if(result.status === "success") {
+                        datiGlobali = result.data;
+                        popolaTabella(datiGlobali);
+                    } else {
+                        throw new Error("Errore nel caricamento");
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('loadingMsg').textContent = "Errore durante il caricamento dati. Riprova.";
+                    document.getElementById('loadingMsg').style.color = "#e74c3c";
+                });
+        }
+
+        function popolaTabella(dati) {
+            const tbody = document.getElementById('corpoTabella');
+            tbody.innerHTML = '';
+            rowCounter = 0;
+
+            dati.forEach(ordine => {
+                // Ignora eventuali righe vuote del foglio Excel
+                if(!ordine.Nome && !ordine.Cognome) return; 
+
+                rowCounter++;
+                const tr = document.createElement('tr');
+                
+                // Formattazione della data e ora italiana
+                let dataFormattata = ordine.Data;
+                if(ordine.Data) {
+                    const d = new Date(ordine.Data);
+                    if(!isNaN(d)) dataFormattata = d.toLocaleDateString('it-IT') + " " + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
+                }
+
+                // Colora il badge dello status in base alla parola
+                let statusClass = "status-badge";
+                let statusTesto = ordine.Status ? ordine.Status.toLowerCase() : '';
+                if(statusTesto.includes('prenotato')) statusClass += " status-prenotato";
+                if(statusTesto.includes('consegnato')) statusClass += " status-consegnato";
+                if(statusTesto.includes('annullato')) statusClass += " status-annullato";
+
+                tr.innerHTML = `
+                    <td>${dataFormattata}</td>
+                    <td><strong>${ordine.Nome || '-'}</strong></td>
+                    <td><strong>${ordine.Cognome || '-'}</strong></td>
+                    <td>${ordine.Telefono || '-'}</td>
+                    <td>${ordine["Quantità"] || ordine.quantita || '-'}</td>
+                    <td><span class="${statusClass}">${ordine.Status || 'In attesa'}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('loadingMsg').style.display = 'none';
+            document.getElementById('tabellaOrdini').style.display = 'table';
+            document.getElementById('contatoreOrdini').textContent = `Totale ordini caricati in tabella: ${rowCounter}`;
+        }
+
+        function esportaExcel() {
+            if(datiGlobali.length === 0) {
+                alert("Nessun dato da esportare!");
+                return;
+            }
+            
+            // Genera e scarica il file Excel
+            const ws = XLSX.utils.json_to_sheet(datiGlobali);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Ordini");
+            XLSX.writeFile(wb, "Ordini_Panettoni_WonderLAD.xlsx");
+        }
+
+        function eseguiTestLettura() {
+            caricaDati();
+        }
+
+        // Carica i dati in automatico non appena la pagina viene aperta
+        window.onload = caricaDati;
+    </script>
+</body>
+</html>
