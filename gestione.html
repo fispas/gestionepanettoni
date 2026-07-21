@@ -21,19 +21,44 @@
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
-        .stat-card { background: white; padding: 1rem; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; border-bottom: 4px solid #e53935; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+        .stat-card { background: white; padding: 1rem; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; border-bottom: 4px solid #e53935; position: relative; }
         .stat-card.pandoro { border-bottom-color: #fbbc05; }
         .stat-title { font-size: 0.9rem; color: #7f8c8d; font-weight: 700; }
         .stat-value { font-size: 1.8rem; font-weight: 800; color: #2c3e50; margin: 0.5rem 0; }
         .stat-detail { font-size: 0.8rem; color: #95a5a6; }
+        
+        .stock-edit-btn { background: #f8f9fa; border: 1px solid #ced4da; padding: 2px 8px; border-radius: 5px; font-size: 0.75rem; cursor: pointer; font-weight: bold; margin-top: 5px; display: inline-block; color: #495057; }
+        .stock-edit-btn:hover { background: #e9ecef; }
+
+        /* Alert Box */
+        .alert-box { background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+
         .chart-container { background: white; padding: 1rem; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
+
+        /* Filtri & Ricerca */
+        .controls-panel { background: white; padding: 1rem; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 1rem; display: flex; flex-direction: column; gap: 10px; }
+        .search-input { width: 100%; padding: 0.7rem 1rem; border: 2px solid #e9ecef; border-radius: 10px; box-sizing: border-box; font-family: 'Nunito'; font-size: 0.95rem; background-color: #f8f9fa; }
+        .search-input:focus { outline: none; border-color: #e53935; background-color: #fff; }
+        
+        .filter-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 5px; }
+        .chip { background: #f1f3f5; border: none; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; color: #495057; cursor: pointer; white-space: nowrap; }
+        .chip.active { background: #e53935; color: white; }
 
         .table-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
         .btn-action { background-color: #2ecc71; color: white; border: none; padding: 0.7rem 1rem; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
         .btn-edit { background-color: #f39c12; color: white; border: none; padding: 0.5rem; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
         .btn-delete { background-color: #e74c3c; color: white; border: none; padding: 0.5rem; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-left: 5px; }
         
+        /* Badge Status */
+        .badge-status { padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; display: inline-block; }
+        .status-prenotato-da-pagare { background-color: #ffe3e3; color: #c92a2a; }
+        .status-prenotato-pagare { background-color: #e6fcf5; color: #0ca678; }
+        .status-in-preparazione { background-color: #fff3bf; color: #f59f00; }
+        .status-da-consegnare { background-color: #e7f5ff; color: #1971c2; }
+        .status-consegnato { background-color: #d8f5a2; color: #5c940d; }
+        .status-annullato { background-color: #f1f3f5; color: #868e96; }
+
         .table-responsive { width: 100%; background: transparent; margin-bottom: 1rem; }
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e9ecef; font-size: 0.9rem; }
@@ -86,16 +111,19 @@
 
         <!-- Dashboard -->
         <div id="view-dashboard" class="view active">
+            <div id="alertContainer"></div>
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-title">Panettoni</div>
                     <div class="stat-value" id="valPanettoni">0</div>
                     <div class="stat-detail" id="rimanenzePanettoni">Rimanenze: 0</div>
+                    <button class="stock-edit-btn" onclick="apriModaleStock('Panettoni')">✏️ Modifica Stock</button>
                 </div>
                 <div class="stat-card pandoro">
                     <div class="stat-title">Pandori</div>
                     <div class="stat-value" id="valPandori">0</div>
                     <div class="stat-detail" id="rimanenzePandori">Rimanenze: 0</div>
+                    <button class="stock-edit-btn" onclick="apriModaleStock('Pandori')">✏️ Modifica Stock</button>
                 </div>
             </div>
             <div class="chart-container"><canvas id="graficoVendite"></canvas></div>
@@ -105,6 +133,18 @@
 
         <!-- Ordini -->
         <div id="view-ordini" class="view">
+            <div class="controls-panel">
+                <input type="text" id="searchOrdini" class="search-input" placeholder="🔍 Cerca per nome, cognome o telefono..." onkeyup="filtraOrdini()">
+                <div class="filter-chips">
+                    <button class="chip active" onclick="setFiltroStato('Tutti', this)">Tutti</button>
+                    <button class="chip" onclick="setFiltroStato('Prenotato - Da Pagare', this)">Da Pagare</button>
+                    <button class="chip" onclick="setFiltroStato('Prenotato - Pagato', this)">Pagati</button>
+                    <button class="chip" onclick="setFiltroStato('In Preparazione', this)">In Preparazione</button>
+                    <button class="chip" onclick="setFiltroStato('Da Consegnare', this)">Da Consegnare</button>
+                    <button class="chip" onclick="setFiltroStato('Consegnato', this)">Consegnati</button>
+                    <button class="chip" onclick="setFiltroStato('Annullato', this)">Annullati</button>
+                </div>
+            </div>
             <div class="table-controls">
                 <h3 style="margin: 0; color: #2c3e50;">Lista Ordini</h3>
                 <button class="btn-action" onclick="esportaExcel()">📥 Export</button>
@@ -119,6 +159,9 @@
 
         <!-- Utenti (Solo Administrator) -->
         <div id="view-utenti" class="view">
+            <div class="controls-panel">
+                <input type="text" id="searchUtenti" class="search-input" placeholder="🔍 Cerca utente..." onkeyup="filtraUtenti()">
+            </div>
             <div class="table-controls">
                 <h3 style="margin: 0; color: #2c3e50;">Gestione Utenti</h3>
                 <button class="btn-action" onclick="apriModaleUtente('add')">➕ Nuovo Utente</button>
@@ -148,10 +191,12 @@
             <input type="number" id="edit-pan" min="0">
             <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Pandori</label>
             <input type="number" id="edit-pan-dori" min="0">
-            <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Status</label>
+            <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Status e Pagamento</label>
             <select id="edit-status">
-                <option value="Prenotato">Prenotato</option>
+                <option value="Prenotato - Da Pagare">Prenotato - Da Pagare</option>
+                <option value="Prenotato - Pagato">Prenotato - Pagato</option>
                 <option value="In Preparazione">In Preparazione</option>
+                <option value="Da Consegnare">Da Consegnare</option>
                 <option value="Consegnato">Consegnato</option>
                 <option value="Annullato">Annullato</option>
             </select>
@@ -159,6 +204,21 @@
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="chiudiModale('edit-modal')">Annulla</button>
                 <button class="btn-save" onclick="salvaModificaOrdine()">Salva</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale Modifica Stock Iniziale -->
+    <div id="stock-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0;" id="stock-modal-title">Modifica Stock</h3>
+            <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Totale Panettoni</label>
+            <input type="number" id="input-tot-pan" min="0">
+            <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Totale Pandori</label>
+            <input type="number" id="input-tot-pand" min="0">
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="chiudiModale('stock-modal')">Annulla</button>
+                <button class="btn-save" onclick="salvaStock()">Aggiorna Stock</button>
             </div>
         </div>
     </div>
@@ -189,10 +249,12 @@
         const API_URL = 'https://script.google.com/macros/s/AKfycbzSIBLORkFGCUDfI8j7t6YRIGaqrVEaRr1Gjlrx5i5TYS6P9Aq_S-ZMJsJd9To4H-3g/exec'; 
         let datiGlobali = [];
         let utentiGlobali = [];
+        let impostazioniGlobali = {};
         let rowCounter = 0;
         let chartInstance = null;
         let currentUser = ""; 
         let currentRole = "";
+        let filtroStatoAttuale = "Tutti";
 
         function effettuaLogin() {
             const user = document.getElementById('username').value.trim();
@@ -258,12 +320,25 @@
                     if(result.status === "success") {
                         datiGlobali = result.data;
                         utentiGlobali = result.utenti || [];
+                        impostazioniGlobali = result.impostazioni || {};
                         popolaTabellaOrdini(datiGlobali);
                         popolaTabellaUtenti(utentiGlobali);
-                        calcolaStatistiche(datiGlobali, result.impostazioni);
+                        calcolaStatistiche(datiGlobali, impostazioniGlobali);
                         document.getElementById('loadingMsg').style.display = 'none';
                     }
                 });
+        }
+
+        function getBadgeClass(status) {
+            if(!status) return 'status-prenotato-da-pagare';
+            const s = status.toLowerCase();
+            if(s.includes('da pagare')) return 'status-prenotato-da-pagare';
+            if(s.includes('pagato')) return 'status-prenotato-pagare';
+            if(s.includes('preparazione')) return 'status-in-preparazione';
+            if(s.includes('da consegnare')) return 'status-da-consegnare';
+            if(s.includes('consegnato')) return 'status-consegnato';
+            if(s.includes('annullato')) return 'status-annullato';
+            return 'status-prenotato-da-pagare';
         }
 
         function popolaTabellaOrdini(dati) {
@@ -291,29 +366,74 @@
                 if(!ordine.Nome && !ordine.Cognome) return; 
                 rowCounter++;
                 const tr = document.createElement('tr');
+                tr.setAttribute('data-nome', (ordine.Nome + " " + ordine.Cognome + " " + ordine.Telefono).toLowerCase());
+                tr.setAttribute('data-stato', ordine.Status || "");
                 
                 colonneOriginali.forEach(col => {
                     if(col !== "rowNumber") {
                         const td = document.createElement('td');
                         td.setAttribute('data-label', col);
                         let valore = ordine[col];
+                        
                         if(col.toLowerCase().includes('data') && valore) {
                             const d = new Date(valore);
                             if(!isNaN(d)) valore = d.toLocaleDateString('it-IT') + " " + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
                         }
-                        td.innerHTML = `<span>${valore || '-'}</span>`;
+                        
+                        if(col.toLowerCase() === 'status' || col.toLowerCase() === 'stato') {
+                            const badgeClass = getBadgeClass(valore);
+                            td.innerHTML = `<span class="badge-status ${badgeClass}">${valore || 'Prenotato'}</span>`;
+                        } else {
+                            td.innerHTML = `<span>${valore || '-'}</span>`;
+                        }
                         tr.appendChild(td);
                     }
                 });
                 
                 const tdAzioni = document.createElement('td');
                 tdAzioni.setAttribute('data-label', 'Azioni');
-                tdAzioni.innerHTML = `<button class="btn-edit" onclick="apriModaleOrdine(${ordine.rowNumber}, ${ordine.Panettoni || 0}, ${ordine.Pandori || 0}, '${ordine.Status || 'Prenotato'}')">✏️ Modifica</button>`;
+                tdAzioni.innerHTML = `<button class="btn-edit" onclick="apriModaleOrdine(${ordine.rowNumber}, ${ordine.Panettoni || 0}, ${ordine.Pandori || 0}, '${ordine.Status || 'Prenotato - Da Pagare'}')">✏️ Modifica</button>`;
                 tr.appendChild(tdAzioni);
                 tbody.appendChild(tr);
             });
             document.getElementById('tabellaOrdini').style.display = 'table';
             document.getElementById('contatoreOrdini').textContent = `Sessione caricata. Totale righe analizzate: ${rowCounter}`;
+            filtraOrdini(); // Applica i filtri attivi
+        }
+
+        function filtraOrdini() {
+            const query = document.getElementById('searchOrdini').value.toLowerCase();
+            const rows = document.querySelectorAll('#corpoTabella tr');
+            
+            rows.forEach(tr => {
+                const testo = tr.getAttribute('data-nome') || "";
+                const stato = tr.getAttribute('data-stato') || "";
+                
+                const matchTesto = testo.includes(query);
+                const matchFiltro = (filtroStatoAttuale === 'Tutti' || stato === filtroStatoAttuale);
+                
+                if(matchTesto && matchFiltro) {
+                    tr.style.display = '';
+                } else {
+                    tr.style.display = 'none';
+                }
+            });
+        }
+
+        function setFiltroStato(stato, btnElement) {
+            filtroStatoAttuale = stato;
+            document.querySelectorAll('.filter-chips .chip').forEach(c => c.classList.remove('active'));
+            btnElement.classList.add('active');
+            filtraOrdini();
+        }
+
+        function filtraUtenti() {
+            const query = document.getElementById('searchUtenti').value.toLowerCase();
+            const rows = document.querySelectorAll('#corpoUtenti tr');
+            rows.forEach(tr => {
+                const text = tr.textContent.toLowerCase();
+                tr.style.display = text.includes(query) ? '' : 'none';
+            });
         }
 
         function popolaTabellaUtenti(utenti) {
@@ -345,6 +465,28 @@
                 if(sel.options[i].value === status) { sel.selectedIndex = i; break; }
             }
             document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        function apriModaleStock(tipo) {
+            document.getElementById('input-tot-pan').value = impostazioniGlobali["Totale Panettoni"] || 0;
+            document.getElementById('input-tot-pand').value = impostazioniGlobali["Totale Pandori"] || 0;
+            document.getElementById('stock-modal').style.display = 'flex';
+        }
+
+        function salvaStock() {
+            const totPan = document.getElementById('input-tot-pan').value;
+            const totPand = document.getElementById('input-tot-pand').value;
+
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'update_stock', totPanettoni: totPan, totPandori: totPand, user: currentUser })
+            })
+            .then(res => res.json())
+            .then(() => {
+                chiudiModale('stock-modal');
+                caricaDati();
+            });
         }
 
         function apriModaleUtente(mode, row = '', username = '', password = '', ruolo = 'Manager') {
@@ -421,11 +563,21 @@
 
         function calcolaStatistiche(dati, impostazioni) {
             let totPanettoni = 0; let totPandori = 0;
+            let ordiniDaPagareNonConsegnati = 0;
+
             dati.forEach(ordine => {
                 if(!ordine.Nome && !ordine.Cognome) return;
-                totPanettoni += parseInt(ordine.Panettoni) || 0;
-                totPandori += parseInt(ordine.Pandori) || 0;
+                const pan = parseInt(ordine.Panettoni) || 0;
+                const pand = parseInt(ordine.Pandori) || 0;
+                totPanettoni += pan;
+                totPandori += pand;
+
+                const status = (ordine.Status || "").toLowerCase();
+                if(status.includes('da pagare') && !status.includes('consegnato') && !status.includes('annullato')) {
+                    ordiniDaPagareNonConsegnati++;
+                }
             });
+
             let stockInizialePanettoni = parseInt(impostazioni["Totale Panettoni"]) || 0;
             let stockInizialePandori = parseInt(impostazioni["Totale Pandori"]) || 0;
 
@@ -433,6 +585,20 @@
             document.getElementById('valPandori').textContent = totPandori;
             document.getElementById('rimanenzePanettoni').textContent = `Su stock di ${stockInizialePanettoni} (Restano: ${stockInizialePanettoni - totPanettoni})`;
             document.getElementById('rimanenzePandori').textContent = `Su stock di ${stockInizialePandori} (Restano: ${stockInizialePandori - totPandori})`;
+
+            // Alert box dinamica in dashboard se ci sono ordini da saldare
+            const alertContainer = document.getElementById('alertContainer');
+            if(ordiniDaPagareNonConsegnati > 0) {
+                alertContainer.innerHTML = `
+                    <div class="alert-box">
+                        <span>⚠️</span>
+                        <span>Attenzione: ci sono <strong>${ordiniDaPagareNonConsegnati} ordini</strong> in sospeso con stato "Da Pagare"!</span>
+                    </div>
+                `;
+            } else {
+                alertContainer.innerHTML = '';
+            }
+
             aggiornaGrafico(totPanettoni, totPandori);
         }
 
