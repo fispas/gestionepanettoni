@@ -10,15 +10,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
-            --header-bg: #006847;
-            --header-dark: #004d35;
-            --accent-green: #a1cb68;
-            --accent-hover: #8cb851;
-            --bg-main: #f9fbf8;
+            --primary: #6b9080;
+            --primary-dark: #4d6a5b;
+            --accent-soft: #a4c3b2;
+            --accent-light: #eaf4f0;
+            --bg-main: #f6fff8;
             --card-bg: #ffffff;
-            --text-main: #1a1a1a;
-            --text-muted: #5a6561;
-            --border-color: #e1e8e3;
+            --text-main: #2c3e35;
+            --text-muted: #6b7c73;
+            --border-color: #e2ece9;
         }
 
         body { 
@@ -30,17 +30,19 @@
             padding-bottom: 90px; 
         }
 
+        /* Header Chiaro e Luminoso */
         .header { 
-            background-color: var(--header-bg); 
-            color: white; 
-            padding: 0.8rem 1rem; 
+            background-color: #ffffff; 
+            color: var(--text-main); 
+            padding: 0.8rem 1.2rem; 
             font-family: 'Quicksand', sans-serif;
             font-weight: 750; 
             font-size: 1.2rem; 
             position: sticky; 
             top: 0; 
             z-index: 100; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-bottom: 2px solid var(--border-color);
+            box-shadow: 0 4px 15px rgba(107, 144, 128, 0.05);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -49,28 +51,28 @@
         .header-brand {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
         .header img {
-            height: 32px;
+            height: 34px;
             width: auto;
         }
 
         .btn-logout {
-            background-color: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            background-color: #fff0f0;
+            color: #d9534f;
+            border: 1px solid #f5c6cb;
             padding: 0.4rem 0.8rem;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 0.8rem;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
             font-family: 'Quicksand', sans-serif;
         }
         .btn-logout:hover {
-            background-color: rgba(255, 255, 255, 0.35);
+            background-color: #f8d7da;
         }
 
         .container { padding: 1.5rem 1rem; max-width: 1000px; margin: 0 auto; display: none; } 
@@ -81,103 +83,112 @@
             display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; 
         }
         .login-box { 
-            background: var(--card-bg); padding: 2.5rem 2rem; border-radius: 20px; 
-            box-shadow: 0 10px 30px rgba(0,104,71,0.08); text-align: center; 
-            border-top: 8px solid var(--header-bg); width: 90%; max-width: 360px; box-sizing: border-box; 
+            background: var(--card-bg); padding: 2.5rem 2rem; border-radius: 24px; 
+            box-shadow: 0 10px 30px rgba(107,144,128,0.08); text-align: center; 
+            border: 2px solid var(--border-color); width: 90%; max-width: 360px; box-sizing: border-box; 
         }
-        .login-box h2 { font-family: 'Quicksand', sans-serif; color: var(--header-bg); margin-top: 0; }
+        .login-box h2 { font-family: 'Quicksand', sans-serif; color: var(--primary); margin-top: 0; }
         .login-box input[type="text"], .login-box input[type="password"] { 
             padding: 0.9rem 1rem; margin-bottom: 1rem; width: 100%; box-sizing: border-box; 
-            border: 2px solid var(--border-color); border-radius: 12px; font-family: 'Nunito'; font-size: 1rem; background-color: #fcfdfe; 
+            border: 2px solid var(--border-color); border-radius: 12px; font-family: 'Nunito'; font-size: 1rem; background-color: #fbfdfe; 
         }
-        .login-box input:focus { border-color: var(--header-bg); outline: none; background: #fff; }
+        .login-box input:focus { border-color: var(--primary); outline: none; background: #fff; }
         .remember-container { display: flex; align-items: center; gap: 8px; margin-bottom: 1.2rem; font-size: 0.9rem; color: var(--text-muted); text-align: left; cursor: pointer; }
-        .remember-container input { width: 18px; height: 18px; accent-color: var(--header-bg); cursor: pointer; }
-        .login-box button { background-color: var(--header-bg); color: white; border: none; padding: 1rem; width: 100%; border-radius: 12px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: background 0.2s; }
-        .login-box button:hover { background-color: var(--header-dark); }
+        .remember-container input { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+        .login-box button { background-color: var(--primary); color: white; border: none; padding: 1rem; width: 100%; border-radius: 12px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: background 0.2s; }
+        .login-box button:hover { background-color: var(--primary-dark); }
 
         .view { display: none; animation: fadeIn 0.3s; }
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .dashboard-header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; }
-        .btn-pdf { background-color: var(--header-bg); color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(0, 104, 71, 0.2); }
-        .btn-pdf:hover { background-color: var(--header-dark); }
+        .btn-pdf { background-color: var(--primary); color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(107, 144, 128, 0.2); }
+        .btn-pdf:hover { background-color: var(--primary-dark); }
 
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.2rem; }
-        .stat-card { background: var(--card-bg); padding: 1.2rem; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); text-align: center; border-bottom: 5px solid var(--header-bg); position: relative; }
-        .stat-card.pandoro { border-bottom-color: var(--accent-green); }
+        .stat-card { background: var(--card-bg); padding: 1.2rem; border-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); text-align: center; border: 2px solid var(--border-color); border-bottom: 5px solid var(--primary); position: relative; }
+        .stat-card.pandoro { border-bottom-color: var(--accent-soft); }
         .stat-title { font-size: 0.95rem; color: var(--text-muted); font-weight: 700; font-family: 'Quicksand', sans-serif; text-transform: uppercase; }
         .stat-value { font-size: 2rem; font-weight: 800; color: var(--text-main); margin: 0.4rem 0; }
         .stat-detail { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
         
-        .stock-edit-btn { background: #f0f4f1; border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; font-weight: bold; margin-top: 8px; display: inline-block; color: var(--text-main); }
+        .stock-edit-btn { background: var(--accent-light); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; font-weight: bold; margin-top: 8px; display: inline-block; color: var(--primary-dark); }
 
-        /* Box Status Cliccabili in Dashboard con Dettaglio Prodotti */
+        /* Box Status Cliccabili con Toni Pastello Tenui */
         .status-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-bottom: 1.5rem; }
         @media screen and (max-width: 600px) {
             .status-summary-grid { grid-template-columns: repeat(2, 1fr); }
         }
-        .status-summary-card { padding: 0.9rem 0.5rem; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); text-align: center; cursor: pointer; transition: transform 0.1s; border: 2px solid transparent; }
+        .status-summary-card { padding: 0.9rem 0.5rem; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); text-align: center; cursor: pointer; transition: transform 0.1s; border: 2px solid transparent; }
         .status-summary-card:hover { transform: translateY(-2px); }
         .status-summary-title { font-size: 0.75rem; font-weight: 800; margin-bottom: 0.2rem; text-transform: uppercase; font-family: 'Quicksand', sans-serif; }
         .status-summary-count { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.3rem; }
-        .status-summary-breakdown { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); border-top: 1px dashed rgba(0,0,0,0.1); padding-top: 4px; display: flex; justify-content: space-around; }
+        .status-summary-breakdown { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); border-top: 1px dashed rgba(0,0,0,0.08); padding-top: 4px; display: flex; justify-content: space-around; }
 
-        .card-prenotato { background-color: #f0f8f4; border-color: var(--accent-green); }
-        .card-prenotato .status-summary-title, .card-prenotato .status-summary-count { color: var(--header-dark); }
-        .card-da-pagare { background-color: #fff5f5; border-color: #feb2b2; }
+        .card-prenotato { background-color: #e8f4f8; border-color: #bee3f8; }
+        .card-prenotato .status-summary-title, .card-prenotato .status-summary-count { color: #2b6cb0; }
+        
+        .card-da-pagare { background-color: #fce8e6; border-color: #f5c6cb; }
         .card-da-pagare .status-summary-title, .card-da-pagare .status-summary-count { color: #c53030; }
-        .card-pagato { background-color: #f0fff4; border-color: #9ae6b4; }
-        .card-pagato .status-summary-title, .card-pagato .status-summary-count { color: #22543d; }
-        .card-preparazione { background-color: #fffaf0; border-color: #fbd38d; }
-        .card-preparazione .status-summary-title, .card-preparazione .status-summary-count { color: #c05621; }
-        .card-da-consegnare { background-color: #ebf8ff; border-color: #90cdf4; }
-        .card-da-consegnare .status-summary-title, .card-da-consegnare .status-summary-count { color: #2c5282; }
-        .card-consegnato { background-color: #f7fee7; border-color: #bef264; }
-        .card-consegnato .status-summary-title, .card-consegnato .status-summary-count { color: #3f6212; }
-        .card-annullato { background-color: #f7fafc; border-color: #cbd5e0; grid-column: span 3; }
-        .card-annullato .status-summary-title, .card-annullato .status-summary-count { color: #4a5568; }
+        
+        .card-pagato { background-color: #e8f5e9; border-color: #c6f6d5; }
+        .card-pagato .status-summary-title, .card-pagato .status-summary-count { color: #276749; }
+        
+        .card-preparazione { background-color: #fff8e1; border-color: #ffe082; }
+        .card-preparazione .status-summary-title, .card-preparazione .status-summary-count { color: #b7791f; }
+        
+        .card-da-consegnare { background-color: #f3e5f5; border-color: #e1bee7; }
+        .card-da-consegnare .status-summary-title, .card-da-consegnare .status-summary-count { color: #6b46c1; }
+        
+        .card-consegnato { background-color: #edf7ed; border-color: #c8e6c9; }
+        .card-consegnato .status-summary-title, .card-consegnato .status-summary-count { color: #2e7d32; }
+        
+        .card-annullato { background-color: #f1f3f5; border-color: #e2e8f0; grid-column: span 3; }
+        .card-annullato .status-summary-title, .card-annullato .status-summary-count { color: #718096; }
 
-        .alert-box { background-color: #fff5f5; border: 1px solid #feb2b2; color: #c53030; padding: 1rem; border-radius: 14px; margin-bottom: 1.5rem; font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; }
-        .chart-container { background: var(--card-bg); padding: 1.2rem; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 1.5rem; }
+        .alert-box { background-color: #fce8e6; border: 1px solid #f5c6cb; color: #c53030; padding: 1rem; border-radius: 16px; margin-bottom: 1.5rem; font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; }
+        .chart-container { background: var(--card-bg); padding: 1.2rem; border-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 2px solid var(--border-color); margin-bottom: 1.5rem; }
 
-        .controls-panel { background: var(--card-bg); padding: 1.2rem; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 1rem; display: flex; flex-direction: column; gap: 10px; }
-        .search-input { width: 100%; padding: 0.8rem 1rem; border: 2px solid var(--border-color); border-radius: 12px; box-sizing: border-box; font-family: 'Nunito'; font-size: 0.95rem; background-color: #fcfdfe; }
-        .search-input:focus { outline: none; border-color: var(--header-bg); background-color: #fff; }
+        .controls-panel { background: var(--card-bg); padding: 1.2rem; border-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 2px solid var(--border-color); margin-bottom: 1rem; display: flex; flex-direction: column; gap: 10px; }
+        .search-input { width: 100%; padding: 0.8rem 1rem; border: 2px solid var(--border-color); border-radius: 12px; box-sizing: border-box; font-family: 'Nunito'; font-size: 0.95rem; background-color: #fbfdfe; }
+        .search-input:focus { outline: none; border-color: var(--primary); background-color: #fff; }
         
         .filter-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 5px; }
-        .chip { background: #edf2f7; border: none; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; color: #4a5568; cursor: pointer; white-space: nowrap; }
-        .chip.active { background: var(--header-bg); color: white; }
+        .chip { background: #f0f4f1; border: none; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+        .chip.active { background: var(--primary); color: white; }
 
         .table-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-        .btn-action { background-color: var(--accent-green); color: var(--header-dark); border: none; padding: 0.7rem 1.2rem; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
-        .btn-edit { background-color: #dd6b20; color: white; border: none; padding: 0.5rem 0.8rem; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
-        .btn-delete { background-color: #e53e3e; color: white; border: none; padding: 0.5rem 0.8rem; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-left: 5px; }
+        .btn-action { background-color: var(--primary); color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
+        .btn-edit { background-color: #e2e8f0; color: var(--text-main); border: none; padding: 0.4rem 0.7rem; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
+        .btn-quick-status { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; padding: 0.4rem 0.6rem; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-right: 4px; }
+        .btn-delete { background-color: #fce8e6; color: #c53030; border: 1px solid #f5c6cb; padding: 0.4rem 0.7rem; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-left: 4px; }
         
         .badge-status { padding: 5px 10px; border-radius: 8px; font-size: 0.78rem; font-weight: 800; display: inline-block; font-family: 'Quicksand', sans-serif; }
-        .status-prenotato { background-color: #f0f8f4; color: var(--header-dark); }
-        .status-prenotato-da-pagare { background-color: #fff5f5; color: #c53030; }
-        .status-prenotato-pagare { background-color: #f0fff4; color: #22543d; }
-        .status-in-preparazione { background-color: #fffaf0; color: #c05621; }
-        .status-da-consegnare { background-color: #ebf8ff; color: #2c5282; }
-        .status-consegnato { background-color: #f7fee7; color: #3f6212; }
-        .status-annullato { background-color: #f7fafc; color: #4a5568; }
+        .status-prenotato { background-color: #e8f4f8; color: #2b6cb0; }
+        .status-prenotato-da-pagare { background-color: #fce8e6; color: #c53030; }
+        .status-prenotato-pagare { background-color: #e8f5e9; color: #276749; }
+        .status-in-preparazione { background-color: #fff8e1; color: #b7791f; }
+        .status-da-consegnare { background-color: #f3e5f5; color: #6b46c1; }
+        .status-consegnato { background-color: #edf7ed; color: #2e7d32; }
+        .status-annullato { background-color: #f1f3f5; color: #718096; }
+
+        .wa-link { color: #2e7d32; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+        .wa-link:hover { text-decoration: underline; }
 
         .table-responsive { width: 100%; background: transparent; margin-bottom: 1rem; }
-        table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.04); }
-        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
-        th { background-color: #f7fafc; color: var(--text-main); font-weight: 800; font-family: 'Quicksand', sans-serif; white-space: nowrap; }
+        table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 18px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid var(--border-color); }
+        th, td { padding: 0.9rem; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
+        th { background-color: #f0f4f1; color: var(--text-main); font-weight: 800; font-family: 'Quicksand', sans-serif; white-space: nowrap; }
 
         @media screen and (max-width: 768px) {
             table, thead, tbody, th, td, tr { display: block; }
-            table { background: transparent; box-shadow: none; }
+            table { background: transparent; box-shadow: none; border: none; }
             thead tr { display: none; }
-            tr { background: var(--card-bg); margin-bottom: 1rem; border-radius: 16px; padding: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.04); border: 1px solid var(--border-color); }
+            tr { background: var(--card-bg); margin-bottom: 1rem; border-radius: 18px; padding: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 2px solid var(--border-color); }
             td { border: none; border-bottom: 1px solid #edf2f7; position: relative; display: flex; justify-content: space-between; align-items: center; padding: 0.7rem; text-align: right; }
             td::before { content: attr(data-label); font-weight: 800; color: var(--text-muted); text-align: left; padding-right: 15px; flex-shrink: 0; font-family: 'Quicksand', sans-serif; }
             td:last-child { border-bottom: none; justify-content: flex-end; }
-            .btn-edit, .btn-delete { width: 48%; padding: 0.8rem; font-size: 0.9rem; margin-top: 0.5rem; }
         }
 
         .bottom-nav { 
@@ -189,9 +200,9 @@
             display: flex; 
             justify-content: space-around; 
             padding: 0.8rem 0; 
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.06); 
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.04); 
             z-index: 1000; 
-            border-top: 1px solid var(--border-color);
+            border-top: 2px solid var(--border-color);
         }
         .nav-item { 
             background: none; 
@@ -208,20 +219,20 @@
             transition: color 0.2s;
         }
         .nav-item.active { 
-            color: var(--header-bg); 
+            color: var(--primary); 
         }
         .nav-icon { font-size: 1.4rem; }
 
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 3000; }
-        .modal-content { background: var(--card-bg); padding: 2rem; border-radius: 20px; width: 90%; max-width: 400px; box-sizing: border-box; }
-        .modal-content h3 { font-family: 'Quicksand', sans-serif; color: var(--header-bg); }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 3000; }
+        .modal-content { background: var(--card-bg); padding: 2rem; border-radius: 24px; width: 90%; max-width: 400px; box-sizing: border-box; border: 2px solid var(--border-color); }
+        .modal-content h3 { font-family: 'Quicksand', sans-serif; color: var(--primary); }
         .modal-content input, .modal-content select { width: 100%; padding: 0.9rem; margin-bottom: 1rem; border: 2px solid var(--border-color); border-radius: 12px; box-sizing: border-box; font-family: 'Nunito'; }
         .modal-actions { display: flex; justify-content: space-between; gap: 1rem; }
-        .btn-save { background-color: var(--accent-green); color: var(--header-dark); border: none; padding: 0.9rem; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; }
-        .btn-cancel { background-color: #e53e3e; color: white; border: none; padding: 0.9rem; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; }
+        .btn-save { background-color: var(--primary); color: white; border: none; padding: 0.9rem; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; }
+        .btn-cancel { background-color: #fce8e6; color: #c53030; border: 1px solid #f5c6cb; padding: 0.9rem; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; }
 
         #contatoreOrdini { font-size: 0.85em; color: var(--text-muted); font-weight: 700; text-align: center; margin: 1rem 0; font-family: 'Quicksand', sans-serif; }
-        #loadingMsg { font-weight: bold; color: var(--header-bg); text-align: center; margin: 2rem 0; font-family: 'Quicksand', sans-serif; }
+        #loadingMsg { font-weight: bold; color: var(--primary); text-align: center; margin: 2rem 0; font-family: 'Quicksand', sans-serif; }
         .test-btn { background-color: transparent; color: var(--text-muted); border: 2px dashed var(--border-color); margin-top: 1rem; width: 100%; padding: 0.8rem; border-radius: 12px; font-family: 'Quicksand', sans-serif; font-weight: 700; cursor: pointer; }
     </style>
 </head>
@@ -244,7 +255,7 @@
     <div class="header">
         <div class="header-brand">
             <img src="https://www.wonderlad.org/wp-content/uploads/2020/05/logo-wonderlad.png" alt="WonderLAD Logo" onerror="this.style.display='none'">
-            <span>Gestione Ordini <span id="user-badge" style="font-size: 0.75rem; font-weight: normal; opacity: 0.85; background: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 6px;"></span></span>
+            <span>Gestione Ordini <span id="user-badge" style="font-size: 0.75rem; font-weight: normal; opacity: 0.85; background: var(--accent-light); color: var(--primary-dark); padding: 3px 8px; border-radius: 6px;"></span></span>
         </div>
         <button class="btn-logout" onclick="effettuaLogout()">🚪 Logout</button>
     </div>
@@ -449,14 +460,12 @@
         let currentRole = "";
         let filtroStatoAttuale = "Tutti";
 
-        // Al caricamento della pagina, verifica se esiste una sessione attiva
         window.addEventListener('DOMContentLoaded', () => {
             const sessionUser = sessionStorage.getItem('wonderlad_active_user') || localStorage.getItem('wonderlad_user');
             const sessionRole = sessionStorage.getItem('wonderlad_active_role');
             const savedPass = localStorage.getItem('wonderlad_pass');
 
             if (sessionUser && sessionRole) {
-                // Ripristina sessione senza dover richiedere credenziali
                 currentUser = sessionUser;
                 currentRole = sessionRole;
                 avviaInterfaccia();
@@ -490,7 +499,6 @@
                     currentUser = user;
                     currentRole = result.role;
 
-                    // Salvataggio Sessione Attiva per evitare il logout al refresh
                     sessionStorage.setItem('wonderlad_active_user', currentUser);
                     sessionStorage.setItem('wonderlad_active_role', currentRole);
 
@@ -658,6 +666,13 @@
                             const d = new Date(valore);
                             if(!isNaN(d)) valore = d.toLocaleDateString('it-IT') + " " + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
                         }
+
+                        // Link diretto a WhatsApp per il Telefono
+                        if(col.toLowerCase() === 'telefono' && valore) {
+                            const cleanTel = String(valore).replace(/\D/g, '');
+                            const msgWa = encodeURIComponent(`Ciao ${ordine.Nome || ''}, ti contattiamo da WonderLAD in merito al tuo ordine per i dolci solidali.`);
+                            valore = `<a href="https://wa.me/39${cleanTel}?text=${msgWa}" target="_blank" class="wa-link">📱 ${valore}</a>`;
+                        }
                         
                         if(col.toLowerCase() === 'status' || col.toLowerCase() === 'stato') {
                             const badgeClass = getBadgeClass(valore);
@@ -669,15 +684,35 @@
                     }
                 });
                 
+                const currentStatus = ordine.Status || 'Prenotato';
+                let nextStatusBtn = '';
+                if(currentStatus.includes('Da Pagare')) {
+                    nextStatusBtn = `<button class="btn-quick-status" onclick="cambiaStatoRapido(${ordine.rowNumber}, ${ordine.Panettoni || 0}, ${ordine.Pandori || 0}, 'Prenotato - Pagato')">✅ Pagato</button>`;
+                } else if(currentStatus.includes('Da Consegnare') || currentStatus.includes('In Preparazione')) {
+                    nextStatusBtn = `<button class="btn-quick-status" onclick="cambiaStatoRapido(${ordine.rowNumber}, ${ordine.Panettoni || 0}, ${ordine.Pandori || 0}, 'Consegnato')">✅ Consegnato</button>`;
+                }
+
                 const tdAzioni = document.createElement('td');
                 tdAzioni.setAttribute('data-label', 'Azioni');
-                tdAzioni.innerHTML = `<button class="btn-edit" onclick="apriModaleOrdine(${ordine.rowNumber}, ${ordine.Panettoni || 0}, ${ordine.Pandori || 0}, '${ordine.Status || 'Prenotato'}')">✏️ Modifica</button>`;
+                tdAzioni.innerHTML = `${nextStatusBtn}<button class="btn-edit" onclick="apriModaleOrdine(${ordine.rowNumber}, ${ordine.Panettoni || 0}, ${ordine.Pandori || 0}, '${ordine.Status || 'Prenotato'}')">✏️ Modifica</button>`;
                 tr.appendChild(tdAzioni);
                 tbody.appendChild(tr);
             });
             document.getElementById('tabellaOrdini').style.display = 'table';
             document.getElementById('contatoreOrdini').textContent = `Sessione caricata. Totale righe analizzate: ${rowCounter}`;
             filtraOrdini();
+        }
+
+        function cambiaStatoRapido(rowNumber, panettoni, pandori, nuovoStato) {
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'update', rowNumber: rowNumber, panettoni: panettoni, pandori: pandori, status: nuovoStato, user: currentUser })
+            })
+            .then(res => res.json())
+            .then(() => {
+                caricaDati();
+            });
         }
 
         function filtraOrdini() {
@@ -856,7 +891,6 @@
             let totPanettoni = 0; let totPandori = 0;
             let ordiniDaPagareNonConsegnati = 0;
             
-            // Contatori distinti per Stato e Prodotto
             let stats = {
                 'prenotato': { count: 0, pan: 0, pand: 0 },
                 'da_pagare': { count: 0, pan: 0, pand: 0 },
@@ -895,7 +929,6 @@
                 }
             });
 
-            // Popola i contatori totali e distinti Panettoni (🥮) / Pandori (🍞)
             const impostaBox = (idCount, idPan, idPand, key) => {
                 document.getElementById(idCount).textContent = stats[key].count;
                 document.getElementById(idPan).textContent = `🥮 ${stats[key].pan}`;
@@ -938,7 +971,7 @@
             if(chartInstance) chartInstance.destroy();
             chartInstance = new Chart(ctx, {
                 type: 'bar',
-                data: { labels: ['Panettoni', 'Pandori'], datasets: [{ label: 'Prenotazioni', data: [panettoni, pandori], backgroundColor: ['#006847', '#a1cb68'], borderRadius: 8 }] },
+                data: { labels: ['Panettoni', 'Pandori'], datasets: [{ label: 'Prenotazioni', data: [panettoni, pandori], backgroundColor: ['#6b9080', '#a4c3b2'], borderRadius: 8 }] },
                 options: { responsive: true, plugins: { legend: { display: false }, title: { display: true, text: 'Andamento Prenotazioni', font: { family: 'Quicksand', size: 16 } } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
             });
         }
@@ -950,92 +983,92 @@
             containerPDF.style.padding = '15px';
             containerPDF.style.fontFamily = 'Nunito, sans-serif';
             containerPDF.style.backgroundColor = '#ffffff';
-            containerPDF.style.color = '#1a1a1a';
+            containerPDF.style.color = '#2c3e35';
 
             const chartCanvas = document.getElementById('graficoVendite');
             const chartImageSrc = chartCanvas ? chartCanvas.toDataURL('image/png') : '';
 
             let page1 = `
                 <div style="page-break-after: always; break-after: page;">
-                    <div style="text-align: center; border-bottom: 3px solid #006847; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="text-align: center; border-bottom: 2px solid #6b9080; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
                         <div style="text-align: left;">
-                            <h2 style="color: #006847; margin: 0; font-family: Quicksand, sans-serif; font-size: 22px;">WonderLAD Onlus</h2>
-                            <p style="font-size: 13px; color: #5a6561; margin: 4px 0 0 0;">Report Generale e Statistiche - ${new Date().toLocaleDateString('it-IT')}</p>
+                            <h2 style="color: #6b9080; margin: 0; font-family: Quicksand, sans-serif; font-size: 22px;">WonderLAD Onlus</h2>
+                            <p style="font-size: 13px; color: #6b7c73; margin: 4px 0 0 0;">Report Generale e Statistiche - ${new Date().toLocaleDateString('it-IT')}</p>
                         </div>
                         <img src="https://www.wonderlad.org/wp-content/uploads/2020/05/logo-wonderlad.png" style="height: 38px;" />
                     </div>
 
-                    <h3 style="color: #006847; font-family: Quicksand, sans-serif; margin-bottom: 10px; font-size: 16px;">Riepilogo Scorte</h3>
+                    <h3 style="color: #6b9080; font-family: Quicksand, sans-serif; margin-bottom: 10px; font-size: 16px;">Riepilogo Scorte</h3>
                     <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-                        <div style="flex: 1; border: 2px solid #006847; padding: 12px; border-radius: 10px; text-align: center; background: #f0f8f4;">
-                            <div style="font-size: 11px; font-weight: bold; color: #5a6561;">PANETTONI PRENOTATI</div>
-                            <div style="font-size: 24px; font-weight: bold; color: #006847; margin: 4px 0;">${document.getElementById('valPanettoni').textContent}</div>
-                            <div style="font-size: 11px; color: #5a6561;">${document.getElementById('rimanenzePanettoni').textContent}</div>
+                        <div style="flex: 1; border: 2px solid #6b9080; padding: 12px; border-radius: 12px; text-align: center; background: #f6fff8;">
+                            <div style="font-size: 11px; font-weight: bold; color: #6b7c73;">PANETTONI PRENOTATI</div>
+                            <div style="font-size: 24px; font-weight: bold; color: #6b9080; margin: 4px 0;">${document.getElementById('valPanettoni').textContent}</div>
+                            <div style="font-size: 11px; color: #6b7c73;">${document.getElementById('rimanenzePanettoni').textContent}</div>
                         </div>
-                        <div style="flex: 1; border: 2px solid #a1cb68; padding: 12px; border-radius: 10px; text-align: center; background: #f7fee7;">
-                            <div style="font-size: 11px; font-weight: bold; color: #5a6561;">PANDORI PRENOTATI</div>
-                            <div style="font-size: 24px; font-weight: bold; color: #004d35; margin: 4px 0;">${document.getElementById('valPandori').textContent}</div>
-                            <div style="font-size: 11px; color: #5a6561;">${document.getElementById('rimanenzePandori').textContent}</div>
+                        <div style="flex: 1; border: 2px solid #a4c3b2; padding: 12px; border-radius: 12px; text-align: center; background: #eaf4f0;">
+                            <div style="font-size: 11px; font-weight: bold; color: #6b7c73;">PANDORI PRENOTATI</div>
+                            <div style="font-size: 24px; font-weight: bold; color: #4d6a5b; margin: 4px 0;">${document.getElementById('valPandori').textContent}</div>
+                            <div style="font-size: 11px; color: #6b7c73;">${document.getElementById('rimanenzePandori').textContent}</div>
                         </div>
                     </div>
 
-                    <h3 style="color: #006847; font-family: Quicksand, sans-serif; margin-bottom: 10px; font-size: 16px;">Conteggio Ordini e Dettaglio Prodotti per Stato</h3>
+                    <h3 style="color: #6b9080; font-family: Quicksand, sans-serif; margin-bottom: 10px; font-size: 16px;">Conteggio Ordini e Dettaglio Prodotti per Stato</h3>
                     <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 12px;">
                         <thead>
-                            <tr style="background: #f4f8f5;">
-                                <th style="padding: 8px; border: 1px solid #e1e8e3; text-align: left;">Stato Ordine</th>
-                                <th style="padding: 8px; border: 1px solid #e1e8e3; text-align: center;">N° Ordini</th>
-                                <th style="padding: 8px; border: 1px solid #e1e8e3; text-align: center;">Panettoni</th>
-                                <th style="padding: 8px; border: 1px solid #e1e8e3; text-align: center;">Pandori</th>
+                            <tr style="background: #f0f4f1;">
+                                <th style="padding: 8px; border: 1px solid #e2ece9; text-align: left;">Stato Ordine</th>
+                                <th style="padding: 8px; border: 1px solid #e2ece9; text-align: center;">N° Ordini</th>
+                                <th style="padding: 8px; border: 1px solid #e2ece9; text-align: center;">Panettoni</th>
+                                <th style="padding: 8px; border: 1px solid #e2ece9; text-align: center;">Pandori</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3;">Prenotati Generici</td>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3; text-align: center; font-weight: bold;">${document.getElementById('countPrenotato').textContent}</td>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3; text-align: center;">${document.getElementById('panPrenotato').textContent.replace('🥮 ','')}</td>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3; text-align: center;">${document.getElementById('panDPrenotato').textContent.replace('🍞 ','')}</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9;">Prenotati Generici</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center; font-weight: bold;">${document.getElementById('countPrenotato').textContent}</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panPrenotato').textContent.replace('🥮 ','')}</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panDPrenotato').textContent.replace('🍞 ','')}</td>
                             </tr>
                             <tr>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3;">Da Pagare</td>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3; text-align: center; font-weight: bold; color: #c53030;">${document.getElementById('countDaPagare').textContent}</td>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3; text-align: center;">${document.getElementById('panDaPagare').textContent.replace('🥮 ','')}</td>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3; text-align: center;">${document.getElementById('panDPaPagare').textContent.replace('🍞 ','')}</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9;">Da Pagare</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center; font-weight: bold; color: #c53030;">${document.getElementById('countDaPagare').textContent}</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panDaPagare').textContent.replace('🥮 ','')}</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panDPaPagare').textContent.replace('🍞 ','')}</td>
                             </tr>
                             <tr>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3;">Pagati</td>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3; text-align: center; font-weight: bold; color: #276749;">${document.getElementById('countPagati').textContent}</td>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3; text-align: center;">${document.getElementById('panPagati').textContent.replace('🥮 ','')}</td>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3; text-align: center;">${document.getElementById('panDPagati').textContent.replace('🍞 ','')}</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9;">Pagati</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center; font-weight: bold; color: #276749;">${document.getElementById('countPagati').textContent}</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panPagati').textContent.replace('🥮 ','')}</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panDPagati').textContent.replace('🍞 ','')}</td>
                             </tr>
                             <tr>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3;">In Preparazione</td>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3; text-align: center; font-weight: bold; color: #c05621;">${document.getElementById('countInPreparazione').textContent}</td>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3; text-align: center;">${document.getElementById('panInPrep').textContent.replace('🥮 ','')}</td>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3; text-align: center;">${document.getElementById('panDInPrep').textContent.replace('🍞 ','')}</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9;">In Preparazione</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center; font-weight: bold; color: #b7791f;">${document.getElementById('countInPreparazione').textContent}</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panInPrep').textContent.replace('🥮 ','')}</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panDInPrep').textContent.replace('🍞 ','')}</td>
                             </tr>
                             <tr>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3;">Da Consegnare</td>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3; text-align: center; font-weight: bold; color: #2c5282;">${document.getElementById('countDaConsegnare').textContent}</td>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3; text-align: center;">${document.getElementById('panDaConseg').textContent.replace('🥮 ','')}</td>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3; text-align: center;">${document.getElementById('panDDaConseg').textContent.replace('🍞 ','')}</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9;">Da Consegnare</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center; font-weight: bold; color: #6b46c1;">${document.getElementById('countDaConsegnare').textContent}</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panDaConseg').textContent.replace('🥮 ','')}</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panDDaConseg').textContent.replace('🍞 ','')}</td>
                             </tr>
                             <tr>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3;">Consegnati</td>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3; text-align: center; font-weight: bold; color: #3f6212;">${document.getElementById('countConsegnati').textContent}</td>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3; text-align: center;">${document.getElementById('panConsegnati').textContent.replace('🥮 ','')}</td>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3; text-align: center;">${document.getElementById('panDConsegnati').textContent.replace('🍞 ','')}</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9;">Consegnati</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center; font-weight: bold; color: #2e7d32;">${document.getElementById('countConsegnati').textContent}</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panConsegnati').textContent.replace('🥮 ','')}</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panDConsegnati').textContent.replace('🍞 ','')}</td>
                             </tr>
                             <tr>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3;">Annullati</td>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3; text-align: center; font-weight: bold; color: #4a5568;">${document.getElementById('countAnnullati').textContent}</td>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3; text-align: center;">${document.getElementById('panAnnullati').textContent.replace('🥮 ','')}</td>
-                                <td style="padding: 6px; border: 1px solid #e1e8e3; text-align: center;">${document.getElementById('panDAnnullati').textContent.replace('🍞 ','')}</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9;">Annullati</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center; font-weight: bold; color: #718096;">${document.getElementById('countAnnullati').textContent}</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panAnnullati').textContent.replace('🥮 ','')}</td>
+                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panDAnnullati').textContent.replace('🍞 ','')}</td>
                             </tr>
                         </tbody>
                     </table>
 
-                    <h3 style="color: #006847; font-family: Quicksand, sans-serif; margin-bottom: 10px; font-size: 16px;">Andamento Grafico</h3>
+                    <h3 style="color: #6b9080; font-family: Quicksand, sans-serif; margin-bottom: 10px; font-size: 16px;">Andamento Grafico</h3>
                     <div style="text-align: center;">
                         ${chartImageSrc ? `<img src="${chartImageSrc}" style="max-width: 100%; height: auto; max-height: 220px;" />` : ''}
                     </div>
@@ -1051,31 +1084,31 @@
                     dStr = d.toLocaleDateString('it-IT') + ' ' + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
                 }
                 rowsTableHTML += `
-                    <tr style="background: ${i % 2 === 0 ? '#ffffff' : '#f9fbf8'};">
-                        <td style="padding: 6px; border: 1px solid #e1e8e3; font-size: 10px;">${dStr}</td>
-                        <td style="padding: 6px; border: 1px solid #e1e8e3; font-size: 11px; font-weight: bold;">${o.Nome || ''} ${o.Cognome || ''}</td>
-                        <td style="padding: 6px; border: 1px solid #e1e8e3; font-size: 10px;">${o.Telefono || '-'}</td>
-                        <td style="padding: 6px; border: 1px solid #e1e8e3; font-size: 11px; text-align: center;">${o.Panettoni || 0}</td>
-                        <td style="padding: 6px; border: 1px solid #e1e8e3; font-size: 11px; text-align: center;">${o.Pandori || 0}</td>
-                        <td style="padding: 6px; border: 1px solid #e1e8e3; font-size: 10px; font-weight: bold;">${o.Status || 'Prenotato'}</td>
+                    <tr style="background: ${i % 2 === 0 ? '#ffffff' : '#f6fff8'};">
+                        <td style="padding: 6px; border: 1px solid #e2ece9; font-size: 10px;">${dStr}</td>
+                        <td style="padding: 6px; border: 1px solid #e2ece9; font-size: 11px; font-weight: bold;">${o.Nome || ''} ${o.Cognome || ''}</td>
+                        <td style="padding: 6px; border: 1px solid #e2ece9; font-size: 10px;">${o.Telefono || '-'}</td>
+                        <td style="padding: 6px; border: 1px solid #e2ece9; font-size: 11px; text-align: center;">${o.Panettoni || 0}</td>
+                        <td style="padding: 6px; border: 1px solid #e2ece9; font-size: 11px; text-align: center;">${o.Pandori || 0}</td>
+                        <td style="padding: 6px; border: 1px solid #e2ece9; font-size: 10px; font-weight: bold;">${o.Status || 'Prenotato'}</td>
                     </tr>
                 `;
             });
 
             let page2 = `
                 <div>
-                    <div style="text-align: center; border-bottom: 2px solid #006847; padding-bottom: 10px; margin-bottom: 15px;">
-                        <h3 style="color: #006847; margin: 0; font-family: Quicksand, sans-serif; font-size: 18px;">Elenco Completo Ordini Registrati</h3>
+                    <div style="text-align: center; border-bottom: 2px solid #6b9080; padding-bottom: 10px; margin-bottom: 15px;">
+                        <h3 style="color: #6b9080; margin: 0; font-family: Quicksand, sans-serif; font-size: 18px;">Elenco Completo Ordini Registrati</h3>
                     </div>
                     <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
                         <thead>
-                            <tr style="background: #006847; color: white;">
-                                <th style="padding: 7px; border: 1px solid #004d35; text-align: left;">Data</th>
-                                <th style="padding: 7px; border: 1px solid #004d35; text-align: left;">Cliente</th>
-                                <th style="padding: 7px; border: 1px solid #004d35; text-align: left;">Telefono</th>
-                                <th style="padding: 7px; border: 1px solid #004d35; text-align: center;">Panettoni</th>
-                                <th style="padding: 7px; border: 1px solid #004d35; text-align: center;">Pandori</th>
-                                <th style="padding: 7px; border: 1px solid #004d35; text-align: left;">Stato</th>
+                            <tr style="background: #6b9080; color: white;">
+                                <th style="padding: 7px; border: 1px solid #4d6a5b; text-align: left;">Data</th>
+                                <th style="padding: 7px; border: 1px solid #4d6a5b; text-align: left;">Cliente</th>
+                                <th style="padding: 7px; border: 1px solid #4d6a5b; text-align: left;">Telefono</th>
+                                <th style="padding: 7px; border: 1px solid #4d6a5b; text-align: center;">Panettoni</th>
+                                <th style="padding: 7px; border: 1px solid #4d6a5b; text-align: center;">Pandori</th>
+                                <th style="padding: 7px; border: 1px solid #4d6a5b; text-align: left;">Stato</th>
                             </tr>
                         </thead>
                         <tbody>
