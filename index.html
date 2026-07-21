@@ -28,162 +28,34 @@
             box-sizing: border-box;
         }
 
-        h2 {
-            text-align: center;
-            color: #2c3e50;
-            margin-top: 0;
-            font-weight: 800;
-            font-size: 1.8rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #7f8c8d;
-            font-size: 0.95rem;
-            margin-bottom: 2rem;
-        }
+        h2 { text-align: center; color: #2c3e50; margin-top: 0; font-weight: 800; font-size: 1.8rem; margin-bottom: 0.5rem; }
+        .subtitle { text-align: center; color: #7f8c8d; font-size: 0.95rem; margin-bottom: 2rem; }
 
         input[type="text"], input[type="tel"] { 
-            width: 100%; 
-            margin-bottom: 1.2rem; 
-            padding: 0.9rem 1rem; 
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            box-sizing: border-box; 
-            font-family: 'Nunito', sans-serif;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            background-color: #f8f9fa;
+            width: 100%; margin-bottom: 1.2rem; padding: 0.9rem 1rem; border: 2px solid #e9ecef;
+            border-radius: 10px; box-sizing: border-box; font-family: 'Nunito', sans-serif;
+            font-size: 1rem; transition: all 0.3s ease; background-color: #f8f9fa;
         }
 
-        input:focus {
-            outline: none;
-            border-color: #fbbc05; 
-            background-color: #ffffff;
-            box-shadow: 0 0 0 4px rgba(251, 188, 5, 0.1);
-        }
+        input:focus { outline: none; border-color: #fbbc05; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(251, 188, 5, 0.1); }
 
-        /* Stili per i selettori di quantità */
-        .product-selector {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #f8f9fa;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            padding: 1rem;
-            margin-bottom: 1.2rem;
-        }
+        .product-selector { display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; border: 2px solid #e9ecef; border-radius: 10px; padding: 1rem; margin-bottom: 1.2rem; }
+        .product-info { display: flex; flex-direction: column; }
+        .product-name { font-weight: 700; font-size: 1.1rem; color: #2c3e50; }
+        .counter-group { display: flex; align-items: center; gap: 15px; }
 
-        .product-info {
-            display: flex;
-            flex-direction: column;
-        }
+        .btn-counter { background-color: #e53935; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; font-size: 1.2rem; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background-color 0.2s, transform 0.1s; }
+        .btn-counter:hover { background-color: #c62828; transform: scale(1.05); }
+        .btn-counter:active { transform: scale(0.95); }
+        .count-display { font-size: 1.2rem; font-weight: 800; width: 20px; text-align: center; }
 
-        .product-name {
-            font-weight: 700;
-            font-size: 1.1rem;
-            color: #2c3e50;
-        }
+        button[type="submit"] { width: 100%; padding: 1.1rem; background-color: #e53935; color: white; border: none; border-radius: 10px; font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: background-color 0.3s, transform 0.1s; font-family: 'Nunito', sans-serif; margin-top: 0.5rem; box-shadow: 0 4px 6px rgba(229, 57, 53, 0.2); }
+        button[type="submit"]:hover { background-color: #c62828; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(229, 57, 53, 0.3); }
 
-        .counter-group {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .btn-counter {
-            background-color: #e53935;
-            color: white;
-            border: none;
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: background-color 0.2s, transform 0.1s;
-        }
-
-        .btn-counter:hover {
-            background-color: #c62828;
-            transform: scale(1.05);
-        }
-        
-        .btn-counter:active {
-            transform: scale(0.95);
-        }
-
-        .count-display {
-            font-size: 1.2rem;
-            font-weight: 800;
-            width: 20px;
-            text-align: center;
-        }
-
-        button[type="submit"] { 
-            width: 100%; 
-            padding: 1.1rem; 
-            background-color: #e53935; 
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.2rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.1s;
-            font-family: 'Nunito', sans-serif;
-            margin-top: 0.5rem;
-            box-shadow: 0 4px 6px rgba(229, 57, 53, 0.2);
-        }
-
-        button[type="submit"]:hover {
-            background-color: #c62828;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(229, 57, 53, 0.3);
-        }
-
-        #statusMsg { 
-            font-weight: bold; 
-            text-align: center;
-            margin-bottom: 1rem; 
-            min-height: 1.5rem;
-            font-size: 1.1rem;
-        }
-
-        #contatoreOrdini { 
-            font-size: 0.9em; 
-            color: #95a5a6; 
-            text-align: center;
-            margin-bottom: 1.5rem;
-            font-weight: 700;
-        }
-
-        .test-btn { 
-            background-color: transparent; 
-            color: #adb5bd;
-            margin-top: 2rem; 
-            border: 2px dashed #dee2e6; 
-            padding: 0.8rem;
-            border-radius: 10px;
-            cursor: pointer;
-            font-family: 'Nunito', sans-serif;
-            font-weight: 700;
-            transition: all 0.3s;
-            width: 100%;
-            max-width: 450px;
-            box-sizing: border-box;
-        }
-
-        .test-btn:hover {
-            background-color: #e9ecef;
-            color: #495057;
-            border-color: #adb5bd;
-        }
+        #statusMsg { font-weight: bold; text-align: center; margin-bottom: 1rem; min-height: 1.5rem; font-size: 1.1rem; }
+        #contatoreOrdini { font-size: 0.9em; color: #95a5a6; text-align: center; margin-bottom: 1.5rem; font-weight: 700; }
+        .test-btn { background-color: transparent; color: #adb5bd; margin-top: 2rem; border: 2px dashed #dee2e6; padding: 0.8rem; border-radius: 10px; cursor: pointer; font-family: 'Nunito', sans-serif; font-weight: 700; transition: all 0.3s; width: 100%; max-width: 450px; box-sizing: border-box; }
+        .test-btn:hover { background-color: #e9ecef; color: #495057; border-color: #adb5bd; }
     </style>
 </head>
 <body>
@@ -201,9 +73,7 @@
             <input type="tel" id="telefono" placeholder="Numero di Telefono" required>
             
             <div class="product-selector">
-                <div class="product-info">
-                    <span class="product-name">Panettoni</span>
-                </div>
+                <div class="product-info"><span class="product-name">Panettoni</span></div>
                 <div class="counter-group">
                     <button type="button" class="btn-counter" onclick="updateCount('panettoni', -1)">-</button>
                     <span id="panettoni-display" class="count-display">0</span>
@@ -212,9 +82,7 @@
             </div>
 
             <div class="product-selector">
-                <div class="product-info">
-                    <span class="product-name">Pandori</span>
-                </div>
+                <div class="product-info"><span class="product-name">Pandori</span></div>
                 <div class="counter-group">
                     <button type="button" class="btn-counter" onclick="updateCount('pandori', -1)">-</button>
                     <span id="pandori-display" class="count-display">0</span>
@@ -226,13 +94,10 @@
         </form>
     </div>
 
-    <!-- Pulsante di test aggiornato con le nuove variabili -->
     <button class="test-btn" onclick="eseguiTest()">⚙️ Esegui Test Inserimento Dati</button>
 
     <script>
-        let counterOrdini = 0;
-        let countPanettoni = 0;
-        let countPandori = 0;
+        let counterOrdini = 0; let countPanettoni = 0; let countPandori = 0;
 
         function updateCount(prodotto, valore) {
             if (prodotto === 'panettoni') {
@@ -250,20 +115,16 @@
             document.getElementById('nome').value = "TestNome";
             document.getElementById('cognome').value = "TestCognome";
             document.getElementById('telefono').value = "3331234567";
-            countPanettoni = 2;
-            countPandori = 1;
+            countPanettoni = 2; countPandori = 1;
             document.getElementById('panettoni-display').textContent = countPanettoni;
             document.getElementById('pandori-display').textContent = countPandori;
-            
             document.getElementById('ordineForm').dispatchEvent(new Event('submit', { cancelable: true }));
         }
         
         document.getElementById('ordineForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
             const msg = document.getElementById('statusMsg');
             
-            // Controllo che ci sia almeno un prodotto selezionato
             if (countPanettoni === 0 && countPandori === 0) {
                 msg.textContent = "Seleziona almeno un Panettone o un Pandoro.";
                 msg.style.color = "#e74c3c";
@@ -271,14 +132,13 @@
             }
 
             const btn = this.querySelector('button[type="submit"]');
-            btn.disabled = true;
-            btn.textContent = "Attendere...";
-            msg.textContent = "";
+            btn.disabled = true; btn.textContent = "Attendere..."; msg.textContent = "";
             
-            // INSERITO IL TUO NUOVO URL DEFINITIVO
-            const url = 'https://script.google.com/macros/s/AKfycbw7kxXSV8ds8zPG7fFsJ08U9PEwuwpJ6swgNmIOjoG-V47Upq3FYg9gQIZU_yIANyNxKQ/exec'; 
+            // IL TUO NUOVO URL 
+            const url = 'https://script.google.com/macros/s/AKfycbzmOhnuJDy9cj5_6dvkdKDqXjyjBkTkiddB4Wt-Vr2wyIqnM2v-4dO65PgnUcWewZVKZg/exec'; 
             
             const data = {
+                action: 'insert',
                 nome: document.getElementById('nome').value,
                 cognome: document.getElementById('cognome').value,
                 telefono: document.getElementById('telefono').value,
@@ -288,37 +148,26 @@
 
             fetch(url, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'text/plain;charset=utf-8',
-                },
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(data)
             })
             .then(response => response.json())
             .then(result => {
                 if(result.status === "success") {
-                    msg.textContent = "Prenotazione confermata con successo! 🎉";
-                    msg.style.color = "#2ecc71";
-                    
-                    // Reset del form e dei contatori
+                    msg.textContent = "Prenotazione confermata con successo! 🎉"; msg.style.color = "#2ecc71";
                     document.getElementById('ordineForm').reset();
-                    countPanettoni = 0;
-                    countPandori = 0;
+                    countPanettoni = 0; countPandori = 0;
                     document.getElementById('panettoni-display').textContent = "0";
                     document.getElementById('pandori-display').textContent = "0";
-                    
                     counterOrdini++;
                     document.getElementById('contatoreOrdini').textContent = `Ordini registrati in questa sessione: ${counterOrdini}`;
-                } else {
-                    throw new Error("Errore backend");
-                }
+                } else { throw new Error("Errore backend"); }
             })
             .catch(error => {
-                msg.textContent = "Si è verificato un errore. Riprova.";
-                msg.style.color = "#e74c3c";
+                msg.textContent = "Si è verificato un errore. Riprova."; msg.style.color = "#e74c3c";
             })
             .finally(() => {
-                btn.disabled = false;
-                btn.textContent = "Conferma Prenotazione";
+                btn.disabled = false; btn.textContent = "Conferma Prenotazione";
             });
         });
     </script>
