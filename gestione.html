@@ -105,14 +105,23 @@
         .btn-pdf { background-color: var(--primary); color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(107, 144, 128, 0.2); }
         .btn-pdf:hover { background-color: var(--primary-dark); }
 
+        /* Card Stock Interattive e Cliccabili */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.2rem; }
-        .stat-card { background: var(--card-bg); padding: 1.2rem; border-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); text-align: center; border: 2px solid var(--border-color); border-bottom: 5px solid var(--primary); position: relative; }
+        .stat-card { 
+            background: var(--card-bg); padding: 1.2rem; border-radius: 18px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); text-align: center; 
+            border: 2px solid var(--border-color); border-bottom: 5px solid var(--primary); 
+            position: relative; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(107,144,128,0.15); }
+        .stat-card.active-filter { border-color: var(--primary); background-color: var(--accent-light); }
         .stat-card.pandoro { border-bottom-color: var(--accent-soft); }
         .stat-title { font-size: 0.95rem; color: var(--text-muted); font-weight: 700; font-family: 'Quicksand', sans-serif; text-transform: uppercase; }
         .stat-value { font-size: 2rem; font-weight: 800; color: var(--text-main); margin: 0.4rem 0; }
         .stat-detail { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
         
-        .stock-edit-btn { background: var(--accent-light); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; font-weight: bold; margin-top: 8px; display: inline-block; color: var(--primary-dark); }
+        .stock-edit-btn { background: var(--card-bg); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; font-weight: bold; margin-top: 8px; display: inline-block; color: var(--primary-dark); }
+        .reset-filter-btn { display: none; background: #edf2f0; border: 1px solid var(--border-color); padding: 0.4rem 0.8rem; border-radius: 10px; font-size: 0.8rem; font-weight: bold; cursor: pointer; color: var(--primary-dark); margin-left: 10px; }
 
         .status-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-bottom: 1.5rem; }
         @media screen and (max-width: 600px) {
@@ -165,7 +174,6 @@
         .status-consegnato { background-color: #edf7ed; color: #2e7d32; }
         .status-annullato { background-color: #f1f3f5; color: #718096; }
 
-        /* Badge colorati specifici per le categorie dei Log */
         .log-badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; display: inline-block; font-family: 'Quicksand', sans-serif; text-transform: uppercase; }
         .log-inserimento { background-color: #e8f5e9; color: #2e7d32; }
         .log-modifica { background-color: #fff8e1; color: #b7791f; }
@@ -267,28 +275,31 @@
         <!-- Dashboard -->
         <div id="view-dashboard" class="view active">
             <div class="dashboard-header-actions">
-                <h3 style="color: var(--text-main); font-size: 1.1rem; margin: 0; font-family: 'Quicksand', sans-serif;">Panoramica Generale</h3>
+                <div>
+                    <h3 style="color: var(--text-main); font-size: 1.1rem; margin: 0; font-family: 'Quicksand', sans-serif; display: inline-block;">Panoramica Generale</h3>
+                    <button id="btnResetProdFilter" class="reset-filter-btn" onclick="selezionaFiltroProdotto('TUTTI')">🔄 Mostra Tutti i Prodotti</button>
+                </div>
                 <button class="btn-pdf" onclick="esportaPDF()">📄 Scarica Report PDF</button>
             </div>
 
             <div id="pdfContent" style="padding: 5px; background: transparent;">
                 <div id="alertContainer"></div>
                 <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-title">Panettoni</div>
+                    <div class="stat-card" id="cardStockPanettoni" onclick="selezionaFiltroProdotto('PANETTONI')">
+                        <div class="stat-title">🥮 Stock Panettoni</div>
                         <div class="stat-value" id="valPanettoni">0</div>
                         <div class="stat-detail" id="rimanenzePanettoni">Rimanenze: 0</div>
-                        <button class="stock-edit-btn" onclick="apriModaleStock('Panettoni')">✏️ Modifica Stock</button>
+                        <button class="stock-edit-btn" onclick="event.stopPropagation(); apriModaleStock('Panettoni')">✏️ Modifica Stock</button>
                     </div>
-                    <div class="stat-card pandoro">
-                        <div class="stat-title">Pandori</div>
+                    <div class="stat-card pandoro" id="cardStockPandori" onclick="selezionaFiltroProdotto('PANDORI')">
+                        <div class="stat-title">🍞 Stock Pandori</div>
                         <div class="stat-value" id="valPandori">0</div>
                         <div class="stat-detail" id="rimanenzePandori">Rimanenze: 0</div>
-                        <button class="stock-edit-btn" onclick="apriModaleStock('Pandori')">✏️ Modifica Stock</button>
+                        <button class="stock-edit-btn" onclick="event.stopPropagation(); apriModaleStock('Pandori')">✏️ Modifica Stock</button>
                     </div>
                 </div>
 
-                <h3 style="color: var(--text-main); font-size: 1.1rem; margin-bottom: 0.8rem; font-family: 'Quicksand', sans-serif;">Stato Ordini</h3>
+                <h3 style="color: var(--text-main); font-size: 1.1rem; margin-bottom: 0.8rem; font-family: 'Quicksand', sans-serif;">Stato Ordini <span id="labelFiltroProdotto" style="font-size:0.85rem; color:var(--text-muted); font-weight:normal;"></span></h3>
                 <div class="status-summary-grid">
                     <div class="status-summary-card card-prenotato" onclick="navigaVersoFiltro('Prenotato')">
                         <div class="status-summary-title">Prenotati</div>
@@ -380,7 +391,7 @@
             </div>
         </div>
 
-        <!-- Log / Attività (Solo Administrator) con Filtro Categoria e Ricerca -->
+        <!-- Log / Attività (Solo Administrator) -->
         <div id="view-log" class="view">
             <div class="controls-panel">
                 <input type="text" id="searchLog" class="search-input" placeholder="🔍 Cerca nei log (es. azionamento, utente, parola chiave)..." onkeyup="filtraLog()">
@@ -437,10 +448,37 @@
                 <option value="Consegnato">Consegnato</option>
                 <option value="Annullato">Annullato</option>
             </select>
+            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Metodo di Pagamento</label>
+            <select id="edit-metodo-pagamento">
+                <option value="-">Non specificato</option>
+                <option value="Cash">Cash / Contanti</option>
+                <option value="Bonifico">Bonifico</option>
+                <option value="POS">POS / Carta</option>
+            </select>
             <input type="hidden" id="edit-row">
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="chiudiModale('edit-modal')">Annulla</button>
                 <button class="btn-save" onclick="salvaModificaOrdine()">Salva</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale Rapida Registrazione Saldo e Metodo Pagamento -->
+    <div id="pay-modal" class="modal">
+        <div class="modal-content">
+            <h3>Registra Saldo Ordine</h3>
+            <p style="font-size:0.88rem; color:var(--text-muted);">Seleziona il metodo di pagamento utilizzato dal cliente:</p>
+            <select id="pay-method-select">
+                <option value="Cash">💶 Cash / Contanti</option>
+                <option value="Bonifico">🏦 Bonifico</option>
+                <option value="POS">💳 POS / Carta</option>
+            </select>
+            <input type="hidden" id="pay-row">
+            <input type="hidden" id="pay-pan">
+            <input type="hidden" id="pay-pand">
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="chiudiModale('pay-modal')">Annulla</button>
+                <button class="btn-save" onclick="confermaSaldoRapido()">Conferma Saldo</button>
             </div>
         </div>
     </div>
@@ -483,7 +521,7 @@
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxX62PXj7nrrHyv2xI3g2TxPnxw6Db2I2W_x-5mEghc_8dHQvUiIGvwm4PTmY8RIQy0Vw/exec'; 
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzoGbrpG7_-K39T9qu6ic0nGNHFqQwEgULVc4IKwv0jdDA2MCSf-OErOJE1ChdnRc2Wng/exec'; 
         let datiGlobali = [];
         let utentiGlobali = [];
         let logsGlobali = [];
@@ -494,6 +532,7 @@
         let currentRole = "";
         let filtroStatoAttuale = "Tutti";
         let filtroLogCatAttuale = "Tutti";
+        let filtroProdottoAttuale = "TUTTI"; // "TUTTI", "PANETTONI", "PANDORI"
 
         window.addEventListener('DOMContentLoaded', () => {
             const sessionUser = sessionStorage.getItem('wonderlad_active_user') || localStorage.getItem('wonderlad_user');
@@ -618,6 +657,34 @@
             btnElement.classList.add('active');
         }
 
+        function selezionaFiltroProdotto(prodotto) {
+            filtroProdottoAttuale = prodotto;
+            
+            const cardPan = document.getElementById('cardStockPanettoni');
+            const cardPand = document.getElementById('cardStockPandori');
+            const resetBtn = document.getElementById('btnResetProdFilter');
+            const labelFilter = document.getElementById('labelFiltroProdotto');
+
+            cardPan.classList.remove('active-filter');
+            cardPand.classList.remove('active-filter');
+
+            if (prodotto === 'PANETTONI') {
+                cardPan.classList.add('active-filter');
+                resetBtn.style.display = 'inline-block';
+                labelFilter.textContent = '(Solo Panettoni)';
+            } else if (prodotto === 'PANDORI') {
+                cardPand.classList.add('active-filter');
+                resetBtn.style.display = 'inline-block';
+                labelFilter.textContent = '(Solo Pandori)';
+            } else {
+                resetBtn.style.display = 'none';
+                labelFilter.textContent = '';
+            }
+
+            calcolaStatistiche(datiGlobali, impostazioniGlobali);
+            filtraOrdini();
+        }
+
         function navigaVersoFiltro(stato) {
             filtroStatoAttuale = stato;
             
@@ -705,6 +772,8 @@
                 const tr = document.createElement('tr');
                 tr.setAttribute('data-nome', (ordine.Nome + " " + ordine.Cognome + " " + ordine.Telefono).toLowerCase());
                 tr.setAttribute('data-stato', ordine.Status || "");
+                tr.setAttribute('data-panettoni', ordine.Panettoni || 0);
+                tr.setAttribute('data-pandori', ordine.Pandori || 0);
                 
                 colonneOriginali.forEach(col => {
                     if(col !== "rowNumber" && col.trim() !== "") {
@@ -736,14 +805,14 @@
                 const currentStatus = ordine.Status || 'Prenotato';
                 let nextStatusBtn = '';
                 if(currentStatus.includes('Da Pagare')) {
-                    nextStatusBtn = `<button class="btn-quick-status" onclick="cambiaStatoRapido(${ordine.rowNumber}, ${ordine.Panettoni || 0}, ${ordine.Pandori || 0}, 'Prenotato - Pagato')">✅ Pagato</button>`;
+                    nextStatusBtn = `<button class="btn-quick-status" onclick="apriModaleSaldoRapido(${ordine.rowNumber}, ${ordine.Panettoni || 0}, ${ordine.Pandori || 0})">✅ Pagato</button>`;
                 } else if(currentStatus.includes('Da Consegnare') || currentStatus.includes('In Preparazione')) {
-                    nextStatusBtn = `<button class="btn-quick-status" onclick="cambiaStatoRapido(${ordine.rowNumber}, ${ordine.Panettoni || 0}, ${ordine.Pandori || 0}, 'Consegnato')">✅ Consegnato</button>`;
+                    nextStatusBtn = `<button class="btn-quick-status" onclick="cambiaStatoRapido(${ordine.rowNumber}, ${ordine.Panettoni || 0}, ${ordine.Pandori || 0}, 'Consegnato', '${ordine["Metodo Pagamento"] || "-"}')">✅ Consegnato</button>`;
                 }
 
                 const tdAzioni = document.createElement('td');
                 tdAzioni.setAttribute('data-label', 'Azioni');
-                tdAzioni.innerHTML = `${nextStatusBtn}<button class="btn-edit" onclick="apriModaleOrdine(${ordine.rowNumber}, ${ordine.Panettoni || 0}, ${ordine.Pandori || 0}, '${ordine.Status || 'Prenotato'}')">✏️ Modifica</button>`;
+                tdAzioni.innerHTML = `${nextStatusBtn}<button class="btn-edit" onclick="apriModaleOrdine(${ordine.rowNumber}, ${ordine.Panettoni || 0}, ${ordine.Pandori || 0}, '${ordine.Status || 'Prenotato'}', '${ordine["Metodo Pagamento"] || "-"}')">✏️ Modifica</button>`;
                 tr.appendChild(tdAzioni);
                 tbody.appendChild(tr);
             });
@@ -752,11 +821,28 @@
             filtraOrdini();
         }
 
-        function cambiaStatoRapido(rowNumber, panettoni, pandori, nuovoStato) {
+        function apriModaleSaldoRapido(rowNumber, panettoni, pandori) {
+            document.getElementById('pay-row').value = rowNumber;
+            document.getElementById('pay-pan').value = panettoni;
+            document.getElementById('pay-pand').value = pandori;
+            document.getElementById('pay-modal').style.display = 'flex';
+        }
+
+        function confermaSaldoRapido() {
+            const rowNumber = document.getElementById('pay-row').value;
+            const panettoni = document.getElementById('pay-pan').value;
+            const pandori = document.getElementById('pay-pand').value;
+            const metodo = document.getElementById('pay-method-select').value;
+
+            cambiaStatoRapido(rowNumber, panettoni, pandori, 'Prenotato - Pagato', metodo);
+            chiudiModale('pay-modal');
+        }
+
+        function cambiaStatoRapido(rowNumber, panettoni, pandori, nuovoStato, metodoPagamento = "-") {
             fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'update', rowNumber: rowNumber, panettoni: panettoni, pandori: pandori, status: nuovoStato, user: currentUser })
+                body: JSON.stringify({ action: 'update', rowNumber: rowNumber, panettoni: panettoni, pandori: pandori, status: nuovoStato, metodoPagamento: metodoPagamento, user: currentUser })
             })
             .then(res => res.json())
             .then(() => {
@@ -771,11 +857,17 @@
             rows.forEach(tr => {
                 const testo = tr.getAttribute('data-nome') || "";
                 const stato = tr.getAttribute('data-stato') || "";
+                const panettoni = parseInt(tr.getAttribute('data-panettoni')) || 0;
+                const pandori = parseInt(tr.getAttribute('data-pandori')) || 0;
                 
                 const matchTesto = testo.includes(query);
                 const matchFiltro = (filtroStatoAttuale === 'Tutti' || stato.toLowerCase() === filtroStatoAttuale.toLowerCase());
                 
-                if(matchTesto && matchFiltro) {
+                let matchProdotto = true;
+                if (filtroProdottoAttuale === 'PANETTONI') matchProdotto = panettoni > 0;
+                if (filtroProdottoAttuale === 'PANDORI') matchProdotto = pandori > 0;
+
+                if(matchTesto && matchFiltro && matchProdotto) {
                     tr.style.display = '';
                 } else {
                     tr.style.display = 'none';
@@ -891,15 +983,21 @@
             });
         }
 
-        function apriModaleOrdine(row, panettoni, pandori, status) {
+        function apriModaleOrdine(row, panettoni, pandori, status, metodo = "-") {
             document.getElementById('edit-row').value = row;
             document.getElementById('edit-pan').value = panettoni;
             document.getElementById('edit-pan-dori').value = pandori;
             
-            const sel = document.getElementById('edit-status');
-            for(let i=0; i<sel.options.length; i++) {
-                if(sel.options[i].value.toLowerCase() === status.toLowerCase()) { sel.selectedIndex = i; break; }
+            const selStatus = document.getElementById('edit-status');
+            for(let i=0; i<selStatus.options.length; i++) {
+                if(selStatus.options[i].value.toLowerCase() === status.toLowerCase()) { selStatus.selectedIndex = i; break; }
             }
+
+            const selMetodo = document.getElementById('edit-metodo-pagamento');
+            for(let i=0; i<selMetodo.options.length; i++) {
+                if(selMetodo.options[i].value.toLowerCase() === metodo.toLowerCase()) { selMetodo.selectedIndex = i; break; }
+            }
+
             document.getElementById('edit-modal').style.display = 'flex';
         }
 
@@ -955,11 +1053,12 @@
             const panettoni = document.getElementById('edit-pan').value;
             const pandori = document.getElementById('edit-pan-dori').value;
             const status = document.getElementById('edit-status').value;
+            const metodo = document.getElementById('edit-metodo-pagamento').value;
 
             fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'update', rowNumber: row, panettoni: panettoni, pandori: pandori, status: status, user: currentUser })
+                body: JSON.stringify({ action: 'update', rowNumber: row, panettoni: panettoni, pandori: pandori, status: status, metodoPagamento: metodo, user: currentUser })
             })
             .then(res => res.json())
             .then(() => {
@@ -1027,27 +1126,31 @@
                 if(!ordine.Nome && !ordine.Cognome) return;
                 const pan = parseInt(ordine.Panettoni) || 0;
                 const pand = parseInt(ordine.Pandori) || 0;
-                totPanettoni += pan;
-                totPandori += pand;
 
-                const status = (ordine.Status || "").toLowerCase();
+                // Calcolo in base all'eventuale filtro prodotto cliccato
+                if (filtroProdottoAttuale === 'TUTTI' || (filtroProdottoAttuale === 'PANETTONI' && pan > 0) || (filtroProdottoAttuale === 'PANDORI' && pand > 0)) {
+                    totPanettoni += pan;
+                    totPandori += pand;
 
-                const sommaStato = (key) => {
-                    stats[key].count++;
-                    stats[key].pan += pan;
-                    stats[key].pand += pand;
-                };
+                    const status = (ordine.Status || "").toLowerCase();
 
-                if(status === 'prenotato') sommaStato('prenotato');
-                if(status.includes('da pagare')) sommaStato('da_pagare');
-                if(status.includes('pagato')) sommaStato('pagato');
-                if(status.includes('preparazione')) sommaStato('preparazione');
-                if(status.includes('da consegnare')) sommaStato('da_consegnare');
-                if(status.includes('consegnato')) sommaStato('consegnato');
-                if(status.includes('annullato')) sommaStato('annullato');
+                    const sommaStato = (key) => {
+                        stats[key].count++;
+                        stats[key].pan += pan;
+                        stats[key].pand += pand;
+                    };
 
-                if(status.includes('da pagare') && !status.includes('consegnato') && !status.includes('annullato')) {
-                    ordiniDaPagareNonConsegnati++;
+                    if(status === 'prenotato') sommaStato('prenotato');
+                    if(status.includes('da pagare')) sommaStato('da_pagare');
+                    if(status.includes('pagato')) sommaStato('pagato');
+                    if(status.includes('preparazione')) sommaStato('preparazione');
+                    if(status.includes('da consegnare')) sommaStato('da_consegnare');
+                    if(status.includes('consegnato')) sommaStato('consegnato');
+                    if(status.includes('annullato')) sommaStato('annullato');
+
+                    if(status.includes('da pagare') && !status.includes('consegnato') && !status.includes('annullato')) {
+                        ordiniDaPagareNonConsegnati++;
+                    }
                 }
             });
 
@@ -1213,6 +1316,7 @@
                         <td style="padding: 6px; border: 1px solid #e2ece9; font-size: 11px; text-align: center;">${o.Panettoni || 0}</td>
                         <td style="padding: 6px; border: 1px solid #e2ece9; font-size: 11px; text-align: center;">${o.Pandori || 0}</td>
                         <td style="padding: 6px; border: 1px solid #e2ece9; font-size: 10px; font-weight: bold;">${o.Status || 'Prenotato'}</td>
+                        <td style="padding: 6px; border: 1px solid #e2ece9; font-size: 10px;">${o["Metodo Pagamento"] || '-'}</td>
                     </tr>
                 `;
             });
@@ -1231,6 +1335,7 @@
                                 <th style="padding: 7px; border: 1px solid #4d6a5b; text-align: center;">Panettoni</th>
                                 <th style="padding: 7px; border: 1px solid #4d6a5b; text-align: center;">Pandori</th>
                                 <th style="padding: 7px; border: 1px solid #4d6a5b; text-align: left;">Stato</th>
+                                <th style="padding: 7px; border: 1px solid #4d6a5b; text-align: left;">Pagamento</th>
                             </tr>
                         </thead>
                         <tbody>
