@@ -137,7 +137,7 @@
         .badge-status { padding: 5px 10px; border-radius: 8px; font-size: 0.78rem; font-weight: 800; display: inline-block; font-family: 'Quicksand', sans-serif; }
         .status-prenotato { background-color: #f0f8f4; color: var(--header-dark); }
         .status-prenotato-da-pagare { background-color: #fff5f5; color: #c53030; }
-        .status-prenotato-pagare { background-color: #f0fff4; color: #22543d; }
+        .status-prenotato-pagare { background-color: #f0fff4; color: #276749; }
         .status-in-preparazione { background-color: #fffaf0; color: #c05621; }
         .status-da-consegnare { background-color: #ebf8ff; color: #2c5282; }
         .status-consegnato { background-color: #f7fee7; color: #3f6212; }
@@ -159,9 +159,37 @@
             .btn-edit, .btn-delete { width: 48%; padding: 0.8rem; font-size: 0.9rem; margin-top: 0.5rem; }
         }
 
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--header-bg); display: flex; justify-content: space-around; padding: 0.8rem 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.15); z-index: 1000; }
-        .nav-item { background: none; border: none; font-family: 'Quicksand', sans-serif; font-size: 0.85rem; font-weight: 750; color: #a1cb68; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .nav-item.active { color: #ffffff; }
+        /* Footer Chiaro */
+        .bottom-nav { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%; 
+            background: #ffffff; 
+            display: flex; 
+            justify-content: space-around; 
+            padding: 0.8rem 0; 
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.06); 
+            z-index: 1000; 
+            border-top: 1px solid var(--border-color);
+        }
+        .nav-item { 
+            background: none; 
+            border: none; 
+            font-family: 'Quicksand', sans-serif; 
+            font-size: 0.85rem; 
+            font-weight: 750; 
+            color: var(--text-muted); 
+            cursor: pointer; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 4px; 
+            transition: color 0.2s;
+        }
+        .nav-item.active { 
+            color: var(--header-bg); 
+        }
         .nav-icon { font-size: 1.4rem; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 3000; }
@@ -313,7 +341,7 @@
         </div>
     </div>
 
-    <!-- Bottom Navigation Dinamica -->
+    <!-- Bottom Navigation Dinamica con Sfondo Chiaro -->
     <nav class="bottom-nav" id="bottomNav">
         <button class="nav-item active" onclick="switchView('dashboard', this)"><span class="nav-icon">📊</span>Dashboard</button>
         <button class="nav-item" onclick="switchView('ordini', this)"><span class="nav-icon">📋</span>Ordini</button>
