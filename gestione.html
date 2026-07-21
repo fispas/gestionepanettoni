@@ -6,7 +6,6 @@
     <title>Gestione WonderLAD</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;750&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
@@ -109,7 +108,7 @@
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* DASHBOARD RECENTRATA */
+        /* DASHBOARD RECENTRETED */
         .dash-selector-bar {
             display: flex;
             background: #edf3f0;
@@ -205,7 +204,6 @@
         .card-st-pagato .flow-card-title, .card-st-pagato .flow-card-count { color: #276749; }
 
         .alert-box { background-color: #fff5f5; border: 1px solid #f5c6cb; color: #c53030; padding: 0.9rem; border-radius: 16px; margin-bottom: 1.2rem; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; }
-        .chart-container { background: var(--card-bg); padding: 1.2rem; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border: 2px solid var(--border-color); margin-bottom: 1.5rem; }
 
         .controls-panel { background: var(--card-bg); padding: 1.2rem; border-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 2px solid var(--border-color); margin-bottom: 1rem; display: flex; flex-direction: column; gap: 10px; }
         .search-input { width: 100%; padding: 0.8rem 1rem; border: 2px solid var(--border-color); border-radius: 12px; box-sizing: border-box; font-family: 'Nunito'; font-size: 0.95rem; background-color: #fbfdfe; }
@@ -311,10 +309,10 @@
     <div class="container" id="main-container">
         <div id="loadingMsg">Sincronizzazione dati in corso...</div>
 
-        <!-- Dashboard Riprogettata -->
+        <!-- Dashboard Riprogettata Globalmente -->
         <div id="view-dashboard" class="view active">
             
-            <!-- Barra di Switch tra Viste (Globale, Panettoni, Pandori) -->
+            <!-- Barra di Switch tra Viste Macro -->
             <div class="dash-selector-bar">
                 <button class="dash-tab-btn active" id="tabModeTutti" onclick="cambiaVistaDashboard('TUTTI', this)">📊 Vista Globale</button>
                 <button class="dash-tab-btn" id="tabModePanettoni" onclick="cambiaVistaDashboard('PANETTONI', this)">🥮 Focus Panettoni</button>
@@ -322,7 +320,6 @@
             </div>
 
             <div id="pdfContent" style="padding: 5px; background: transparent;">
-                <div id="alertContainer"></div>
 
                 <!-- Schede Stock e Progresso Magazzino -->
                 <div class="stock-section">
@@ -395,8 +392,9 @@
                     </div>
                 </div>
 
-                <!-- Macro Categoria 2: Stato Incassi e Finanze -->
+                <!-- Macro Categoria 2: Stato Incassi e Saldi (Con Alert Integrato) -->
                 <div class="dash-section-title">💶 Stato Incassi & Saldi</div>
+                <div id="alertContainer"></div>
                 <div class="flow-grid">
                     <div class="flow-card card-st-dapagare" onclick="navigaVersoFiltro('Prenotato - Da Pagare')">
                         <div class="flow-card-title">Da Pagare</div>
@@ -411,7 +409,6 @@
                     </div>
                 </div>
 
-                <div class="chart-container"><canvas id="graficoVendite"></canvas></div>
             </div>
 
             <div id="contatoreOrdini">Sessione caricata. Totale righe analizzate: 0</div>
@@ -600,7 +597,6 @@
         let logsGlobali = [];
         let impostazioniGlobali = {};
         let rowCounter = 0;
-        let chartInstance = null;
         let currentUser = ""; 
         let currentRole = "";
         let filtroStatoAttuale = "Tutti";
@@ -1170,18 +1166,17 @@
                 const pan = parseInt(ordine.Panettoni) || 0;
                 const pand = parseInt(ordine.Pandori) || 0;
 
-                totPanettoni += pan;
-                totPandori += pand;
+                // Controllo se l'ordine rientra nel focus selezionato (Globale, Panettoni o Pandori)
+                let corrispondeFocus = true;
+                if (filtroProdottoDashboard === 'PANETTONI' && pan <= 0) corrispondeFocus = false;
+                if (filtroProdottoDashboard === 'PANDORI' && pand <= 0) corrispondeFocus = false;
 
-                const status = (ordine.Status || "").toLowerCase();
+                if (corrispondeFocus) {
+                    totPanettoni += pan;
+                    totPandori += pand;
 
-                // Filtro basato sulla vista attiva (TUTTI, PANETTONI, PANDORI)
-                let includeInStats = false;
-                if (filtroProdottoDashboard === 'TUTTI') includeInStats = true;
-                if (filtroProdottoDashboard === 'PANETTONI' && pan > 0) includeInStats = true;
-                if (filtroProdottoDashboard === 'PANDORI' && pand > 0) includeInStats = true;
+                    const status = (ordine.Status || "").toLowerCase();
 
-                if (includeInStats) {
                     const sommaStato = (key) => {
                         stats[key].count++;
                         stats[key].pan += pan;
@@ -1202,7 +1197,7 @@
                 }
             });
 
-            // Popola contatori flussi e incassi
+            // Popola contatori flussi e incassi coerentemente con il focus
             const impostaBoxFlow = (idCount, idSub, key) => {
                 document.getElementById(idCount).textContent = stats[key].count;
                 document.getElementById(idSub).textContent = `🥮 ${stats[key].pan} | 🍞 ${stats[key].pand}`;
@@ -1216,7 +1211,7 @@
             impostaBoxFlow('countConsegnati', 'subConsegnati', 'consegnato');
             impostaBoxFlow('countAnnullati', 'subAnnullati', 'annullato');
 
-            // Stock e barre di progresso generali
+            // Stock e barre di progresso
             let stockInizialePanettoni = parseInt(impostazioni["Totale Panettoni"]) || 0;
             let stockInizialePandori = parseInt(impostazioni["Totale Pandori"]) || 0;
 
@@ -1232,6 +1227,7 @@
             const percPand = stockInizialePandori > 0 ? Math.min(100, Math.round((totPandori / stockInizialePandori) * 100)) : 0;
             document.getElementById('barPandori').style.width = percPand + '%';
 
+            // Alert spostato nella zona Stato Incassi & Saldi
             const alertContainer = document.getElementById('alertContainer');
             if(ordiniDaPagareNonConsegnati > 0) {
                 alertContainer.innerHTML = `
@@ -1243,23 +1239,6 @@
             } else {
                 alertContainer.innerHTML = '';
             }
-
-            aggiornaGrafico(totPanettoni, totPandori);
-        }
-
-        function aggiornaGrafico(panettoni, pandori) {
-            const ctx = document.getElementById('graficoVendite').getContext('2d');
-            if(chartInstance) chartInstance.destroy();
-            chartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: ['Panettoni', 'Pandori'], datasets: [{ label: 'Prenotazioni Totali', data: [panettoni, pandori], backgroundColor: ['#5b8e72', '#94bdad'], borderRadius: 10 }] },
-                options: { 
-                    responsive: true, 
-                    animation: false,
-                    plugins: { legend: { display: false }, title: { display: true, text: 'Confronto Prenotazioni Dolci', font: { family: 'Quicksand', size: 15 } } }, 
-                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
-                }
-            });
         }
 
         function esportaPDF() {
@@ -1270,9 +1249,6 @@
             containerPDF.style.fontFamily = 'Nunito, sans-serif';
             containerPDF.style.backgroundColor = '#ffffff';
             containerPDF.style.color = '#24352c';
-
-            const chartCanvas = document.getElementById('graficoVendite');
-            const chartImageSrc = chartCanvas ? chartCanvas.toDataURL('image/png') : '';
 
             let page1 = `
                 <div style="page-break-after: always; break-after: page;">
@@ -1345,11 +1321,6 @@
                             </tr>
                         </tbody>
                     </table>
-
-                    <h3 style="color: #5b8e72; font-family: Quicksand, sans-serif; margin-bottom: 10px; font-size: 16px;">Andamento Grafico</h3>
-                    <div style="text-align: center;">
-                        ${chartImageSrc ? `<img src="${chartImageSrc}" style="max-width: 100%; height: auto; max-height: 220px;" />` : ''}
-                    </div>
                 </div>
             `;
 
