@@ -4,140 +4,204 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestione WonderLAD</title>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;750&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Libreria per generare il PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        body { font-family: 'Nunito', sans-serif; background-color: #f4f6f8; color: #333; margin: 0; padding: 0; padding-bottom: 80px; }
-        .header { background-color: #e53935; color: white; padding: 1rem; text-align: center; font-weight: 800; font-size: 1.2rem; position: sticky; top: 0; z-index: 100; }
-        .container { padding: 1rem; max-width: 1000px; margin: 0 auto; display: none; } 
+        :root {
+            --primary: #d32f2f;
+            --primary-dark: #b71c1c;
+            --accent: #f57c00;
+            --bg-main: #fcf9f5;
+            --card-bg: #ffffff;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --border-color: #e2e8f0;
+        }
+
+        body { 
+            font-family: 'Nunito', sans-serif; 
+            background-color: var(--bg-main); 
+            color: var(--text-main); 
+            margin: 0; 
+            padding: 0; 
+            padding-bottom: 90px; 
+        }
+
+        .header { 
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark)); 
+            color: white; 
+            padding: 1.2rem 1rem; 
+            text-align: center; 
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 750; 
+            font-size: 1.4rem; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            box-shadow: 0 4px 12px rgba(211, 47, 47, 0.15);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header img {
+            height: 32px;
+            width: auto;
+            border-radius: 4px;
+            background: white;
+            padding: 2px;
+        }
+
+        .container { padding: 1.5rem 1rem; max-width: 1000px; margin: 0 auto; display: none; } 
         
-        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f4f6f8; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; }
-        .login-box { background: white; padding: 2.5rem 2rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; border-top: 8px solid #e53935; width: 90%; max-width: 350px; box-sizing: border-box; }
-        .login-box input[type="text"], .login-box input[type="password"] { padding: 1rem; margin-bottom: 1rem; width: 100%; box-sizing: border-box; border: 2px solid #e9ecef; border-radius: 10px; font-family: 'Nunito'; font-size: 1rem; background-color: #f8f9fa; }
-        .remember-container { display: flex; align-items: center; gap: 8px; margin-bottom: 1.2rem; font-size: 0.9rem; color: #495057; text-align: left; cursor: pointer; }
-        .remember-container input { width: 18px; height: 18px; accent-color: #e53935; cursor: pointer; }
-        .login-box button { background-color: #e53935; color: white; border: none; padding: 1rem; width: 100%; border-radius: 10px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+        #login-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: var(--bg-main); 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; 
+        }
+        .login-box { 
+            background: var(--card-bg); padding: 2.5rem 2rem; border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06); text-align: center; 
+            border-top: 8px solid var(--primary); width: 90%; max-width: 360px; box-sizing: border-box; 
+        }
+        .login-box h2 { font-family: 'Quicksand', sans-serif; color: var(--primary-dark); margin-top: 0; }
+        .login-box input[type="text"], .login-box input[type="password"] { 
+            padding: 0.9rem 1rem; margin-bottom: 1rem; width: 100%; box-sizing: border-box; 
+            border: 2px solid var(--border-color); border-radius: 12px; font-family: 'Nunito'; font-size: 1rem; background-color: #f7fafc; 
+        }
+        .login-box input:focus { border-color: var(--accent); outline: none; background: #fff; }
+        .remember-container { display: flex; align-items: center; gap: 8px; margin-bottom: 1.2rem; font-size: 0.9rem; color: var(--text-muted); text-align: left; cursor: pointer; }
+        .remember-container input { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+        .login-box button { background-color: var(--primary); color: white; border: none; padding: 1rem; width: 100%; border-radius: 12px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: background 0.2s; }
+        .login-box button:hover { background-color: var(--primary-dark); }
 
         .view { display: none; animation: fadeIn 0.3s; }
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .dashboard-header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-        .btn-pdf { background-color: #3498db; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2); }
-        .btn-pdf:hover { background-color: #2980b9; }
+        .dashboard-header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; }
+        .btn-pdf { background-color: #2b6cb0; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(43, 108, 176, 0.2); transition: transform 0.1s; }
+        .btn-pdf:hover { background-color: #2c5282; transform: translateY(-1px); }
 
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
-        .stat-card { background: white; padding: 1rem; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; border-bottom: 4px solid #e53935; position: relative; }
-        .stat-card.pandoro { border-bottom-color: #fbbc05; }
-        .stat-title { font-size: 0.9rem; color: #7f8c8d; font-weight: 700; }
-        .stat-value { font-size: 1.8rem; font-weight: 800; color: #2c3e50; margin: 0.5rem 0; }
-        .stat-detail { font-size: 0.8rem; color: #95a5a6; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.2rem; }
+        .stat-card { background: var(--card-bg); padding: 1.2rem; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); text-align: center; border-bottom: 5px solid var(--primary); position: relative; }
+        .stat-card.pandoro { border-bottom-color: var(--accent); }
+        .stat-title { font-size: 0.95rem; color: var(--text-muted); font-weight: 700; font-family: 'Quicksand', sans-serif; text-transform: uppercase; }
+        .stat-value { font-size: 2rem; font-weight: 800; color: var(--text-main); margin: 0.4rem 0; }
+        .stat-detail { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
         
-        .stock-edit-btn { background: #f8f9fa; border: 1px solid #ced4da; padding: 2px 8px; border-radius: 5px; font-size: 0.75rem; cursor: pointer; font-weight: bold; margin-top: 5px; display: inline-block; color: #495057; }
-        .stock-edit-btn:hover { background: #e9ecef; }
+        .stock-edit-btn { background: #edf2f7; border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; font-weight: bold; margin-top: 8px; display: inline-block; color: var(--text-main); transition: background 0.2s; }
+        .stock-edit-btn:hover { background: #e2e8f0; }
 
-        /* Box Status Cliccabili in Dashboard con Colori Coordinati */
+        /* Box Status Cliccabili in Dashboard */
         .status-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-bottom: 1.5rem; }
         @media screen and (max-width: 600px) {
             .status-summary-grid { grid-template-columns: repeat(2, 1fr); }
         }
-        .status-summary-card { padding: 1rem 0.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); text-align: center; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; border: 2px solid transparent; }
-        .status-summary-card:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.08); filter: brightness(0.95); }
-        .status-summary-title { font-size: 0.75rem; font-weight: 800; margin-bottom: 0.3rem; text-transform: uppercase; }
-        .status-summary-count { font-size: 1.4rem; font-weight: 800; }
+        .status-summary-card { padding: 1rem 0.5rem; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); text-align: center; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; border: 2px solid transparent; }
+        .status-summary-card:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.07); filter: brightness(0.97); }
+        .status-summary-title { font-size: 0.75rem; font-weight: 800; margin-bottom: 0.3rem; text-transform: uppercase; font-family: 'Quicksand', sans-serif; }
+        .status-summary-count { font-size: 1.5rem; font-weight: 800; }
 
-        .card-prenotato { background-color: #e7f5ff; border-color: #74c0fc; }
-        .card-prenotato .status-summary-title, .card-prenotato .status-summary-count { color: #1971c2; }
-        .card-da-pagare { background-color: #ffe3e3; border-color: #ffa8a8; }
-        .card-da-pagare .status-summary-title, .card-da-pagare .status-summary-count { color: #c92a2a; }
-        .card-pagato { background-color: #e6fcf5; border-color: #63e6be; }
-        .card-pagato .status-summary-title, .card-pagato .status-summary-count { color: #0ca678; }
-        .card-preparazione { background-color: #fff3bf; border-color: #ffec99; }
-        .card-preparazione .status-summary-title, .card-preparazione .status-summary-count { color: #f59f00; }
-        .card-da-consegnare { background-color: #e3fafc; border-color: #66d9e8; }
-        .card-da-consegnare .status-summary-title, .card-da-consegnare .status-summary-count { color: #0b7285; }
-        .card-consegnato { background-color: #d8f5a2; border-color: #b2f2bb; }
-        .card-consegnato .status-summary-title, .card-consegnato .status-summary-count { color: #5c940d; }
-        .card-annullato { background-color: #f1f3f5; border-color: #dee2e6; grid-column: span 3; }
-        .card-annullato .status-summary-title, .card-annullato .status-summary-count { color: #868e96; }
+        .card-prenotato { background-color: #ebf8ff; border-color: #bee3f8; }
+        .card-prenotato .status-summary-title, .card-prenotato .status-summary-count { color: #2b6cb0; }
+        .card-da-pagare { background-color: #fff5f5; border-color: #fed7d7; }
+        .card-da-pagare .status-summary-title, .card-da-pagare .status-summary-count { color: #c53030; }
+        .card-pagato { background-color: #f0fff4; border-color: #c6f6d5; }
+        .card-pagato .status-summary-title, .card-pagato .status-summary-count { color: #22543d; }
+        .card-preparazione { background-color: #fffaf0; border-color: #feebc8; }
+        .card-preparazione .status-summary-title, .card-preparazione .status-summary-count { color: #c05621; }
+        .card-da-consegnare { background-color: #e6fffa; border-color: #b2f5ea; }
+        .card-da-consegnare .status-summary-title, .card-da-consegnare .status-summary-count { color: #234e52; }
+        .card-consegnato { background-color: #f7fee7; border-color: #d9f99d; }
+        .card-consegnato .status-summary-title, .card-consegnato .status-summary-count { color: #3f6212; }
+        .card-annullato { background-color: #f7fafc; border-color: #e2e8f0; grid-column: span 3; }
+        .card-annullato .status-summary-title, .card-annullato .status-summary-count { color: #4a5568; }
 
-        .alert-box { background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
-        .chart-container { background: white; padding: 1rem; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
+        .alert-box { background-color: #fffaf0; border: 1px solid #feebc8; color: #744210; padding: 1rem; border-radius: 14px; margin-bottom: 1.5rem; font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .chart-container { background: var(--card-bg); padding: 1.2rem; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 1.5rem; }
 
-        .controls-panel { background: white; padding: 1rem; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 1rem; display: flex; flex-direction: column; gap: 10px; }
-        .search-input { width: 100%; padding: 0.7rem 1rem; border: 2px solid #e9ecef; border-radius: 10px; box-sizing: border-box; font-family: 'Nunito'; font-size: 0.95rem; background-color: #f8f9fa; }
-        .search-input:focus { outline: none; border-color: #e53935; background-color: #fff; }
+        .controls-panel { background: var(--card-bg); padding: 1.2rem; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 1rem; display: flex; flex-direction: column; gap: 10px; }
+        .search-input { width: 100%; padding: 0.8rem 1rem; border: 2px solid var(--border-color); border-radius: 12px; box-sizing: border-box; font-family: 'Nunito'; font-size: 0.95rem; background-color: #f7fafc; }
+        .search-input:focus { outline: none; border-color: var(--primary); background-color: #fff; }
         
         .filter-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 5px; }
-        .chip { background: #f1f3f5; border: none; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; color: #495057; cursor: pointer; white-space: nowrap; }
-        .chip.active { background: #e53935; color: white; }
+        .chip { background: #edf2f7; border: none; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; color: #4a5568; cursor: pointer; white-space: nowrap; transition: background 0.2s; }
+        .chip.active { background: var(--primary); color: white; }
 
         .table-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-        .btn-action { background-color: #2ecc71; color: white; border: none; padding: 0.7rem 1rem; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
-        .btn-edit { background-color: #f39c12; color: white; border: none; padding: 0.5rem; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
-        .btn-delete { background-color: #e74c3c; color: white; border: none; padding: 0.5rem; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-left: 5px; }
+        .btn-action { background-color: #38a169; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(56, 161, 105, 0.2); }
+        .btn-edit { background-color: #d69e2e; color: white; border: none; padding: 0.5rem 0.8rem; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
+        .btn-delete { background-color: #e53e3e; color: white; border: none; padding: 0.5rem 0.8rem; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-left: 5px; }
         
-        .badge-status { padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; display: inline-block; }
-        .status-prenotato { background-color: #e7f5ff; color: #1971c2; }
-        .status-prenotato-da-pagare { background-color: #ffe3e3; color: #c92a2a; }
-        .status-prenotato-pagare { background-color: #e6fcf5; color: #0ca678; }
-        .status-in-preparazione { background-color: #fff3bf; color: #f59f00; }
-        .status-da-consegnare { background-color: #e3fafc; color: #0b7285; }
-        .status-consegnato { background-color: #d8f5a2; color: #5c940d; }
-        .status-annullato { background-color: #f1f3f5; color: #868e96; }
+        /* Badge Status Tabella */
+        .badge-status { padding: 5px 10px; border-radius: 8px; font-size: 0.78rem; font-weight: 800; display: inline-block; font-family: 'Quicksand', sans-serif; }
+        .status-prenotato { background-color: #ebf8ff; color: #2b6cb0; }
+        .status-prenotato-da-pagare { background-color: #fff5f5; color: #c53030; }
+        .status-prenotato-pagare { background-color: #f0fff4; color: #22543d; }
+        .status-in-preparazione { background-color: #fffaf0; color: #c05621; }
+        .status-da-consegnare { background-color: #e6fffa; color: #234e52; }
+        .status-consegnato { background-color: #f7fee7; color: #3f6212; }
+        .status-annullato { background-color: #f7fafc; color: #4a5568; }
 
         .table-responsive { width: 100%; background: transparent; margin-bottom: 1rem; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e9ecef; font-size: 0.9rem; }
-        th { background-color: #f8f9fa; color: #2c3e50; font-weight: 800; white-space: nowrap; }
+        table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.04); }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
+        th { background-color: #f7fafc; color: var(--text-main); font-weight: 800; font-family: 'Quicksand', sans-serif; white-space: nowrap; }
 
         @media screen and (max-width: 768px) {
             table, thead, tbody, th, td, tr { display: block; }
             table { background: transparent; box-shadow: none; }
             thead tr { display: none; }
-            tr { background: white; margin-bottom: 1rem; border-radius: 15px; padding: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e9ecef; }
-            td { border: none; border-bottom: 1px solid #f4f6f8; position: relative; display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; text-align: right; }
-            td::before { content: attr(data-label); font-weight: 800; color: #7f8c8d; text-align: left; padding-right: 15px; flex-shrink: 0; }
+            tr { background: var(--card-bg); margin-bottom: 1rem; border-radius: 16px; padding: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.04); border: 1px solid var(--border-color); }
+            td { border: none; border-bottom: 1px solid #edf2f7; position: relative; display: flex; justify-content: space-between; align-items: center; padding: 0.7rem; text-align: right; }
+            td::before { content: attr(data-label); font-weight: 800; color: var(--text-muted); text-align: left; padding-right: 15px; flex-shrink: 0; font-family: 'Quicksand', sans-serif; }
             td:last-child { border-bottom: none; justify-content: flex-end; }
             .btn-edit, .btn-delete { width: 48%; padding: 0.8rem; font-size: 0.9rem; margin-top: 0.5rem; }
         }
 
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 0.8rem 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.05); z-index: 1000; }
-        .nav-item { background: none; border: none; font-family: 'Nunito', sans-serif; font-size: 0.9rem; font-weight: 700; color: #95a5a6; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        .nav-item.active { color: #e53935; }
-        .nav-icon { font-size: 1.5rem; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg); display: flex; justify-content: space-around; padding: 0.8rem 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.05); z-index: 1000; }
+        .nav-item { background: none; border: none; font-family: 'Quicksand', sans-serif; font-size: 0.85rem; font-weight: 750; color: var(--text-muted); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: color 0.2s; }
+        .nav-item.active { color: var(--primary); }
+        .nav-icon { font-size: 1.4rem; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 3000; }
-        .modal-content { background: white; padding: 2rem; border-radius: 15px; width: 90%; max-width: 400px; box-sizing: border-box; }
-        .modal-content input, .modal-content select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 2px solid #e9ecef; border-radius: 10px; box-sizing: border-box; font-family: 'Nunito'; }
+        .modal-content { background: var(--card-bg); padding: 2rem; border-radius: 20px; width: 90%; max-width: 400px; box-sizing: border-box; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+        .modal-content h3 { font-family: 'Quicksand', sans-serif; color: var(--primary-dark); }
+        .modal-content input, .modal-content select { width: 100%; padding: 0.9rem; margin-bottom: 1rem; border: 2px solid var(--border-color); border-radius: 12px; box-sizing: border-box; font-family: 'Nunito'; }
         .modal-actions { display: flex; justify-content: space-between; gap: 1rem; }
-        .btn-save { background-color: #2ecc71; color: white; border: none; padding: 0.8rem; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; }
-        .btn-cancel { background-color: #e74c3c; color: white; border: none; padding: 0.8rem; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; }
+        .btn-save { background-color: #38a169; color: white; border: none; padding: 0.9rem; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; }
+        .btn-cancel { background-color: #e53e3e; color: white; border: none; padding: 0.9rem; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; }
 
-        #contatoreOrdini { font-size: 0.9em; color: #95a5a6; font-weight: 700; text-align: center; margin: 1rem 0; }
-        #loadingMsg { font-weight: bold; color: #3498db; text-align: center; margin: 2rem 0; }
-        .test-btn { background-color: transparent; color: #adb5bd; border: 2px dashed #dee2e6; margin-top: 1rem; width: 100%; padding: 0.8rem; border-radius: 10px; font-family: 'Nunito'; font-weight: 700; cursor: pointer; }
+        #contatoreOrdini { font-size: 0.85em; color: var(--text-muted); font-weight: 700; text-align: center; margin: 1rem 0; font-family: 'Quicksand', sans-serif; }
+        #loadingMsg { font-weight: bold; color: var(--primary); text-align: center; margin: 2rem 0; font-family: 'Quicksand', sans-serif; }
+        .test-btn { background-color: transparent; color: var(--text-muted); border: 2px dashed var(--border-color); margin-top: 1rem; width: 100%; padding: 0.8rem; border-radius: 12px; font-family: 'Quicksand', sans-serif; font-weight: 700; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="login-overlay">
         <div class="login-box">
-            <h2 style="margin-top: 0; color: #2c3e50;">Area Riservata</h2>
+            <h2>WonderLAD</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Accesso Area Riservata</p>
             <input type="text" id="username" placeholder="Username">
             <input type="password" id="passcode" placeholder="Password">
             <label class="remember-container">
                 <input type="checkbox" id="rememberMe"> Ricorda credenziali
             </label>
             <button onclick="effettuaLogin()" id="btn-login">Accedi</button>
-            <p id="login-err" style="color:#e74c3c; display:none; font-size:0.9rem; font-weight: bold; margin-top: 1rem;">Credenziali errate</p>
+            <p id="login-err" style="color:#e53e3e; display:none; font-size:0.9rem; font-weight: bold; margin-top: 1rem;">Credenziali errate</p>
         </div>
     </div>
 
-    <div class="header">Pannello WonderLAD <span id="user-badge" style="font-size: 0.8rem; font-weight: normal; opacity: 0.8;"></span></div>
+    <div class="header">
+        <img src="https://www.wonderlad.org/wp-content/uploads/2020/05/logo-wonderlad.png" alt="WonderLAD Logo" onerror="this.style.display='none'">
+        Gestione Panettoni & Pandori
+        <span id="user-badge" style="font-size: 0.75rem; font-weight: normal; opacity: 0.9; margin-left: 10px; background: rgba(0,0,0,0.15); padding: 3px 8px; border-radius: 6px;"></span>
+    </div>
 
     <div class="container" id="main-container">
         <div id="loadingMsg">Sincronizzazione dati in corso...</div>
@@ -145,12 +209,12 @@
         <!-- Dashboard -->
         <div id="view-dashboard" class="view active">
             <div class="dashboard-header-actions">
-                <h3 style="color: #2c3e50; font-size: 1.1rem; margin: 0;">Panoramica Generale</h3>
-                <button class="btn-pdf" onclick="esportaPDF()">📄 Esporta PDF</button>
+                <h3 style="color: var(--text-main); font-size: 1.1rem; margin: 0; font-family: 'Quicksand', sans-serif;">Panoramica Generale</h3>
+                <button class="btn-pdf" onclick="esportaPDF()">📄 Scarica Report PDF</button>
             </div>
 
-            <!-- Area che verrà convertita in PDF -->
-            <div id="pdfContent">
+            <!-- Area Completa per il Report PDF -->
+            <div id="pdfContent" style="padding: 5px; background: transparent;">
                 <div id="alertContainer"></div>
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -167,7 +231,7 @@
                     </div>
                 </div>
 
-                <h3 style="color: #2c3e50; font-size: 1.1rem; margin-bottom: 0.8rem;">Stato Ordini</h3>
+                <h3 style="color: var(--text-main); font-size: 1.1rem; margin-bottom: 0.8rem; font-family: 'Quicksand', sans-serif;">Stato Ordini</h3>
                 <div class="status-summary-grid">
                     <div class="status-summary-card card-prenotato" onclick="navigaVersoFiltro('Prenotato')">
                         <div class="status-summary-title">Prenotati</div>
@@ -222,8 +286,8 @@
                 </div>
             </div>
             <div class="table-controls">
-                <h3 style="margin: 0; color: #2c3e50;">Lista Ordini</h3>
-                <button class="btn-action" onclick="esportaExcel()">📥 Export</button>
+                <h3 style="margin: 0; color: var(--text-main); font-family: 'Quicksand', sans-serif;">Lista Ordini</h3>
+                <button class="btn-action" onclick="esportaExcel()">📥 Export Excel</button>
             </div>
             <div class="table-responsive">
                 <table id="tabellaOrdini" style="display:none;">
@@ -239,7 +303,7 @@
                 <input type="text" id="searchUtenti" class="search-input" placeholder="🔍 Cerca utente..." onkeyup="filtraUtenti()">
             </div>
             <div class="table-controls">
-                <h3 style="margin: 0; color: #2c3e50;">Gestione Utenti</h3>
+                <h3 style="margin: 0; color: var(--text-main); font-family: 'Quicksand', sans-serif;">Gestione Utenti</h3>
                 <button class="btn-action" onclick="apriModaleUtente('add')">➕ Nuovo Utente</button>
             </div>
             <div class="table-responsive">
@@ -262,12 +326,12 @@
     <!-- Modale Modifica Ordine -->
     <div id="edit-modal" class="modal">
         <div class="modal-content">
-            <h3 style="margin-top:0;">Modifica Ordine</h3>
-            <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Panettoni</label>
+            <h3>Modifica Ordine</h3>
+            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Panettoni</label>
             <input type="number" id="edit-pan" min="0">
-            <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Pandori</label>
+            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Pandori</label>
             <input type="number" id="edit-pan-dori" min="0">
-            <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Status e Pagamento</label>
+            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Status e Pagamento</label>
             <select id="edit-status">
                 <option value="Prenotato">Prenotato</option>
                 <option value="Prenotato - Da Pagare">Prenotato - Da Pagare</option>
@@ -288,10 +352,10 @@
     <!-- Modale Modifica Stock Iniziale -->
     <div id="stock-modal" class="modal">
         <div class="modal-content">
-            <h3 style="margin-top:0;" id="stock-modal-title">Modifica Stock</h3>
-            <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Totale Panettoni</label>
+            <h3 id="stock-modal-title">Modifica Stock</h3>
+            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Totale Panettoni</label>
             <input type="number" id="input-tot-pan" min="0">
-            <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Totale Pandori</label>
+            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Totale Pandori</label>
             <input type="number" id="input-tot-pand" min="0">
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="chiudiModale('stock-modal')">Annulla</button>
@@ -303,12 +367,12 @@
     <!-- Modale Gestione Utenti -->
     <div id="user-modal" class="modal">
         <div class="modal-content">
-            <h3 id="user-modal-title" style="margin-top:0;">Nuovo Utente</h3>
-            <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Username</label>
+            <h3 id="user-modal-title">Nuovo Utente</h3>
+            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Username</label>
             <input type="text" id="modal-username">
-            <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Password</label>
+            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Password</label>
             <input type="text" id="modal-password" placeholder="Inserisci o resetta password">
-            <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Ruolo</label>
+            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Ruolo</label>
             <select id="modal-role">
                 <option value="Manager">Manager</option>
                 <option value="Administrator">Administrator</option>
@@ -750,21 +814,40 @@
             if(chartInstance) chartInstance.destroy();
             chartInstance = new Chart(ctx, {
                 type: 'bar',
-                data: { labels: ['Panettoni', 'Pandori'], datasets: [{ label: 'Prenotazioni', data: [panettoni, pandori], backgroundColor: ['#e53935', '#fbbc05'], borderRadius: 8 }] },
-                options: { responsive: true, plugins: { legend: { display: false }, title: { display: true, text: 'Andamento Prenotazioni', font: { family: 'Nunito', size: 16 } } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+                data: { labels: ['Panettoni', 'Pandori'], datasets: [{ label: 'Prenotazioni', data: [panettoni, pandori], backgroundColor: ['#d32f2f', '#f57c00'], borderRadius: 8 }] },
+                options: { responsive: true, plugins: { legend: { display: false }, title: { display: true, text: 'Andamento Prenotazioni', font: { family: 'Quicksand', size: 16 } } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
             });
         }
 
         function esportaPDF() {
             const element = document.getElementById('pdfContent');
+            
+            // Crea un contenitore temporaneo formattato pulito per la stampa del PDF
+            const containerPDF = document.createElement('div');
+            containerPDF.style.padding = '20px';
+            containerPDF.style.fontFamily = 'Nunito, sans-serif';
+            containerPDF.style.backgroundColor = '#ffffff';
+            containerPDF.style.color = '#2d3748';
+
+            // Intestazione formale del Report Onlus
+            const headerHTML = `
+                <div style="text-align: center; border-bottom: 3px solid #d32f2f; padding-bottom: 15px; margin-bottom: 20px;">
+                    <h2 style="color: #d32f2f; margin: 0; font-family: Quicksand, sans-serif;">WonderLAD Onlus</h2>
+                    <p style="font-size: 14px; color: #718096; margin: 5px 0 0 0;">Report Ufficiale Gestione Panettoni e Pandori - Data: ${new Date().toLocaleDateString('it-IT')}</p>
+                </div>
+            `;
+
+            containerPDF.innerHTML = headerHTML + element.innerHTML;
+
             const opt = {
                 margin:       10,
-                filename:     'Report_WonderLAD.pdf',
+                filename:     `Report_WonderLAD_${new Date().toISOString().slice(0,10)}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
-            html2pdf().from(element).set(opt).save();
+
+            html2pdf().from(containerPDF).set(opt).save();
         }
 
         function esportaExcel() {
@@ -776,7 +859,7 @@
             XLSX.writeFile(wb, "Ordini_WonderLAD.xlsx");
         }
 
-        function eseguiTestLettura() { caricaDati(); }
+        function eseguiTestLettura() { caricaDitesca = caricaDati(); }
     </script>
 </body>
 </html>
