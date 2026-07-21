@@ -10,15 +10,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
-            --primary: #6b9080;
-            --primary-dark: #4d6a5b;
-            --accent-soft: #a4c3b2;
+            --primary: #5b8e72;
+            --primary-dark: #3a6250;
+            --accent-soft: #94bdad;
             --accent-light: #eaf4f0;
-            --bg-main: #f6fff8;
+            --bg-main: #f8faf7;
             --card-bg: #ffffff;
-            --text-main: #2c3e35;
-            --text-muted: #6b7c73;
-            --border-color: #e2ece9;
+            --text-main: #24352c;
+            --text-muted: #62756d;
+            --border-color: #e1eae5;
         }
 
         body { 
@@ -41,22 +41,14 @@
             top: 0; 
             z-index: 100; 
             border-bottom: 2px solid var(--border-color);
-            box-shadow: 0 4px 15px rgba(107, 144, 128, 0.05);
+            box-shadow: 0 4px 15px rgba(91, 142, 114, 0.05);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .header-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .header img {
-            height: 34px;
-            width: auto;
-        }
+        .header-brand { display: flex; align-items: center; gap: 12px; }
+        .header img { height: 34px; width: auto; }
 
         .btn-logout {
             background-color: #fff0f0;
@@ -70,11 +62,9 @@
             transition: all 0.2s;
             font-family: 'Quicksand', sans-serif;
         }
-        .btn-logout:hover {
-            background-color: #f8d7da;
-        }
+        .btn-logout:hover { background-color: #f8d7da; }
 
-        .container { padding: 1.5rem 1rem; max-width: 1000px; margin: 0 auto; display: none; } 
+        .container { padding: 1.2rem 1rem; max-width: 1000px; margin: 0 auto; display: none; } 
         
         #login-overlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
@@ -83,7 +73,7 @@
         }
         .login-box { 
             background: var(--card-bg); padding: 2.5rem 2rem; border-radius: 24px; 
-            box-shadow: 0 10px 30px rgba(107,144,128,0.08); text-align: center; 
+            box-shadow: 0 10px 30px rgba(91,142,114,0.08); text-align: center; 
             border: 2px solid var(--border-color); width: 90%; max-width: 360px; box-sizing: border-box; 
         }
         .login-box h2 { font-family: 'Quicksand', sans-serif; color: var(--primary); margin-top: 0; }
@@ -101,55 +91,102 @@
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .dashboard-header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; }
-        .btn-pdf { background-color: var(--primary); color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(107, 144, 128, 0.2); }
-        .btn-pdf:hover { background-color: var(--primary-dark); }
-
-        /* Card Stock Interattive e Cliccabili */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.2rem; }
-        .stat-card { 
-            background: var(--card-bg); padding: 1.2rem; border-radius: 18px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03); text-align: center; 
-            border: 2px solid var(--border-color); border-bottom: 5px solid var(--primary); 
-            position: relative; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+        /* TAB SELECTOR DASHBOARD NOVO */
+        .dash-selector-bar {
+            display: flex;
+            background: #edf3f0;
+            padding: 5px;
+            border-radius: 16px;
+            margin-bottom: 1.2rem;
+            gap: 5px;
+            border: 1px solid var(--border-color);
         }
-        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(107,144,128,0.15); }
-        .stat-card.active-filter { border-color: var(--primary); background-color: var(--accent-light); }
-        .stat-card.pandoro { border-bottom-color: var(--accent-soft); }
-        .stat-title { font-size: 0.95rem; color: var(--text-muted); font-weight: 700; font-family: 'Quicksand', sans-serif; text-transform: uppercase; }
-        .stat-value { font-size: 2rem; font-weight: 800; color: var(--text-main); margin: 0.4rem 0; }
-        .stat-detail { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+        .dash-tab-btn {
+            flex: 1;
+            padding: 0.7rem;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 750;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        .dash-tab-btn.active {
+            background: var(--card-bg);
+            color: var(--primary-dark);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        /* CARD SCORTE CON PROGRESS BAR */
+        .stock-section { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+        @media screen and (max-width: 600px) { .stock-section { grid-template-columns: 1fr; } }
+
+        .stock-card {
+            background: var(--card-bg);
+            padding: 1.2rem;
+            border-radius: 20px;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+            position: relative;
+        }
+        .stock-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .stock-title { font-family: 'Quicksand', sans-serif; font-weight: 750; font-size: 1.05rem; color: var(--text-main); }
+        .stock-numbers { display: flex; align-items: baseline; gap: 8px; margin: 0.4rem 0; }
+        .stock-main-val { font-size: 2.2rem; font-weight: 800; color: var(--primary-dark); }
+        .stock-sub-val { font-size: 0.9rem; color: var(--text-muted); font-weight: 600; }
         
-        .stock-edit-btn { background: var(--card-bg); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; font-weight: bold; margin-top: 8px; display: inline-block; color: var(--primary-dark); }
-        .reset-filter-btn { display: none; background: #edf2f0; border: 1px solid var(--border-color); padding: 0.4rem 0.8rem; border-radius: 10px; font-size: 0.8rem; font-weight: bold; cursor: pointer; color: var(--primary-dark); margin-left: 10px; }
+        .progress-bar-bg { background: #eef4f1; border-radius: 10px; height: 10px; width: 100%; overflow: hidden; margin: 0.6rem 0; }
+        .progress-bar-fill { background: linear-gradient(90deg, var(--accent-soft), var(--primary)); height: 100%; border-radius: 10px; transition: width 0.4s ease; }
+        
+        .stock-footer-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; }
+        .stock-edit-btn { background: #f0f6f3; border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; font-weight: bold; color: var(--primary-dark); }
 
-        .status-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-bottom: 1.5rem; }
-        @media screen and (max-width: 600px) {
-            .status-summary-grid { grid-template-columns: repeat(2, 1fr); }
+        /* SEZIONI FLUSSO STATO */
+        .dash-section-title { font-family: 'Quicksand', sans-serif; font-size: 1rem; font-weight: 750; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.8rem; letter-spacing: 0.5px; }
+
+        .flow-grid { display: grid; grid-template-columns: repeat( auto-fit, minmax(130px, 1fr) ); gap: 0.8rem; margin-bottom: 1.5rem; }
+        .flow-card {
+            background: var(--card-bg);
+            padding: 1rem 0.6rem;
+            border-radius: 16px;
+            border: 2px solid var(--border-color);
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
         }
-        .status-summary-card { padding: 0.9rem 0.5rem; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); text-align: center; cursor: pointer; transition: transform 0.1s; border: 2px solid transparent; }
-        .status-summary-card:hover { transform: translateY(-2px); }
-        .status-summary-title { font-size: 0.75rem; font-weight: 800; margin-bottom: 0.2rem; text-transform: uppercase; font-family: 'Quicksand', sans-serif; }
-        .status-summary-count { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.3rem; }
-        .status-summary-breakdown { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); border-top: 1px dashed rgba(0,0,0,0.08); padding-top: 4px; display: flex; justify-content: space-around; }
+        .flow-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.04); }
+        .flow-card-title { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; font-family: 'Quicksand', sans-serif; margin-bottom: 0.3rem; }
+        .flow-card-count { font-size: 1.6rem; font-weight: 800; }
+        .flow-card-sub { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; margin-top: 0.3rem; border-top: 1px dashed rgba(0,0,0,0.08); padding-top: 4px; }
 
-        .card-prenotato { background-color: #e8f4f8; border-color: #bee3f8; }
-        .card-prenotato .status-summary-title, .card-prenotato .status-summary-count { color: #2b6cb0; }
-        .card-da-pagare { background-color: #fce8e6; border-color: #f5c6cb; }
-        .card-da-pagare .status-summary-title, .card-da-pagare .status-summary-count { color: #c53030; }
-        .card-pagato { background-color: #e8f5e9; border-color: #c6f6d5; }
-        .card-pagato .status-summary-title, .card-pagato .status-summary-count { color: #276749; }
-        .card-preparazione { background-color: #fff8e1; border-color: #ffe082; }
-        .card-preparazione .status-summary-title, .card-preparazione .status-summary-count { color: #b7791f; }
-        .card-da-consegnare { background-color: #f3e5f5; border-color: #e1bee7; }
-        .card-da-consegnare .status-summary-title, .card-da-consegnare .status-summary-count { color: #6b46c1; }
-        .card-consegnato { background-color: #edf7ed; border-color: #c8e6c9; }
-        .card-consegnato .status-summary-title, .card-consegnato .status-summary-count { color: #2e7d32; }
-        .card-annullato { background-color: #f1f3f5; border-color: #e2e8f0; grid-column: span 3; }
-        .card-annullato .status-summary-title, .card-annullato .status-summary-count { color: #718096; }
+        /* Colori Categorie Flussi */
+        .card-st-prenotato { border-color: #bee3f8; background-color: #f0f8ff; }
+        .card-st-prenotato .flow-card-title, .card-st-prenotato .flow-card-count { color: #2b6cb0; }
 
-        .alert-box { background-color: #fce8e6; border: 1px solid #f5c6cb; color: #c53030; padding: 1rem; border-radius: 16px; margin-bottom: 1.5rem; font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; }
-        .chart-container { background: var(--card-bg); padding: 1.2rem; border-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 2px solid var(--border-color); margin-bottom: 1.5rem; }
+        .card-st-prep { border-color: #ffe082; background-color: #fffde7; }
+        .card-st-prep .flow-card-title, .card-st-prep .flow-card-count { color: #b7791f; }
+
+        .card-st-consegna { border-color: #e1bee7; background-color: #fcf4fc; }
+        .card-st-consegna .flow-card-title, .card-st-consegna .flow-card-count { color: #6b46c1; }
+
+        .card-st-consegnato { border-color: #c8e6c9; background-color: #f1fbe8; }
+        .card-st-consegnato .flow-card-title, .card-st-consegnato .flow-card-count { color: #2e7d32; }
+
+        .card-st-annullato { border-color: #e2e8f0; background-color: #f8fafc; }
+        .card-st-annullato .flow-card-title, .card-st-annullato .flow-card-count { color: #718096; }
+
+        .card-st-dapagare { border-color: #f5c6cb; background-color: #fff5f5; }
+        .card-st-dapagare .flow-card-title, .card-st-dapagare .flow-card-count { color: #c53030; }
+
+        .card-st-pagato { border-color: #c6f6d5; background-color: #f0fff4; }
+        .card-st-pagato .flow-card-title, .card-st-pagato .flow-card-count { color: #276749; }
+
+        .alert-box { background-color: #fff5f5; border: 1px solid #f5c6cb; color: #c53030; padding: 0.9rem; border-radius: 16px; margin-bottom: 1.2rem; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; }
+        .chart-container { background: var(--card-bg); padding: 1.2rem; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border: 2px solid var(--border-color); margin-bottom: 1.5rem; }
 
         .controls-panel { background: var(--card-bg); padding: 1.2rem; border-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 2px solid var(--border-color); margin-bottom: 1rem; display: flex; flex-direction: column; gap: 10px; }
         .search-input { width: 100%; padding: 0.8rem 1rem; border: 2px solid var(--border-color); border-radius: 12px; box-sizing: border-box; font-family: 'Nunito'; font-size: 0.95rem; background-color: #fbfdfe; }
@@ -201,35 +238,18 @@
         }
 
         .bottom-nav { 
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            width: 100%; 
-            background: #ffffff; 
-            display: flex; 
-            justify-content: space-around; 
-            padding: 0.8rem 0; 
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.04); 
-            z-index: 1000; 
-            border-top: 2px solid var(--border-color);
+            position: fixed; bottom: 0; left: 0; width: 100%; 
+            background: #ffffff; display: flex; justify-content: space-around; 
+            padding: 0.8rem 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.04); 
+            z-index: 1000; border-top: 2px solid var(--border-color);
         }
         .nav-item { 
-            background: none; 
-            border: none; 
-            font-family: 'Quicksand', sans-serif; 
-            font-size: 0.85rem; 
-            font-weight: 750; 
-            color: var(--text-muted); 
-            cursor: pointer; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            gap: 4px; 
-            transition: color 0.2s;
+            background: none; border: none; font-family: 'Quicksand', sans-serif; 
+            font-size: 0.85rem; font-weight: 750; color: var(--text-muted); 
+            cursor: pointer; display: flex; flex-direction: column; align-items: center; 
+            gap: 4px; transition: color 0.2s;
         }
-        .nav-item.active { 
-            color: var(--primary); 
-        }
+        .nav-item.active { color: var(--primary); }
         .nav-icon { font-size: 1.4rem; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 3000; }
@@ -272,69 +292,108 @@
     <div class="container" id="main-container">
         <div id="loadingMsg">Sincronizzazione dati in corso...</div>
 
-        <!-- Dashboard -->
+        <!-- Dashboard Rivoluzionata -->
         <div id="view-dashboard" class="view active">
+            
+            <!-- Barra di Switch tra Viste -->
+            <div class="dash-selector-bar">
+                <button class="dash-tab-btn active" id="tabModeTutti" onclick="cambiaVistaDashboard('TUTTI', this)">📊 Vista Globale</button>
+                <button class="dash-tab-btn" id="tabModePanettoni" onclick="cambiaVistaDashboard('PANETTONI', this)">🥮 Panettoni</button>
+                <button class="dash-tab-btn" id="tabModePandori" onclick="cambiaVistaDashboard('PANDORI', this)">🍞 Pandori</button>
+            </div>
+
             <div class="dashboard-header-actions">
-                <div>
-                    <h3 style="color: var(--text-main); font-size: 1.1rem; margin: 0; font-family: 'Quicksand', sans-serif; display: inline-block;">Panoramica Generale</h3>
-                    <button id="btnResetProdFilter" class="reset-filter-btn" onclick="selezionaFiltroProdotto('TUTTI')">🔄 Mostra Tutti i Prodotti</button>
-                </div>
+                <h3 style="color: var(--text-main); font-size: 1.1rem; margin: 0; font-family: 'Quicksand', sans-serif;" id="dashMainHeaderTitle">Panoramica Generale</h3>
                 <button class="btn-pdf" onclick="esportaPDF()">📄 Scarica Report PDF</button>
             </div>
 
             <div id="pdfContent" style="padding: 5px; background: transparent;">
                 <div id="alertContainer"></div>
-                <div class="stats-grid">
-                    <div class="stat-card" id="cardStockPanettoni" onclick="selezionaFiltroProdotto('PANETTONI')">
-                        <div class="stat-title">🥮 Stock Panettoni</div>
-                        <div class="stat-value" id="valPanettoni">0</div>
-                        <div class="stat-detail" id="rimanenzePanettoni">Rimanenze: 0</div>
-                        <button class="stock-edit-btn" onclick="event.stopPropagation(); apriModaleStock('Panettoni')">✏️ Modifica Stock</button>
+
+                <!-- Schede Stock e Progresso Magazzino -->
+                <div class="stock-section">
+                    <div class="stock-card" onclick="cambiaVistaDashboard('PANETTONI', document.getElementById('tabModePanettoni'))">
+                        <div class="stock-header">
+                            <span class="stock-title">🥮 Panettoni</span>
+                            <button class="stock-edit-btn" onclick="event.stopPropagation(); apriModaleStock('Panettoni')">✏️ Modifica Stock</button>
+                        </div>
+                        <div class="stock-numbers">
+                            <span class="stock-main-val" id="valPanettoni">0</span>
+                            <span class="stock-sub-val" id="lblTotPanettoni">prenotati su 0</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="barPanettoni" style="width: 0%;"></div>
+                        </div>
+                        <div class="stock-footer-actions">
+                            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:700;" id="rimanenzePanettoni">Rimanenza: 0</span>
+                        </div>
                     </div>
-                    <div class="stat-card pandoro" id="cardStockPandori" onclick="selezionaFiltroProdotto('PANDORI')">
-                        <div class="stat-title">🍞 Stock Pandori</div>
-                        <div class="stat-value" id="valPandori">0</div>
-                        <div class="stat-detail" id="rimanenzePandori">Rimanenze: 0</div>
-                        <button class="stock-edit-btn" onclick="event.stopPropagation(); apriModaleStock('Pandori')">✏️ Modifica Stock</button>
+
+                    <div class="stock-card" onclick="cambiaVistaDashboard('PANDORI', document.getElementById('tabModePandori'))">
+                        <div class="stock-header">
+                            <span class="stock-title">🍞 Pandori</span>
+                            <button class="stock-edit-btn" onclick="event.stopPropagation(); apriModaleStock('Pandori')">✏️ Modifica Stock</button>
+                        </div>
+                        <div class="stock-numbers">
+                            <span class="stock-main-val" id="valPandori">0</span>
+                            <span class="stock-sub-val" id="lblTotPandori">prenotati su 0</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="barPandori" style="width: 0%;"></div>
+                        </div>
+                        <div class="stock-footer-actions">
+                            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:700;" id="rimanenzePandori">Rimanenza: 0</span>
+                        </div>
                     </div>
                 </div>
 
-                <h3 style="color: var(--text-main); font-size: 1.1rem; margin-bottom: 0.8rem; font-family: 'Quicksand', sans-serif;">Stato Ordini <span id="labelFiltroProdotto" style="font-size:0.85rem; color:var(--text-muted); font-weight:normal;"></span></h3>
-                <div class="status-summary-grid">
-                    <div class="status-summary-card card-prenotato" onclick="navigaVersoFiltro('Prenotato')">
-                        <div class="status-summary-title">Prenotati</div>
-                        <div class="status-summary-count" id="countPrenotato">0</div>
-                        <div class="status-summary-breakdown"><span id="panPrenotato">🥮 0</span> <span id="panDPrenotato">🍞 0</span></div>
+                <!-- Macro Categoria 1: Stato Logistica & Ritiro -->
+                <div class="dash-section-title">📦 Flusso Logistico & Consegne</div>
+                <div class="flow-grid">
+                    <div class="flow-card card-st-prenotato" onclick="navigaVersoFiltro('Prenotato')">
+                        <div class="flow-card-title">Prenotati</div>
+                        <div class="flow-card-count" id="countPrenotato">0</div>
+                        <div class="flow-card-sub" id="subPrenotato">🥮 0 | 🍞 0</div>
                     </div>
-                    <div class="status-summary-card card-da-pagare" onclick="navigaVersoFiltro('Prenotato - Da Pagare')">
-                        <div class="status-summary-title">Da Pagare</div>
-                        <div class="status-summary-count" id="countDaPagare">0</div>
-                        <div class="status-summary-breakdown"><span id="panDaPagare">🥮 0</span> <span id="panDPaPagare">🍞 0</span></div>
+
+                    <div class="flow-card card-st-prep" onclick="navigaVersoFiltro('In Preparazione')">
+                        <div class="flow-card-title">In Prep.</div>
+                        <div class="flow-card-count" id="countInPreparazione">0</div>
+                        <div class="flow-card-sub" id="subInPrep">🥮 0 | 🍞 0</div>
                     </div>
-                    <div class="status-summary-card card-pagato" onclick="navigaVersoFiltro('Prenotato - Pagato')">
-                        <div class="status-summary-title">Pagati</div>
-                        <div class="status-summary-count" id="countPagati">0</div>
-                        <div class="status-summary-breakdown"><span id="panPagati">🥮 0</span> <span id="panDPagati">🍞 0</span></div>
+
+                    <div class="flow-card card-st-consegna" onclick="navigaVersoFiltro('Da Consegnare')">
+                        <div class="flow-card-title">Da Conseg.</div>
+                        <div class="flow-card-count" id="countDaConsegnare">0</div>
+                        <div class="flow-card-sub" id="subDaConseg">🥮 0 | 🍞 0</div>
                     </div>
-                    <div class="status-summary-card card-preparazione" onclick="navigaVersoFiltro('In Preparazione')">
-                        <div class="status-summary-title">In Prep.</div>
-                        <div class="status-summary-count" id="countInPreparazione">0</div>
-                        <div class="status-summary-breakdown"><span id="panInPrep">🥮 0</span> <span id="panDInPrep">🍞 0</span></div>
+
+                    <div class="flow-card card-st-consegnato" onclick="navigaVersoFiltro('Consegnato')">
+                        <div class="flow-card-title">Consegnati</div>
+                        <div class="flow-card-count" id="countConsegnati">0</div>
+                        <div class="flow-card-sub" id="subConsegnati">🥮 0 | 🍞 0</div>
                     </div>
-                    <div class="status-summary-card card-da-consegnare" onclick="navigaVersoFiltro('Da Consegnare')">
-                        <div class="status-summary-title">Da Conseg.</div>
-                        <div class="status-summary-count" id="countDaConsegnare">0</div>
-                        <div class="status-summary-breakdown"><span id="panDaConseg">🥮 0</span> <span id="panDDaConseg">🍞 0</span></div>
+
+                    <div class="flow-card card-st-annullato" onclick="navigaVersoFiltro('Annullato')">
+                        <div class="flow-card-title">Annullati</div>
+                        <div class="flow-card-count" id="countAnnullati">0</div>
+                        <div class="flow-card-sub" id="subAnnullati">🥮 0 | 🍞 0</div>
                     </div>
-                    <div class="status-summary-card card-consegnato" onclick="navigaVersoFiltro('Consegnato')">
-                        <div class="status-summary-title">Consegnati</div>
-                        <div class="status-summary-count" id="countConsegnati">0</div>
-                        <div class="status-summary-breakdown"><span id="panConsegnati">🥮 0</span> <span id="panDConsegnati">🍞 0</span></div>
+                </div>
+
+                <!-- Macro Categoria 2: Stato Incassi e Finanze -->
+                <div class="dash-section-title">💶 Stato Incassi & Saldi</div>
+                <div class="flow-grid">
+                    <div class="flow-card card-st-dapagare" onclick="navigaVersoFiltro('Prenotato - Da Pagare')">
+                        <div class="flow-card-title">Da Pagare</div>
+                        <div class="flow-card-count" id="countDaPagare">0</div>
+                        <div class="flow-card-sub" id="subDaPagare">🥮 0 | 🍞 0</div>
                     </div>
-                    <div class="status-summary-card card-annullato" onclick="navigaVersoFiltro('Annullato')">
-                        <div class="status-summary-title">Annullati</div>
-                        <div class="status-summary-count" id="countAnnullati">0</div>
-                        <div class="status-summary-breakdown"><span id="panAnnullati">🥮 0</span> <span id="panDAnnullati">🍞 0</span></div>
+
+                    <div class="flow-card card-st-pagato" onclick="navigaVersoFiltro('Prenotato - Pagato')">
+                        <div class="flow-card-title">Pagati</div>
+                        <div class="flow-card-count" id="countPagati">0</div>
+                        <div class="flow-card-sub" id="subPagati">🥮 0 | 🍞 0</div>
                     </div>
                 </div>
 
@@ -463,7 +522,7 @@
         </div>
     </div>
 
-    <!-- Modale Rapida Registrazione Saldo e Metodo Pagamento -->
+    <!-- Modale Rapida Registrazione Saldo -->
     <div id="pay-modal" class="modal">
         <div class="modal-content">
             <h3>Registra Saldo Ordine</h3>
@@ -521,7 +580,7 @@
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbzoGbrpG7_-K39T9qu6ic0nGNHFqQwEgULVc4IKwv0jdDA2MCSf-OErOJE1ChdnRc2Wng/exec'; 
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzoGbrpG7_-K39T9qu6ic0nGNHFqQwEgULVc4IKwv0jdDA2MCSf-OErOJE1ChdnRc2Wng/execc'; 
         let datiGlobali = [];
         let utentiGlobali = [];
         let logsGlobali = [];
@@ -532,7 +591,7 @@
         let currentRole = "";
         let filtroStatoAttuale = "Tutti";
         let filtroLogCatAttuale = "Tutti";
-        let filtroProdottoAttuale = "TUTTI"; // "TUTTI", "PANETTONI", "PANDORI"
+        let filtroProdottoDashboard = "TUTTI"; // "TUTTI", "PANETTONI", "PANDORI"
 
         window.addEventListener('DOMContentLoaded', () => {
             const sessionUser = sessionStorage.getItem('wonderlad_active_user') || localStorage.getItem('wonderlad_user');
@@ -657,38 +716,24 @@
             btnElement.classList.add('active');
         }
 
-        function selezionaFiltroProdotto(prodotto) {
-            filtroProdottoAttuale = prodotto;
+        function cambiaVistaDashboard(modo, btnElem) {
+            filtroProdottoDashboard = modo;
             
-            const cardPan = document.getElementById('cardStockPanettoni');
-            const cardPand = document.getElementById('cardStockPandori');
-            const resetBtn = document.getElementById('btnResetProdFilter');
-            const labelFilter = document.getElementById('labelFiltroProdotto');
+            document.querySelectorAll('.dash-tab-btn').forEach(b => b.classList.remove('active'));
+            if(btnElem) btnElem.classList.add('active');
 
-            cardPan.classList.remove('active-filter');
-            cardPand.classList.remove('active-filter');
-
-            if (prodotto === 'PANETTONI') {
-                cardPan.classList.add('active-filter');
-                resetBtn.style.display = 'inline-block';
-                labelFilter.textContent = '(Solo Panettoni)';
-            } else if (prodotto === 'PANDORI') {
-                cardPand.classList.add('active-filter');
-                resetBtn.style.display = 'inline-block';
-                labelFilter.textContent = '(Solo Pandori)';
-            } else {
-                resetBtn.style.display = 'none';
-                labelFilter.textContent = '';
-            }
+            const headerLbl = document.getElementById('dashMainHeaderTitle');
+            if(modo === 'PANETTONI') headerLbl.textContent = 'Focus Panettoni';
+            else if(modo === 'PANDORI') headerLbl.textContent = 'Focus Pandori';
+            else headerLbl.textContent = 'Panoramica Generale';
 
             calcolaStatistiche(datiGlobali, impostazioniGlobali);
-            filtraOrdini();
         }
 
         function navigaVersoFiltro(stato) {
             filtroStatoAttuale = stato;
             
-            document.querySelectorAll('.filter-chips .chip').forEach(c => {
+            document.querySelectorAll('#view-ordini .filter-chips .chip').forEach(c => {
                 if(c.textContent.toLowerCase() === stato.toLowerCase() || (stato === 'Prenotato' && c.textContent.toLowerCase() === 'prenotati')) {
                     c.classList.add('active');
                 } else {
@@ -864,8 +909,8 @@
                 const matchFiltro = (filtroStatoAttuale === 'Tutti' || stato.toLowerCase() === filtroStatoAttuale.toLowerCase());
                 
                 let matchProdotto = true;
-                if (filtroProdottoAttuale === 'PANETTONI') matchProdotto = panettoni > 0;
-                if (filtroProdottoAttuale === 'PANDORI') matchProdotto = pandori > 0;
+                if (filtroProdottoDashboard === 'PANETTONI') matchProdotto = panettoni > 0;
+                if (filtroProdottoDashboard === 'PANDORI') matchProdotto = pandori > 0;
 
                 if(matchTesto && matchFiltro && matchProdotto) {
                     tr.style.display = '';
@@ -1127,13 +1172,18 @@
                 const pan = parseInt(ordine.Panettoni) || 0;
                 const pand = parseInt(ordine.Pandori) || 0;
 
-                // Calcolo in base all'eventuale filtro prodotto cliccato
-                if (filtroProdottoAttuale === 'TUTTI' || (filtroProdottoAttuale === 'PANETTONI' && pan > 0) || (filtroProdottoAttuale === 'PANDORI' && pand > 0)) {
-                    totPanettoni += pan;
-                    totPandori += pand;
+                totPanettoni += pan;
+                totPandori += pand;
 
-                    const status = (ordine.Status || "").toLowerCase();
+                const status = (ordine.Status || "").toLowerCase();
 
+                // Calcolo in base alla vista attiva (TUTTI, PANETTONI, PANDORI)
+                let includeInStats = false;
+                if (filtroProdottoDashboard === 'TUTTI') includeInStats = true;
+                if (filtroProdottoDashboard === 'PANETTONI' && pan > 0) includeInStats = true;
+                if (filtroProdottoDashboard === 'PANDORI' && pand > 0) includeInStats = true;
+
+                if (includeInStats) {
                     const sommaStato = (key) => {
                         stats[key].count++;
                         stats[key].pan += pan;
@@ -1154,34 +1204,42 @@
                 }
             });
 
-            const impostaBox = (idCount, idPan, idPand, key) => {
+            // Popola i contatori puliti
+            const impostaBoxFlow = (idCount, idSub, key) => {
                 document.getElementById(idCount).textContent = stats[key].count;
-                document.getElementById(idPan).textContent = `🥮 ${stats[key].pan}`;
-                document.getElementById(idPand).textContent = `🍞 ${stats[key].pand}`;
+                document.getElementById(idSub).textContent = `🥮 ${stats[key].pan} | 🍞 ${stats[key].pand}`;
             };
 
-            impostaBox('countPrenotato', 'panPrenotato', 'panDPrenotato', 'prenotato');
-            impostaBox('countDaPagare', 'panDaPagare', 'panDPaPagare', 'da_pagare');
-            impostaBox('countPagati', 'panPagati', 'panDPagati', 'pagato');
-            impostaBox('countInPreparazione', 'panInPrep', 'panDInPrep', 'preparazione');
-            impostaBox('countDaConsegnare', 'panDaConseg', 'panDDaConseg', 'da_consegnare');
-            impostaBox('countConsegnati', 'panConsegnati', 'panDConsegnati', 'consegnato');
-            impostaBox('countAnnullati', 'panAnnullati', 'panDAnnullati', 'annullato');
+            impostaBoxFlow('countPrenotato', 'subPrenotato', 'prenotato');
+            impostaBoxFlow('countDaPagare', 'subDaPagare', 'da_pagare');
+            impostaBoxFlow('countPagati', 'subPagati', 'pagato');
+            impostaBoxFlow('countInPreparazione', 'subInPrep', 'preparazione');
+            impostaBoxFlow('countDaConsegnare', 'subDaConseg', 'da_consegnare');
+            impostaBoxFlow('countConsegnati', 'subConsegnati', 'consegnato');
+            impostaBoxFlow('countAnnullati', 'subAnnullati', 'annullato');
 
+            // Stock e barre di progresso
             let stockInizialePanettoni = parseInt(impostazioni["Totale Panettoni"]) || 0;
             let stockInizialePandori = parseInt(impostazioni["Totale Pandori"]) || 0;
 
             document.getElementById('valPanettoni').textContent = totPanettoni;
+            document.getElementById('lblTotPanettoni').textContent = `prenotati su ${stockInizialePanettoni}`;
+            document.getElementById('rimanenzePanettoni').textContent = `Rimanenza: ${stockInizialePanettoni - totPanettoni} pz`;
+            const percPan = stockInizialePanettoni > 0 ? Math.min(100, Math.round((totPanettoni / stockInizialePanettoni) * 100)) : 0;
+            document.getElementById('barPanettoni').style.width = percPan + '%';
+
             document.getElementById('valPandori').textContent = totPandori;
-            document.getElementById('rimanenzePanettoni').textContent = `Su stock di ${stockInizialePanettoni} (Restano: ${stockInizialePanettoni - totPanettoni})`;
-            document.getElementById('rimanenzePandori').textContent = `Su stock di ${stockInizialePandori} (Restano: ${stockInizialePandori - totPandori})`;
+            document.getElementById('lblTotPandori').textContent = `prenotati su ${stockInizialePandori}`;
+            document.getElementById('rimanenzePandori').textContent = `Rimanenza: ${stockInizialePandori - totPandori} pz`;
+            const percPand = stockInizialePandori > 0 ? Math.min(100, Math.round((totPandori / stockInizialePandori) * 100)) : 0;
+            document.getElementById('barPandori').style.width = percPand + '%';
 
             const alertContainer = document.getElementById('alertContainer');
             if(ordiniDaPagareNonConsegnati > 0) {
                 alertContainer.innerHTML = `
                     <div class="alert-box">
                         <span>⚠️</span>
-                        <span>Attenzione: ci sono <strong>${ordiniDaPagareNonConsegnati} ordini</strong> in sospeso con stato "Da Pagare"!</span>
+                        <span>Attenzione: ci sono <strong>${ordiniDaPagareNonConsegnati} ordini</strong> con stato "Da Pagare" da saldare!</span>
                     </div>
                 `;
             } else {
@@ -1196,8 +1254,8 @@
             if(chartInstance) chartInstance.destroy();
             chartInstance = new Chart(ctx, {
                 type: 'bar',
-                data: { labels: ['Panettoni', 'Pandori'], datasets: [{ label: 'Prenotazioni', data: [panettoni, pandori], backgroundColor: ['#6b9080', '#a4c3b2'], borderRadius: 8 }] },
-                options: { responsive: true, plugins: { legend: { display: false }, title: { display: true, text: 'Andamento Prenotazioni', font: { family: 'Quicksand', size: 16 } } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+                data: { labels: ['Panettoni', 'Pandori'], datasets: [{ label: 'Prenotazioni Totali', data: [panettoni, pandori], backgroundColor: ['#5b8e72', '#94bdad'], borderRadius: 10 }] },
+                options: { responsive: true, plugins: { legend: { display: false }, title: { display: true, text: 'Confronto Prenotazioni Dolci', font: { family: 'Quicksand', size: 15 } } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
             });
         }
 
@@ -1208,92 +1266,84 @@
             containerPDF.style.padding = '15px';
             containerPDF.style.fontFamily = 'Nunito, sans-serif';
             containerPDF.style.backgroundColor = '#ffffff';
-            containerPDF.style.color = '#2c3e35';
+            containerPDF.style.color = '#24352c';
 
             const chartCanvas = document.getElementById('graficoVendite');
             const chartImageSrc = chartCanvas ? chartCanvas.toDataURL('image/png') : '';
 
             let page1 = `
                 <div style="page-break-after: always; break-after: page;">
-                    <div style="text-align: center; border-bottom: 2px solid #6b9080; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="text-align: center; border-bottom: 2px solid #5b8e72; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
                         <div style="text-align: left;">
-                            <h2 style="color: #6b9080; margin: 0; font-family: Quicksand, sans-serif; font-size: 22px;">WonderLAD Onlus</h2>
-                            <p style="font-size: 13px; color: #6b7c73; margin: 4px 0 0 0;">Report Generale e Statistiche - ${new Date().toLocaleDateString('it-IT')}</p>
+                            <h2 style="color: #5b8e72; margin: 0; font-family: Quicksand, sans-serif; font-size: 22px;">WonderLAD Onlus</h2>
+                            <p style="font-size: 13px; color: #62756d; margin: 4px 0 0 0;">Report Generale e Statistiche - ${new Date().toLocaleDateString('it-IT')}</p>
                         </div>
                         <img src="https://www.wonderlad.org/wp-content/uploads/2020/05/logo-wonderlad.png" style="height: 38px;" />
                     </div>
 
-                    <h3 style="color: #6b9080; font-family: Quicksand, sans-serif; margin-bottom: 10px; font-size: 16px;">Riepilogo Scorte</h3>
+                    <h3 style="color: #5b8e72; font-family: Quicksand, sans-serif; margin-bottom: 10px; font-size: 16px;">Riepilogo Scorte</h3>
                     <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-                        <div style="flex: 1; border: 2px solid #6b9080; padding: 12px; border-radius: 12px; text-align: center; background: #f6fff8;">
-                            <div style="font-size: 11px; font-weight: bold; color: #6b7c73;">PANETTONI PRENOTATI</div>
-                            <div style="font-size: 24px; font-weight: bold; color: #6b9080; margin: 4px 0;">${document.getElementById('valPanettoni').textContent}</div>
-                            <div style="font-size: 11px; color: #6b7c73;">${document.getElementById('rimanenzePanettoni').textContent}</div>
+                        <div style="flex: 1; border: 2px solid #5b8e72; padding: 12px; border-radius: 12px; text-align: center; background: #f6fff8;">
+                            <div style="font-size: 11px; font-weight: bold; color: #62756d;">PANETTONI PRENOTATI</div>
+                            <div style="font-size: 24px; font-weight: bold; color: #5b8e72; margin: 4px 0;">${document.getElementById('valPanettoni').textContent}</div>
+                            <div style="font-size: 11px; color: #62756d;">${document.getElementById('rimanenzePanettoni').textContent}</div>
                         </div>
-                        <div style="flex: 1; border: 2px solid #a4c3b2; padding: 12px; border-radius: 12px; text-align: center; background: #eaf4f0;">
-                            <div style="font-size: 11px; font-weight: bold; color: #6b7c73;">PANDORI PRENOTATI</div>
-                            <div style="font-size: 24px; font-weight: bold; color: #4d6a5b; margin: 4px 0;">${document.getElementById('valPandori').textContent}</div>
-                            <div style="font-size: 11px; color: #6b7c73;">${document.getElementById('rimanenzePandori').textContent}</div>
+                        <div style="flex: 1; border: 2px solid #94bdad; padding: 12px; border-radius: 12px; text-align: center; background: #eaf4f0;">
+                            <div style="font-size: 11px; font-weight: bold; color: #62756d;">PANDORI PRENOTATI</div>
+                            <div style="font-size: 24px; font-weight: bold; color: #3a6250; margin: 4px 0;">${document.getElementById('valPandori').textContent}</div>
+                            <div style="font-size: 11px; color: #62756d;">${document.getElementById('rimanenzePandori').textContent}</div>
                         </div>
                     </div>
 
-                    <h3 style="color: #6b9080; font-family: Quicksand, sans-serif; margin-bottom: 10px; font-size: 16px;">Conteggio Ordini e Dettaglio Prodotti per Stato</h3>
+                    <h3 style="color: #5b8e72; font-family: Quicksand, sans-serif; margin-bottom: 10px; font-size: 16px;">Conteggio Ordini per Stato</h3>
                     <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 12px;">
                         <thead>
                             <tr style="background: #f0f4f1;">
-                                <th style="padding: 8px; border: 1px solid #e2ece9; text-align: left;">Stato Ordine</th>
-                                <th style="padding: 8px; border: 1px solid #e2ece9; text-align: center;">N° Ordini</th>
-                                <th style="padding: 8px; border: 1px solid #e2ece9; text-align: center;">Panettoni</th>
-                                <th style="padding: 8px; border: 1px solid #e2ece9; text-align: center;">Pandori</th>
+                                <th style="padding: 8px; border: 1px solid #e1eae5; text-align: left;">Stato Ordine</th>
+                                <th style="padding: 8px; border: 1px solid #e1eae5; text-align: center;">N° Ordini</th>
+                                <th style="padding: 8px; border: 1px solid #e1eae5; text-align: center;">Dettaglio (Pan / Pand)</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="padding: 6px; border: 1px solid #e2ece9;">Prenotati Generici</td>
-                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center; font-weight: bold;">${document.getElementById('countPrenotato').textContent}</td>
-                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panPrenotato').textContent.replace('🥮 ','')}</td>
-                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panDPrenotato').textContent.replace('🍞 ','')}</td>
+                                <td style="padding: 6px; border: 1px solid #e1eae5;">Prenotati Generici</td>
+                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center; font-weight: bold;">${document.getElementById('countPrenotato').textContent}</td>
+                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center;">${document.getElementById('subPrenotato').textContent}</td>
                             </tr>
                             <tr>
-                                <td style="padding: 6px; border: 1px solid #e2ece9;">Da Pagare</td>
-                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center; font-weight: bold; color: #c53030;">${document.getElementById('countDaPagare').textContent}</td>
-                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panDaPagare').textContent.replace('🥮 ','')}</td>
-                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panDPaPagare').textContent.replace('🍞 ','')}</td>
+                                <td style="padding: 6px; border: 1px solid #e1eae5;">Da Pagare</td>
+                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center; font-weight: bold; color: #c53030;">${document.getElementById('countDaPagare').textContent}</td>
+                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center;">${document.getElementById('subDaPagare').textContent}</td>
                             </tr>
                             <tr>
-                                <td style="padding: 6px; border: 1px solid #e2ece9;">Pagati</td>
-                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center; font-weight: bold; color: #276749;">${document.getElementById('countPagati').textContent}</td>
-                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panPagati').textContent.replace('🥮 ','')}</td>
-                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panDPagati').textContent.replace('🍞 ','')}</td>
+                                <td style="padding: 6px; border: 1px solid #e1eae5;">Pagati</td>
+                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center; font-weight: bold; color: #276749;">${document.getElementById('countPagati').textContent}</td>
+                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center;">${document.getElementById('subPagati').textContent}</td>
                             </tr>
                             <tr>
-                                <td style="padding: 6px; border: 1px solid #e2ece9;">In Preparazione</td>
-                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center; font-weight: bold; color: #b7791f;">${document.getElementById('countInPreparazione').textContent}</td>
-                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panInPrep').textContent.replace('🥮 ','')}</td>
-                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panDInPrep').textContent.replace('🍞 ','')}</td>
+                                <td style="padding: 6px; border: 1px solid #e1eae5;">In Preparazione</td>
+                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center; font-weight: bold; color: #b7791f;">${document.getElementById('countInPreparazione').textContent}</td>
+                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center;">${document.getElementById('subInPrep').textContent}</td>
                             </tr>
                             <tr>
-                                <td style="padding: 6px; border: 1px solid #e2ece9;">Da Consegnare</td>
-                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center; font-weight: bold; color: #6b46c1;">${document.getElementById('countDaConsegnare').textContent}</td>
-                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panDaConseg').textContent.replace('🥮 ','')}</td>
-                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panDDaConseg').textContent.replace('🍞 ','')}</td>
+                                <td style="padding: 6px; border: 1px solid #e1eae5;">Da Consegnare</td>
+                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center; font-weight: bold; color: #6b46c1;">${document.getElementById('countDaConsegnare').textContent}</td>
+                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center;">${document.getElementById('subDaConseg').textContent}</td>
                             </tr>
                             <tr>
-                                <td style="padding: 6px; border: 1px solid #e2ece9;">Consegnati</td>
-                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center; font-weight: bold; color: #2e7d32;">${document.getElementById('countConsegnati').textContent}</td>
-                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panConsegnati').textContent.replace('🥮 ','')}</td>
-                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panDConsegnati').textContent.replace('🍞 ','')}</td>
+                                <td style="padding: 6px; border: 1px solid #e1eae5;">Consegnati</td>
+                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center; font-weight: bold; color: #2e7d32;">${document.getElementById('countConsegnati').textContent}</td>
+                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center;">${document.getElementById('subConsegnati').textContent}</td>
                             </tr>
                             <tr>
-                                <td style="padding: 6px; border: 1px solid #e2ece9;">Annullati</td>
-                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center; font-weight: bold; color: #718096;">${document.getElementById('countAnnullati').textContent}</td>
-                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panAnnullati').textContent.replace('🥮 ','')}</td>
-                                <td style="padding: 6px; border: 1px solid #e2ece9; text-align: center;">${document.getElementById('panDAnnullati').textContent.replace('🍞 ','')}</td>
+                                <td style="padding: 6px; border: 1px solid #e1eae5;">Annullati</td>
+                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center; font-weight: bold; color: #718096;">${document.getElementById('countAnnullati').textContent}</td>
+                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center;">${document.getElementById('subAnnullati').textContent}</td>
                             </tr>
                         </tbody>
                     </table>
 
-                    <h3 style="color: #6b9080; font-family: Quicksand, sans-serif; margin-bottom: 10px; font-size: 16px;">Andamento Grafico</h3>
+                    <h3 style="color: #5b8e72; font-family: Quicksand, sans-serif; margin-bottom: 10px; font-size: 16px;">Andamento Grafico</h3>
                     <div style="text-align: center;">
                         ${chartImageSrc ? `<img src="${chartImageSrc}" style="max-width: 100%; height: auto; max-height: 220px;" />` : ''}
                     </div>
@@ -1310,32 +1360,32 @@
                 }
                 rowsTableHTML += `
                     <tr style="background: ${i % 2 === 0 ? '#ffffff' : '#f6fff8'};">
-                        <td style="padding: 6px; border: 1px solid #e2ece9; font-size: 10px;">${dStr}</td>
-                        <td style="padding: 6px; border: 1px solid #e2ece9; font-size: 11px; font-weight: bold;">${o.Nome || ''} ${o.Cognome || ''}</td>
-                        <td style="padding: 6px; border: 1px solid #e2ece9; font-size: 10px;">${o.Telefono || '-'}</td>
-                        <td style="padding: 6px; border: 1px solid #e2ece9; font-size: 11px; text-align: center;">${o.Panettoni || 0}</td>
-                        <td style="padding: 6px; border: 1px solid #e2ece9; font-size: 11px; text-align: center;">${o.Pandori || 0}</td>
-                        <td style="padding: 6px; border: 1px solid #e2ece9; font-size: 10px; font-weight: bold;">${o.Status || 'Prenotato'}</td>
-                        <td style="padding: 6px; border: 1px solid #e2ece9; font-size: 10px;">${o["Metodo Pagamento"] || '-'}</td>
+                        <td style="padding: 6px; border: 1px solid #e1eae5; font-size: 10px;">${dStr}</td>
+                        <td style="padding: 6px; border: 1px solid #e1eae5; font-size: 11px; font-weight: bold;">${o.Nome || ''} ${o.Cognome || ''}</td>
+                        <td style="padding: 6px; border: 1px solid #e1eae5; font-size: 10px;">${o.Telefono || '-'}</td>
+                        <td style="padding: 6px; border: 1px solid #e1eae5; font-size: 11px; text-align: center;">${o.Panettoni || 0}</td>
+                        <td style="padding: 6px; border: 1px solid #e1eae5; font-size: 11px; text-align: center;">${o.Pandori || 0}</td>
+                        <td style="padding: 6px; border: 1px solid #e1eae5; font-size: 10px; font-weight: bold;">${o.Status || 'Prenotato'}</td>
+                        <td style="padding: 6px; border: 1px solid #e1eae5; font-size: 10px;">${o["Metodo Pagamento"] || '-'}</td>
                     </tr>
                 `;
             });
 
             let page2 = `
                 <div>
-                    <div style="text-align: center; border-bottom: 2px solid #6b9080; padding-bottom: 10px; margin-bottom: 15px;">
-                        <h3 style="color: #6b9080; margin: 0; font-family: Quicksand, sans-serif; font-size: 18px;">Elenco Completo Ordini Registrati</h3>
+                    <div style="text-align: center; border-bottom: 2px solid #5b8e72; padding-bottom: 10px; margin-bottom: 15px;">
+                        <h3 style="color: #5b8e72; margin: 0; font-family: Quicksand, sans-serif; font-size: 18px;">Elenco Completo Ordini Registrati</h3>
                     </div>
                     <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
                         <thead>
-                            <tr style="background: #6b9080; color: white;">
-                                <th style="padding: 7px; border: 1px solid #4d6a5b; text-align: left;">Data</th>
-                                <th style="padding: 7px; border: 1px solid #4d6a5b; text-align: left;">Cliente</th>
-                                <th style="padding: 7px; border: 1px solid #4d6a5b; text-align: left;">Telefono</th>
-                                <th style="padding: 7px; border: 1px solid #4d6a5b; text-align: center;">Panettoni</th>
-                                <th style="padding: 7px; border: 1px solid #4d6a5b; text-align: center;">Pandori</th>
-                                <th style="padding: 7px; border: 1px solid #4d6a5b; text-align: left;">Stato</th>
-                                <th style="padding: 7px; border: 1px solid #4d6a5b; text-align: left;">Pagamento</th>
+                            <tr style="background: #5b8e72; color: white;">
+                                <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Data</th>
+                                <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Cliente</th>
+                                <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Telefono</th>
+                                <th style="padding: 7px; border: 1px solid #3a6250; text-align: center;">Panettoni</th>
+                                <th style="padding: 7px; border: 1px solid #3a6250; text-align: center;">Pandori</th>
+                                <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Stato</th>
+                                <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Pagamento</th>
                             </tr>
                         </thead>
                         <tbody>
