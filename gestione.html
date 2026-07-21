@@ -1,4 +1,3 @@
-<!-- gestione.html -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -51,6 +50,12 @@
         .header-brand { display: flex; align-items: center; gap: 12px; }
         .header img { height: 34px; width: auto; }
 
+        .header-actions-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         .btn-logout {
             background-color: #fff0f0;
             color: #d9534f;
@@ -64,6 +69,20 @@
             font-family: 'Quicksand', sans-serif;
         }
         .btn-logout:hover { background-color: #f8d7da; }
+
+        .btn-pdf-header {
+            background-color: var(--accent-light);
+            color: var(--primary-dark);
+            border: 1px solid var(--accent-soft);
+            padding: 0.4rem 0.8rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Quicksand', sans-serif;
+        }
+        .btn-pdf-header:hover { background-color: var(--accent-soft); color: #fff; }
 
         .container { padding: 1.2rem 1rem; max-width: 1000px; margin: 0 auto; display: none; } 
         
@@ -90,19 +109,19 @@
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* TAB SELECTOR DASHBOARD NOVO */
+        /* DASHBOARD RECENTRATA */
         .dash-selector-bar {
             display: flex;
             background: #edf3f0;
-            padding: 5px;
+            padding: 6px;
             border-radius: 16px;
-            margin-bottom: 1.2rem;
-            gap: 5px;
+            margin-bottom: 1.5rem;
+            gap: 6px;
             border: 1px solid var(--border-color);
         }
         .dash-tab-btn {
             flex: 1;
-            padding: 0.7rem;
+            padding: 0.8rem;
             border: none;
             border-radius: 12px;
             font-family: 'Quicksand', sans-serif;
@@ -120,7 +139,6 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
 
-        /* CARD SCORTE CON PROGRESS BAR */
         .stock-section { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
         @media screen and (max-width: 600px) { .stock-section { grid-template-columns: 1fr; } }
 
@@ -131,7 +149,10 @@
             border: 2px solid var(--border-color);
             box-shadow: 0 4px 15px rgba(0,0,0,0.02);
             position: relative;
+            cursor: pointer;
+            transition: transform 0.15s;
         }
+        .stock-card:hover { transform: translateY(-2px); }
         .stock-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
         .stock-title { font-family: 'Quicksand', sans-serif; font-weight: 750; font-size: 1.05rem; color: var(--text-main); }
         .stock-numbers { display: flex; align-items: baseline; gap: 8px; margin: 0.4rem 0; }
@@ -144,7 +165,6 @@
         .stock-footer-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; }
         .stock-edit-btn { background: #f0f6f3; border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; font-weight: bold; color: var(--primary-dark); }
 
-        /* SEZIONI FLUSSO STATO */
         .dash-section-title { font-family: 'Quicksand', sans-serif; font-size: 1rem; font-weight: 750; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.8rem; letter-spacing: 0.5px; }
 
         .flow-grid { display: grid; grid-template-columns: repeat( auto-fit, minmax(130px, 1fr) ); gap: 0.8rem; margin-bottom: 1.5rem; }
@@ -282,25 +302,23 @@
             <img src="https://www.wonderlad.org/wp-content/uploads/2020/05/logo-wonderlad.png" alt="WonderLAD Logo" onerror="this.style.display='none'">
             <span>Gestione Ordini <span id="user-badge" style="font-size: 0.75rem; font-weight: normal; opacity: 0.85; background: var(--accent-light); color: var(--primary-dark); padding: 3px 8px; border-radius: 6px;"></span></span>
         </div>
-        <button class="btn-logout" onclick="effettuaLogout()">🚪 Logout</button>
+        <div class="header-actions-right">
+            <button class="btn-pdf-header" onclick="esportaPDF()">📄 Scarica PDF</button>
+            <button class="btn-logout" onclick="effettuaLogout()">🚪 Logout</button>
+        </div>
     </div>
 
     <div class="container" id="main-container">
         <div id="loadingMsg">Sincronizzazione dati in corso...</div>
 
-        <!-- Dashboard Rivoluzionata -->
+        <!-- Dashboard Riprogettata -->
         <div id="view-dashboard" class="view active">
             
-            <!-- Barra di Switch tra Viste -->
+            <!-- Barra di Switch tra Viste (Globale, Panettoni, Pandori) -->
             <div class="dash-selector-bar">
                 <button class="dash-tab-btn active" id="tabModeTutti" onclick="cambiaVistaDashboard('TUTTI', this)">📊 Vista Globale</button>
-                <button class="dash-tab-btn" id="tabModePanettoni" onclick="cambiaVistaDashboard('PANETTONI', this)">🥮 Panettoni</button>
-                <button class="dash-tab-btn" id="tabModePandori" onclick="cambiaVistaDashboard('PANDORI', this)">🍞 Pandori</button>
-            </div>
-
-            <div class="dashboard-header-actions">
-                <h3 style="color: var(--text-main); font-size: 1.1rem; margin: 0; font-family: 'Quicksand', sans-serif;" id="dashMainHeaderTitle">Panoramica Generale</h3>
-                <button class="btn-pdf" onclick="esportaPDF()">📄 Scarica Report PDF</button>
+                <button class="dash-tab-btn" id="tabModePanettoni" onclick="cambiaVistaDashboard('PANETTONI', this)">🥮 Focus Panettoni</button>
+                <button class="dash-tab-btn" id="tabModePandori" onclick="cambiaVistaDashboard('PANDORI', this)">🍞 Focus Pandori</button>
             </div>
 
             <div id="pdfContent" style="padding: 5px; background: transparent;">
@@ -449,7 +467,7 @@
         <!-- Log / Attività (Solo Administrator) -->
         <div id="view-log" class="view">
             <div class="controls-panel">
-                <input type="text" id="searchLog" class="search-input" placeholder="🔍 Cerca nei log (es. azionamento, utente, parola chiave)..." onkeyup="filtraLog()">
+                <input type="text" id="searchLog" class="search-input" placeholder="🔍 Cerca nei log..." onkeyup="filtraLog()">
                 <div class="filter-chips" id="logFilterChips">
                     <button class="chip active" onclick="setFiltroLogCat('Tutti', this)">Tutti</button>
                     <button class="chip" onclick="setFiltroLogCat('INSERIMENTO', this)">Inserimento</button>
@@ -592,16 +610,11 @@
         window.addEventListener('DOMContentLoaded', () => {
             const sessionUser = sessionStorage.getItem('wonderlad_active_user') || localStorage.getItem('wonderlad_user');
             const sessionRole = sessionStorage.getItem('wonderlad_active_role');
-            const savedPass = localStorage.getItem('wonderlad_pass');
 
             if (sessionUser && sessionRole) {
                 currentUser = sessionUser;
                 currentRole = sessionRole;
                 avviaInterfaccia();
-            } else if (sessionUser && savedPass) {
-                document.getElementById('username').value = sessionUser;
-                document.getElementById('passcode').value = savedPass;
-                effettuaLogin();
             }
         });
 
@@ -674,10 +687,6 @@
                 if (existingLogBtn) existingLogBtn.remove();
             }
 
-            document.querySelectorAll('.stock-edit-btn').forEach(b => {
-                b.style.display = isAdmin ? 'inline-block' : 'none';
-            });
-
             caricaDati();
         }
 
@@ -685,8 +694,6 @@
             if (confirm("Vuoi davvero uscire dal sistema?")) {
                 sessionStorage.removeItem('wonderlad_active_user');
                 sessionStorage.removeItem('wonderlad_active_role');
-                localStorage.removeItem('wonderlad_user');
-                localStorage.removeItem('wonderlad_pass');
                 location.reload();
             }
         }
@@ -707,11 +714,6 @@
             
             document.querySelectorAll('.dash-tab-btn').forEach(b => b.classList.remove('active'));
             if(btnElem) btnElem.classList.add('active');
-
-            const headerLbl = document.getElementById('dashMainHeaderTitle');
-            if(modo === 'PANETTONI') headerLbl.textContent = 'Focus Panettoni';
-            else if(modo === 'PANDORI') headerLbl.textContent = 'Focus Pandori';
-            else headerLbl.textContent = 'Panoramica Generale';
 
             calcolaStatistiche(datiGlobali, impostazioniGlobali);
         }
@@ -1173,7 +1175,7 @@
 
                 const status = (ordine.Status || "").toLowerCase();
 
-                // Calcolo in base alla vista attiva (TUTTI, PANETTONI, PANDORI)
+                // Filtro basato sulla vista attiva (TUTTI, PANETTONI, PANDORI)
                 let includeInStats = false;
                 if (filtroProdottoDashboard === 'TUTTI') includeInStats = true;
                 if (filtroProdottoDashboard === 'PANETTONI' && pan > 0) includeInStats = true;
@@ -1200,7 +1202,7 @@
                 }
             });
 
-            // Popola i contatori puliti
+            // Popola contatori flussi e incassi
             const impostaBoxFlow = (idCount, idSub, key) => {
                 document.getElementById(idCount).textContent = stats[key].count;
                 document.getElementById(idSub).textContent = `🥮 ${stats[key].pan} | 🍞 ${stats[key].pand}`;
@@ -1214,7 +1216,7 @@
             impostaBoxFlow('countConsegnati', 'subConsegnati', 'consegnato');
             impostaBoxFlow('countAnnullati', 'subAnnullati', 'annullato');
 
-            // Stock e barre di progresso
+            // Stock e barre di progresso generali
             let stockInizialePanettoni = parseInt(impostazioni["Totale Panettoni"]) || 0;
             let stockInizialePandori = parseInt(impostazioni["Totale Pandori"]) || 0;
 
