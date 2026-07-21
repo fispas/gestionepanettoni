@@ -7,15 +7,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;750&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --header-bg: #006847;
-            --header-dark: #004d35;
-            --accent-green: #a1cb68;
-            --accent-hover: #8cb851;
-            --bg-main: #f9fbf8;
+            --primary: #6b9080;
+            --primary-dark: #4d6a5b;
+            --accent-soft: #a4c3b2;
+            --accent-light: #eaf4f0;
+            --bg-main: #f6fff8;
             --card-bg: #ffffff;
-            --text-main: #1a1a1a;
-            --text-muted: #5a6561;
-            --border-color: #e1e8e3;
+            --text-main: #2c3e35;
+            --text-muted: #6b7c73;
+            --border-color: #e2ece9;
         }
 
         body { 
@@ -33,12 +33,13 @@
 
         .header-bar {
             width: 100%;
-            background-color: var(--header-bg);
+            background-color: var(--card-bg);
             padding: 1.2rem 1rem;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-bottom: 2px solid var(--border-color);
+            box-shadow: 0 4px 15px rgba(107, 144, 128, 0.05);
             margin-bottom: 2rem;
         }
 
@@ -52,16 +53,16 @@
             max-width: 450px;
             width: 90%;
             padding: 2.5rem 2rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 104, 71, 0.08);
-            border-top: 6px solid var(--header-bg); 
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(107, 144, 128, 0.08);
+            border: 2px solid var(--border-color);
             box-sizing: border-box;
             margin-bottom: 2rem;
         }
 
         h2 { 
             text-align: center; 
-            color: var(--header-bg); 
+            color: var(--primary); 
             margin-top: 0; 
             font-weight: 750; 
             font-size: 1.8rem; 
@@ -82,37 +83,38 @@
             margin-bottom: 1.2rem; 
             padding: 0.9rem 1rem; 
             border: 2px solid var(--border-color);
-            border-radius: 12px; 
+            border-radius: 14px; 
             box-sizing: border-box; 
             font-family: 'Nunito', sans-serif;
             font-size: 1rem; 
             transition: all 0.3s ease; 
-            background-color: #fcfdfe; 
+            background-color: #fbfdfe; 
+            color: var(--text-main);
         }
 
         input:focus { 
             outline: none; 
-            border-color: var(--header-bg); 
+            border-color: var(--primary); 
             background-color: #ffffff; 
-            box-shadow: 0 0 0 4px rgba(0, 104, 71, 0.12); 
+            box-shadow: 0 0 0 4px rgba(107, 144, 128, 0.12); 
         }
 
         .product-selector { 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            background-color: #f4f8f5; 
+            background-color: var(--accent-light); 
             border: 2px solid var(--border-color); 
-            border-radius: 12px; 
+            border-radius: 16px; 
             padding: 1rem; 
             margin-bottom: 1.2rem; 
         }
 
-        .product-name { font-weight: 750; font-size: 1.1rem; color: var(--header-dark); font-family: 'Quicksand', sans-serif; }
+        .product-name { font-weight: 750; font-size: 1.1rem; color: var(--primary-dark); font-family: 'Quicksand', sans-serif; }
         .counter-group { display: flex; align-items: center; gap: 15px; }
 
         .btn-counter { 
-            background-color: var(--header-bg); 
+            background-color: var(--primary); 
             color: white; 
             border: none; 
             width: 38px; 
@@ -126,27 +128,27 @@
             align-items: center; 
             transition: background-color 0.2s, transform 0.1s; 
         }
-        .btn-counter:hover { background-color: var(--header-dark); transform: scale(1.05); }
+        .btn-counter:hover { background-color: var(--primary-dark); transform: scale(1.05); }
         .btn-counter:active { transform: scale(0.95); }
         .count-display { font-size: 1.2rem; font-weight: 800; width: 25px; text-align: center; color: var(--text-main); }
 
         button[type="submit"] { 
             width: 100%; 
             padding: 1.1rem; 
-            background-color: var(--accent-green); 
-            color: var(--header-dark); 
+            background-color: var(--primary); 
+            color: white; 
             border: none; 
-            border-radius: 12px; 
+            border-radius: 14px; 
             font-size: 1.15rem; 
             font-weight: 800; 
             cursor: pointer; 
             transition: background-color 0.3s, transform 0.1s; 
             font-family: 'Quicksand', sans-serif; 
             margin-top: 0.5rem; 
-            box-shadow: 0 4px 12px rgba(161, 203, 104, 0.4); 
+            box-shadow: 0 4px 12px rgba(107, 144, 128, 0.25); 
         }
         button[type="submit"]:hover { 
-            background-color: var(--accent-hover); 
+            background-color: var(--primary-dark); 
             transform: translateY(-2px); 
         }
 
@@ -158,7 +160,7 @@
             color: var(--text-muted); 
             border: 2px dashed var(--border-color); 
             padding: 0.8rem; 
-            border-radius: 12px; 
+            border-radius: 14px; 
             cursor: pointer; 
             font-family: 'Quicksand', sans-serif; 
             font-weight: 700; 
@@ -172,7 +174,7 @@
 <body>
 
     <div class="header-bar">
-        <img src="https://www.wonderlad.org/wp-content/uploads/2020/05/logo-wonderlad.png" alt="WonderLAD Logo" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'180\' height=\'40\' viewBox=\'0 0 180 40\'><text x=\'10\' y=\'28\' fill=\'%23ffffff\' font-family=\'Quicksand\' font-size=\'22\' font-weight=\'bold\'>WonderLAD</text></svg>'">
+        <img src="https://www.wonderlad.org/wp-content/uploads/2020/05/logo-wonderlad.png" alt="WonderLAD Logo" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'180\' height=\'40\' viewBox=\'0 0 180 40\'><text x=\'10\' y=\'28\' fill=\'%236b9080\' font-family=\'Quicksand\' font-size=\'22\' font-weight=\'bold\'>WonderLAD</text></svg>'">
     </div>
 
     <div class="form-container">
@@ -246,7 +248,7 @@
             
             if (countPanettoni === 0 && countPandori === 0) {
                 msg.textContent = "Seleziona almeno un Panettone o un Pandoro.";
-                msg.style.color = "#c53030";
+                msg.style.color = "#d9534f";
                 return;
             }
 
@@ -273,7 +275,7 @@
             .then(result => {
                 if(result.status === "success") {
                     msg.textContent = "Prenotazione confermata con successo! 🎉"; 
-                    msg.style.color = "#006847";
+                    msg.style.color = "#6b9080";
                     document.getElementById('ordineForm').reset();
                     countPanettoni = 0; 
                     countPandori = 0;
@@ -287,7 +289,7 @@
             })
             .catch(error => {
                 msg.textContent = "Si è verificato un errore. Riprova."; 
-                msg.style.color = "#c53030";
+                msg.style.color = "#d9534f";
             })
             .finally(() => {
                 btn.disabled = false; 
