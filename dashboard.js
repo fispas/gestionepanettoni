@@ -9,6 +9,27 @@ function cambiaVistaDashboard(modo, btnElem) {
     calcolaStatistiche(datiGlobali, impostazioniGlobali);
 }
 
+function navigaVersoFiltro(stato) {
+    filtroStatoAttuale = stato;
+    
+    document.querySelectorAll('#view-ordini .filter-chips .chip').forEach(c => {
+        if(c.textContent.toLowerCase() === stato.toLowerCase() || (stato === 'Prenotato' && c.textContent.toLowerCase() === 'prenotati')) {
+            c.classList.add('active');
+        } else {
+            c.classList.remove('active');
+        }
+    });
+
+    filtraOrdini();
+
+    const navButtons = document.querySelectorAll('.bottom-nav .nav-item');
+    navButtons.forEach(btn => {
+        if(btn.textContent.includes('Ordini')) {
+            switchView('ordini', btn);
+        }
+    });
+}
+
 function calcolaStatistiche(dati, impostazioni) {
     let totPanettoni = 0; 
     let totPandori = 0;
@@ -53,7 +74,6 @@ function calcolaStatistiche(dati, impostazioni) {
             metodiPagamentoStats[chiaveMetodo].pan += pan;
             metodiPagamentoStats[chiaveMetodo].pand += pand;
 
-            // Categorizzazione Incassi & Saldi
             if(status.includes('da pagare') && !status.includes('consegnato') && !status.includes('annullato')) {
                 ordiniDaIncassareList.push(ordine);
             } else if(status.includes('pagato') || status.includes('consegnato')) {
@@ -62,7 +82,6 @@ function calcolaStatistiche(dati, impostazioni) {
                 ordiniNonImpostatiIncassiList.push(ordine);
             }
 
-            // Categorizzazione Logistica & Consegne
             if(status.includes('preparazione') || status.includes('prenotato')) {
                 ordiniDaPreparareList.push(ordine);
             } else if(status.includes('da consegnare') || status.includes('consegnato')) {
@@ -98,16 +117,16 @@ function calcolaStatistiche(dati, impostazioni) {
     const percPand = stockInizialePandori > 0 ? Math.min(100, Math.round((totPandori / stockInizialePandori) * 100)) : 0;
     if(barPand) barPand.style.width = percPand + '%';
 
-    // Render delle sezioni nel Command Center
-    renderizzaAreaCommandCenter('areaDaIncassare', ordiniDaIncassareList, 'incasso', '🔴 Priorità Finanziaria: Da Incassare');
-    renderizzaAreaCommandCenter('areaPagati', ordiniPagatiList, 'pagato', '🟢 Finanza: Pagati / Chiusi');
-    renderizzaAreaCommandCenter('areaNonImpostatiIncassi', ordiniNonImpostatiIncassiList, 'altro', '⚪ Incassi: Stato Non Impostato');
+    // Render con supporto ai filtri cliccabili
+    renderizzaAreaCommandCenter('areaDaIncassare', ordiniDaIncassareList, 'incasso', '🔴 Priorità Finanziaria: Da Incassare', 'Prenotato - Da Pagare');
+    renderizzaAreaCommandCenter('areaPagati', ordiniPagatiList, 'pagato', '🟢 Finanza: Pagati / Chiusi', 'Prenotato - Pagato');
+    renderizzaAreaCommandCenter('areaNonImpostatiIncassi', ordiniNonImpostatiIncassiList, 'altro', '⚪ Incassi: Stato Non Impostato', 'Tutti');
     
     renderizzaBoxMetodiPagamento('areaMetodiPagamento', metodiPagamentoStats);
     
-    renderizzaAreaCommandCenter('areaDaPreparare', ordiniDaPreparareList, 'preparazione', '🟡 Priorità Logistica: Da Preparare');
-    renderizzaAreaCommandCenter('areaPronti', ordiniProntiList, 'consegna', '🟢 Logistica: Pronti / Consegnati');
-    renderizzaAreaCommandCenter('areaNonImpostatiLogistica', ordiniNonImpostatiLogisticaList, 'altro', '⚪ Logistica: Stato Non Impostato');
+    renderizzaAreaCommandCenter('areaDaPreparare', ordiniDaPreparareList, 'preparazione', '🟡 Priorità Logistica: Da Preparare', 'In Preparazione');
+    renderizzaAreaCommandCenter('areaPronti', ordiniProntiList, 'consegna', '🟢 Logistica: Pronti / Consegnati', 'Consegnato');
+    renderizzaAreaCommandCenter('areaNonImpostatiLogistica', ordiniNonImpostatiLogisticaList, 'altro', '⚪ Logistica: Stato Non Impostato', 'Tutti');
 }
 
 function renderizzaBoxMetodiPagamento(containerId, metodiStats) {
@@ -130,22 +149,22 @@ function renderizzaBoxMetodiPagamento(containerId, metodiStats) {
             💳 Dettaglio Metodi di Pagamento Impostati
         </div>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.8rem;">
-            <div style="background: var(--card-bg); padding: 0.9rem; border-radius: 14px; border: 2px solid var(--border-color); text-align: center;">
+            <div onclick="navigaVersoFiltro('Tutti')" style="background: var(--card-bg); padding: 0.9rem; border-radius: 14px; border: 2px solid var(--border-color); text-align: center; cursor: pointer; transition: transform 0.15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
                 <div style="font-size: 0.75rem; font-weight: 800; color: #2e7d32; font-family: 'Quicksand', sans-serif;">💶 CASH / CONTANTI</div>
                 <div style="font-size: 1.4rem; font-weight: 800; margin: 4px 0;">${metodiStats['Cash'].count} <span style="font-size: 0.75rem; font-weight: normal; color: var(--text-muted);">ordini</span></div>
                 <div style="font-size: 0.7rem; color: var(--text-muted); border-top: 1px dashed var(--border-color); padding-top: 4px;">🥮 ${metodiStats['Cash'].pan} | 🍞 ${metodiStats['Cash'].pand}</div>
             </div>
-            <div style="background: var(--card-bg); padding: 0.9rem; border-radius: 14px; border: 2px solid var(--border-color); text-align: center;">
+            <div onclick="navigaVersoFiltro('Tutti')" style="background: var(--card-bg); padding: 0.9rem; border-radius: 14px; border: 2px solid var(--border-color); text-align: center; cursor: pointer; transition: transform 0.15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
                 <div style="font-size: 0.75rem; font-weight: 800; color: #2b6cb0; font-family: 'Quicksand', sans-serif;">🏦 BONIFICO</div>
                 <div style="font-size: 1.4rem; font-weight: 800; margin: 4px 0;">${metodiStats['Bonifico'].count} <span style="font-size: 0.75rem; font-weight: normal; color: var(--text-muted);">ordini</span></div>
                 <div style="font-size: 0.7rem; color: var(--text-muted); border-top: 1px dashed var(--border-color); padding-top: 4px;">🥮 ${metodiStats['Bonifico'].pan} | 🍞 ${metodiStats['Bonifico'].pand}</div>
             </div>
-            <div style="background: var(--card-bg); padding: 0.9rem; border-radius: 14px; border: 2px solid var(--border-color); text-align: center;">
+            <div onclick="navigaVersoFiltro('Tutti')" style="background: var(--card-bg); padding: 0.9rem; border-radius: 14px; border: 2px solid var(--border-color); text-align: center; cursor: pointer; transition: transform 0.15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
                 <div style="font-size: 0.75rem; font-weight: 800; color: #6b46c1; font-family: 'Quicksand', sans-serif;">💳 POS / CARTA</div>
                 <div style="font-size: 1.4rem; font-weight: 800; margin: 4px 0;">${metodiStats['POS'].count} <span style="font-size: 0.75rem; font-weight: normal; color: var(--text-muted);">ordini</span></div>
                 <div style="font-size: 0.7rem; color: var(--text-muted); border-top: 1px dashed var(--border-color); padding-top: 4px;">🥮 ${metodiStats['POS'].pan} | 🍞 ${metodiStats['POS'].pand}</div>
             </div>
-            <div style="background: var(--card-bg); padding: 0.9rem; border-radius: 14px; border: 2px solid var(--border-color); text-align: center;">
+            <div onclick="navigaVersoFiltro('Tutti')" style="background: var(--card-bg); padding: 0.9rem; border-radius: 14px; border: 2px solid var(--border-color); text-align: center; cursor: pointer; transition: transform 0.15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
                 <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); font-family: 'Quicksand', sans-serif;">❓ NON SPECIFICATO</div>
                 <div style="font-size: 1.4rem; font-weight: 800; margin: 4px 0;">${metodiStats['Altro'].count} <span style="font-size: 0.75rem; font-weight: normal; color: var(--text-muted);">ordini</span></div>
                 <div style="font-size: 0.7rem; color: var(--text-muted); border-top: 1px dashed var(--border-color); padding-top: 4px;">🥮 ${metodiStats['Altro'].pan} | 🍞 ${metodiStats['Altro'].pand}</div>
@@ -154,7 +173,7 @@ function renderizzaBoxMetodiPagamento(containerId, metodiStats) {
     `;
 }
 
-function renderizzaAreaCommandCenter(containerId, listaOrdini, tipoArea, titoloSezione) {
+function renderizzaAreaCommandCenter(containerId, listaOrdini, tipoArea, titoloSezione, statoFiltroTarget) {
     let container = document.getElementById(containerId);
     
     if (!container) {
@@ -165,10 +184,17 @@ function renderizzaAreaCommandCenter(containerId, listaOrdini, tipoArea, titoloS
         if(dashboardView) dashboardView.appendChild(container);
     }
 
+    let coloreBordo = "var(--primary)";
+    if(tipoArea === 'incasso') coloreBordo = "#c53030";
+    if(tipoArea === 'preparazione') coloreBordo = "#b7791f";
+    if(tipoArea === 'consegna' || tipoArea === 'pagato') coloreBordo = "#2e7d32";
+    if(tipoArea === 'altro') coloreBordo = "#718096";
+
     if (listaOrdini.length === 0) {
         container.innerHTML = `
-            <div style="font-family: 'Quicksand', sans-serif; font-size: 0.95rem; font-weight: 750; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">
-                ${titoloSezione} (0)
+            <div onclick="navigaVersoFiltro('${statoFiltroTarget}')" style="font-family: 'Quicksand', sans-serif; font-size: 0.95rem; font-weight: 750; color: ${coloreBordo}; margin-bottom: 0.5rem; text-transform: uppercase; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                <span>${titoloSezione} (0)</span>
+                <span style="font-size: 0.75rem; font-weight: normal; color: var(--text-muted);">🔍 Vedi tutti</span>
             </div>
             <div style="background: var(--card-bg); padding: 0.8rem; border-radius: 14px; border: 2px solid var(--border-color); text-align: center; color: var(--text-muted); font-size: 0.85rem;">
                 ✅ Nessun elemento in questa sezione.
@@ -181,17 +207,17 @@ function renderizzaAreaCommandCenter(containerId, listaOrdini, tipoArea, titoloS
     listaOrdini.slice(0, 5).forEach(o => {
         let azioniBtn = '';
         if (tipoArea === 'incasso') {
-            azioniBtn = `<button class="btn-quick-status" onclick="apriModaleSaldoRapido(${o.rowNumber}, ${o.Panettoni || 0}, ${o.Pandori || 0})">💶 Incassa Subito</button>`;
+            azioniBtn = `<button class="btn-quick-status" onclick="event.stopPropagation(); apriModaleSaldoRapido(${o.rowNumber}, ${o.Panettoni || 0}, ${o.Pandori || 0})">💶 Incassa Subito</button>`;
         } else if (tipoArea === 'preparazione') {
-            azioniBtn = `<button class="btn-quick-status" onclick="cambiaStatoRapido(${o.rowNumber}, ${o.Panettoni || 0}, ${o.Pandori || 0}, 'Da Consegnare', '${o["Metodo Pagamento"] || "-"}')">📦 Pronto</button>`;
+            azioniBtn = `<button class="btn-quick-status" onclick="event.stopPropagation(); cambiaStatoRapido(${o.rowNumber}, ${o.Panettoni || 0}, ${o.Pandori || 0}, 'Da Consegnare', '${o["Metodo Pagamento"] || "-"}')">📦 Pronto</button>`;
         } else if (tipoArea === 'consegna') {
-            azioniBtn = `<button class="btn-quick-status" onclick="cambiaStatoRapido(${o.rowNumber}, ${o.Panettoni || 0}, ${o.Pandori || 0}, 'Consegnato', '${o["Metodo Pagamento"] || "-"}')">✅ Consegna</button>`;
+            azioniBtn = `<button class="btn-quick-status" onclick="event.stopPropagation(); cambiaStatoRapido(${o.rowNumber}, ${o.Panettoni || 0}, ${o.Pandori || 0}, 'Consegnato', '${o["Metodo Pagamento"] || "-"}')">✅ Consegna</button>`;
         } else {
-            azioniBtn = `<button class="btn-edit" onclick="apriModaleOrdine(${o.rowNumber}, ${o.Panettoni || 0}, ${o.Pandori || 0}, '${o.Status || 'Prenotato'}', '${o["Metodo Pagamento"] || "-"}')">✏️ Gestisci</button>`;
+            azioniBtn = `<button class="btn-edit" onclick="event.stopPropagation(); apriModaleOrdine(${o.rowNumber}, ${o.Panettoni || 0}, ${o.Pandori || 0}, '${o.Status || 'Prenotato'}', '${o["Metodo Pagamento"] || "-"}')">✏️ Gestisci</button>`;
         }
 
         righeHTML += `
-            <div style="display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 0.7rem 1rem; border-radius: 12px; margin-bottom: 6px; border: 1px solid var(--border-color);">
+            <div onclick="navigaVersoFiltro('${statoFiltroTarget}')" style="display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 0.7rem 1rem; border-radius: 12px; margin-bottom: 6px; border: 1px solid var(--border-color); cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='#f0f4f1'" onmouseout="this.style.background='#fff'">
                 <div>
                     <strong>${o.Nome} ${o.Cognome}</strong> 
                     <span style="font-size: 0.8rem; color: var(--text-muted); margin-left: 8px;">(🥮 ${o.Panettoni || 0} | 🍞 ${o.Pandori || 0}) - <em style="color: var(--primary-dark);">${o.Status || 'Non imp.'}</em></span>
@@ -201,19 +227,14 @@ function renderizzaAreaCommandCenter(containerId, listaOrdini, tipoArea, titoloS
         `;
     });
 
-    let coloreBordo = "var(--primary)";
-    if(tipoArea === 'incasso') coloreBordo = "#c53030";
-    if(tipoArea === 'preparazione') coloreBordo = "#b7791f";
-    if(tipoArea === 'consegna' || tipoArea === 'pagato') coloreBordo = "#2e7d32";
-    if(tipoArea === 'altro') coloreBordo = "#718096";
-
     container.innerHTML = `
-        <div style="font-family: 'Quicksand', sans-serif; font-size: 0.95rem; font-weight: 750; color: ${coloreBordo}; margin-bottom: 0.5rem; text-transform: uppercase;">
-            ${titoloSezione} (${listaOrdini.length})
+        <div onclick="navigaVersoFiltro('${statoFiltroTarget}')" style="font-family: 'Quicksand', sans-serif; font-size: 0.95rem; font-weight: 750; color: ${coloreBordo}; margin-bottom: 0.5rem; text-transform: uppercase; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+            <span>${titoloSezione} (${listaOrdini.length})</span>
+            <span style="font-size: 0.75rem; font-weight: normal; color: var(--text-muted);">🔍 Vedi tutti nel filtro</span>
         </div>
         <div style="background: var(--card-bg); padding: 0.8rem; border-radius: 16px; border: 2px solid var(--border-color);">
             ${righeHTML}
-            ${listaOrdini.length > 5 ? `<div style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">E altri ${listaOrdini.length - 5} ordini in questa categoria...</div>` : ''}
+            ${listaOrdini.length > 5 ? `<div onclick="event.stopPropagation(); navigaVersoFiltro('${statoFiltroTarget}')" style="text-align: center; font-size: 0.8rem; color: var(--primary); font-weight: bold; margin-top: 8px; cursor: pointer;">Visualizza tutti gli altri ${listaOrdini.length - 5} ordini nella tabella ➡️</div>` : ''}
         </div>
     `;
 }
