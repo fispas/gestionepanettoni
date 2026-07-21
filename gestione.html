@@ -31,15 +31,37 @@
         .stock-edit-btn { background: #f8f9fa; border: 1px solid #ced4da; padding: 2px 8px; border-radius: 5px; font-size: 0.75rem; cursor: pointer; font-weight: bold; margin-top: 5px; display: inline-block; color: #495057; }
         .stock-edit-btn:hover { background: #e9ecef; }
 
-        /* Box Status Cliccabili in Dashboard (Disposti su 3 colonne o 2 flessibili) */
+        /* Box Status Cliccabili in Dashboard con Colori Coordinati */
         .status-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-bottom: 1.5rem; }
         @media screen and (max-width: 600px) {
             .status-summary-grid { grid-template-columns: repeat(2, 1fr); }
         }
-        .status-summary-card { background: white; padding: 0.9rem 0.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); text-align: center; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; border: 2px solid transparent; }
-        .status-summary-card:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.08); border-color: #e53935; }
-        .status-summary-title { font-size: 0.75rem; color: #7f8c8d; font-weight: 700; margin-bottom: 0.3rem; text-transform: uppercase; }
-        .status-summary-count { font-size: 1.3rem; font-weight: 800; color: #2c3e50; }
+        .status-summary-card { padding: 1rem 0.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); text-align: center; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; border: 2px solid transparent; }
+        .status-summary-card:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.08); filter: brightness(0.95); }
+        .status-summary-title { font-size: 0.75rem; font-weight: 800; margin-bottom: 0.3rem; text-transform: uppercase; }
+        .status-summary-count { font-size: 1.4rem; font-weight: 800; }
+
+        /* Colori specifici per card dashboard */
+        .card-prenotato { background-color: #e7f5ff; border-color: #74c0fc; }
+        .card-prenotato .status-summary-title, .card-prenotato .status-summary-count { color: #1971c2; }
+
+        .card-da-pagare { background-color: #ffe3e3; border-color: #ffa8a8; }
+        .card-da-pagare .status-summary-title, .card-da-pagare .status-summary-count { color: #c92a2a; }
+
+        .card-pagato { background-color: #e6fcf5; border-color: #63e6be; }
+        .card-pagato .status-summary-title, .card-pagato .status-summary-count { color: #0ca678; }
+
+        .card-preparazione { background-color: #fff3bf; border-color: #ffec99; }
+        .card-preparazione .status-summary-title, .card-preparazione .status-summary-count { color: #f59f00; }
+
+        .card-da-consegnare { background-color: #e3fafc; border-color: #66d9e8; }
+        .card-da-consegnare .status-summary-title, .card-da-consegnare .status-summary-count { color: #0b7285; }
+
+        .card-consegnato { background-color: #d8f5a2; border-color: #b2f2bb; }
+        .card-consegnato .status-summary-title, .card-consegnato .status-summary-count { color: #5c940d; }
+
+        .card-annullato { background-color: #f1f3f5; border-color: #dee2e6; grid-column: span 3; }
+        .card-annullato .status-summary-title, .card-annullato .status-summary-count { color: #868e96; }
 
         .alert-box { background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
 
@@ -58,7 +80,7 @@
         .btn-edit { background-color: #f39c12; color: white; border: none; padding: 0.5rem; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
         .btn-delete { background-color: #e74c3c; color: white; border: none; padding: 0.5rem; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-left: 5px; }
         
-        /* Badge Status */
+        /* Badge Status Tabella */
         .badge-status { padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; display: inline-block; }
         .status-prenotato { background-color: #e7f5ff; color: #1971c2; }
         .status-prenotato-da-pagare { background-color: #ffe3e3; color: #c92a2a; }
@@ -136,34 +158,34 @@
                 </div>
             </div>
 
-            <!-- Box di Riepilogo Status Cliccabili -->
+            <!-- Box di Riepilogo Status Cliccabili Colorati -->
             <h3 style="color: #2c3e50; font-size: 1.1rem; margin-bottom: 0.8rem;">Stato Ordini</h3>
             <div class="status-summary-grid">
-                <div class="status-summary-card" onclick="navigaVersoFiltro('Prenotato')">
+                <div class="status-summary-card card-prenotato" onclick="navigaVersoFiltro('Prenotato')">
                     <div class="status-summary-title">Prenotati</div>
                     <div class="status-summary-count" id="countPrenotato">0</div>
                 </div>
-                <div class="status-summary-card" onclick="navigaVersoFiltro('Prenotato - Da Pagare')">
+                <div class="status-summary-card card-da-pagare" onclick="navigaVersoFiltro('Prenotato - Da Pagare')">
                     <div class="status-summary-title">Da Pagare</div>
                     <div class="status-summary-count" id="countDaPagare">0</div>
                 </div>
-                <div class="status-summary-card" onclick="navigaVersoFiltro('Prenotato - Pagato')">
+                <div class="status-summary-card card-pagato" onclick="navigaVersoFiltro('Prenotato - Pagato')">
                     <div class="status-summary-title">Pagati</div>
                     <div class="status-summary-count" id="countPagati">0</div>
                 </div>
-                <div class="status-summary-card" onclick="navigaVersoFiltro('In Preparazione')">
+                <div class="status-summary-card card-preparazione" onclick="navigaVersoFiltro('In Preparazione')">
                     <div class="status-summary-title">In Prep.</div>
                     <div class="status-summary-count" id="countInPreparazione">0</div>
                 </div>
-                <div class="status-summary-card" onclick="navigaVersoFiltro('Da Consegnare')">
+                <div class="status-summary-card card-da-consegnare" onclick="navigaVersoFiltro('Da Consegnare')">
                     <div class="status-summary-title">Da Conseg.</div>
                     <div class="status-summary-count" id="countDaConsegnare">0</div>
                 </div>
-                <div class="status-summary-card" onclick="navigaVersoFiltro('Consegnato')">
+                <div class="status-summary-card card-consegnato" onclick="navigaVersoFiltro('Consegnato')">
                     <div class="status-summary-title">Consegnati</div>
                     <div class="status-summary-count" id="countConsegnati">0</div>
                 </div>
-                <div class="status-summary-card" onclick="navigaVersoFiltro('Annullato')" style="grid-column: span 3;">
+                <div class="status-summary-card card-annullato" onclick="navigaVersoFiltro('Annullato')">
                     <div class="status-summary-title">Annullati</div>
                     <div class="status-summary-count" id="countAnnullati">0</div>
                 </div>
@@ -418,7 +440,7 @@
             const trHead = document.createElement('tr');
             
             colonneOriginali.forEach(col => {
-                if(col !== "rowNumber") {
+                if(col !== "rowNumber" && col.trim() !== "") {
                     const th = document.createElement('th');
                     th.textContent = col;
                     trHead.appendChild(th);
@@ -437,7 +459,7 @@
                 tr.setAttribute('data-stato', ordine.Status || "");
                 
                 colonneOriginali.forEach(col => {
-                    if(col !== "rowNumber") {
+                    if(col !== "rowNumber" && col.trim() !== "") {
                         const td = document.createElement('td');
                         td.setAttribute('data-label', col);
                         let valore = ordine[col];
