@@ -8,137 +8,86 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { 
-            font-family: 'Nunito', sans-serif; 
-            background-color: #f4f6f8; 
-            color: #333;
-            margin: 0;
-            padding: 0;
-            padding-bottom: 80px; /* Spazio per la bottom nav */
-        }
+        body { font-family: 'Nunito', sans-serif; background-color: #f4f6f8; color: #333; margin: 0; padding: 0; padding-bottom: 80px; }
+        .header { background-color: #e53935; color: white; padding: 1rem; text-align: center; font-weight: 800; font-size: 1.2rem; position: sticky; top: 0; z-index: 100; }
+        .container { padding: 1rem; max-width: 1000px; margin: 0 auto; display: none; } 
         
-        .header {
-            background-color: #e53935;
-            color: white;
-            padding: 1rem;
-            text-align: center;
-            font-weight: 800;
-            font-size: 1.2rem;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f4f6f8; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; }
+        .login-box { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; border-top: 8px solid #e53935; }
+        .login-box input { padding: 0.8rem; margin: 1rem 0; width: 100%; box-sizing: border-box; border: 2px solid #e9ecef; border-radius: 10px; font-family: 'Nunito'; }
+        .login-box button { background-color: #e53935; color: white; border: none; padding: 0.8rem; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; }
 
-        .container {
-            padding: 1rem;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        /* Gestione Viste (Tab) */
         .view { display: none; animation: fadeIn 0.3s; }
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Card Statistiche */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .stat-card {
-            background: white;
-            padding: 1rem;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            text-align: center;
-            border-bottom: 4px solid #e53935;
-        }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+        .stat-card { background: white; padding: 1rem; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; border-bottom: 4px solid #e53935; }
         .stat-card.pandoro { border-bottom-color: #fbbc05; }
         .stat-title { font-size: 0.9rem; color: #7f8c8d; font-weight: 700; }
         .stat-value { font-size: 1.8rem; font-weight: 800; color: #2c3e50; margin: 0.5rem 0; }
         .stat-detail { font-size: 0.8rem; color: #95a5a6; }
+        .chart-container { background: white; padding: 1rem; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
 
-        /* Grafico */
-        .chart-container {
-            background: white;
-            padding: 1rem;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            margin-bottom: 1.5rem;
-        }
-
-        /* Tabella */
         .table-controls { display: flex; justify-content: space-between; margin-bottom: 1rem; }
-        .btn-action {
-            background-color: #2ecc71; color: white; border: none; padding: 0.7rem 1rem;
-            border-radius: 10px; font-weight: bold; cursor: pointer;
-        }
+        .btn-action { background-color: #2ecc71; color: white; border: none; padding: 0.7rem 1rem; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .btn-edit { background-color: #f39c12; color: white; border: none; padding: 0.5rem; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
         .table-responsive { overflow-x: auto; background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         table { width: 100%; border-collapse: collapse; min-width: 600px; }
         th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e9ecef; font-size: 0.9rem; }
         th { background-color: #f8f9fa; color: #2c3e50; font-weight: 800; white-space: nowrap; }
-        
-        /* Bottom Navigation Bar */
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: white; display: flex; justify-content: space-around;
-            padding: 0.8rem 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.05);
-            z-index: 1000;
-        }
-        .nav-item {
-            background: none; border: none; font-family: 'Nunito', sans-serif;
-            font-size: 0.9rem; font-weight: 700; color: #95a5a6; cursor: pointer;
-            display: flex; flex-direction: column; align-items: center; gap: 5px;
-        }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 0.8rem 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.05); z-index: 1000; }
+        .nav-item { background: none; border: none; font-family: 'Nunito', sans-serif; font-size: 0.9rem; font-weight: 700; color: #95a5a6; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; }
         .nav-item.active { color: #e53935; }
         .nav-icon { font-size: 1.5rem; }
 
+        #edit-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 3000; }
+        .modal-content { background: white; padding: 2rem; border-radius: 15px; width: 90%; max-width: 400px; }
+        .modal-content input, .modal-content select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 2px solid #e9ecef; border-radius: 10px; box-sizing: border-box; }
+        .modal-actions { display: flex; justify-content: space-between; gap: 1rem; }
+        .btn-save { background-color: #2ecc71; color: white; border: none; padding: 0.8rem; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; }
+        .btn-cancel { background-color: #e74c3c; color: white; border: none; padding: 0.8rem; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; }
+
         #contatoreOrdini { font-size: 0.9em; color: #95a5a6; font-weight: 700; text-align: center; margin: 1rem 0; }
         #loadingMsg { font-weight: bold; color: #3498db; text-align: center; margin: 2rem 0; }
-
-        .test-btn {
-            background-color: transparent; color: #adb5bd; border: 2px dashed #dee2e6; 
-            margin-top: 1rem; width: 100%; padding: 0.8rem; border-radius: 10px;
-            font-family: 'Nunito', sans-serif; font-weight: 700; cursor: pointer;
-        }
+        .test-btn { background-color: transparent; color: #adb5bd; border: 2px dashed #dee2e6; margin-top: 1rem; width: 100%; padding: 0.8rem; border-radius: 10px; font-family: 'Nunito', sans-serif; font-weight: 700; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        Pannello WonderLAD
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2>Area Riservata</h2>
+            <input type="password" id="passcode" placeholder="Inserisci Password">
+            <button onclick="effettuaLogin()">Accedi</button>
+            <p id="login-err" style="color:red; display:none; font-size:0.9rem;">Password errata</p>
+        </div>
     </div>
 
-    <div class="container">
+    <div class="header">Pannello WonderLAD</div>
+
+    <div class="container" id="main-container">
         <div id="loadingMsg">Sincronizzazione dati in corso...</div>
 
-        <!-- VISTA 1: DASHBOARD STATISTICHE -->
         <div id="view-dashboard" class="view active">
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-title">Panettoni Prenotati</div>
+                    <div class="stat-title">Panettoni</div>
                     <div class="stat-value" id="valPanettoni">0</div>
                     <div class="stat-detail" id="rimanenzePanettoni">Rimanenze: 0</div>
                 </div>
                 <div class="stat-card pandoro">
-                    <div class="stat-title">Pandori Prenotati</div>
+                    <div class="stat-title">Pandori</div>
                     <div class="stat-value" id="valPandori">0</div>
                     <div class="stat-detail" id="rimanenzePandori">Rimanenze: 0</div>
                 </div>
             </div>
-            
-            <div class="chart-container">
-                <canvas id="graficoVendite"></canvas>
-            </div>
-            
+            <div class="chart-container"><canvas id="graficoVendite"></canvas></div>
             <div id="contatoreOrdini">Sessione caricata. Totale righe analizzate: 0</div>
             <button class="test-btn" onclick="eseguiTestLettura()">⚙️ Esegui Test Ricarica Dati</button>
         </div>
 
-        <!-- VISTA 2: TABELLA E GESTIONE -->
         <div id="view-ordini" class="view">
             <div class="table-controls">
                 <h3 style="margin: 0; color: #2c3e50;">Lista Ordini</h3>
@@ -146,40 +95,70 @@
             </div>
             <div class="table-responsive">
                 <table id="tabellaOrdini" style="display:none;">
-                    <thead id="testaTabella">
-                        <!-- Intestazioni generate dinamicamente -->
-                    </thead>
-                    <tbody id="corpoTabella">
-                        <!-- Dati generati dinamicamente -->
-                    </tbody>
+                    <thead id="testaTabella"></thead>
+                    <tbody id="corpoTabella"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- BOTTOM NAVIGATION BAR -->
     <nav class="bottom-nav">
-        <button class="nav-item active" onclick="switchView('dashboard', this)">
-            <span class="nav-icon">📊</span>
-            Dashboard
-        </button>
-        <button class="nav-item" onclick="switchView('ordini', this)">
-            <span class="nav-icon">📋</span>
-            Ordini
-        </button>
+        <button class="nav-item active" onclick="switchView('dashboard', this)"><span class="nav-icon">📊</span>Dashboard</button>
+        <button class="nav-item" onclick="switchView('ordini', this)"><span class="nav-icon">📋</span>Ordini</button>
     </nav>
 
+    <!-- Modale Modifica -->
+    <div id="edit-modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0;">Modifica Ordine</h3>
+            <label>Panettoni</label>
+            <input type="number" id="edit-pan" min="0">
+            <label>Pandori</label>
+            <input type="number" id="edit-pan-dori" min="0">
+            <label>Status</label>
+            <select id="edit-status">
+                <option value="Prenotato">Prenotato</option>
+                <option value="In Preparazione">In Preparazione</option>
+                <option value="Consegnato">Consegnato</option>
+                <option value="Annullato">Annullato</option>
+            </select>
+            <input type="hidden" id="edit-row">
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="chiudiModale()">Annulla</button>
+                <button class="btn-save" id="btn-save-edit" onclick="salvaModifica()">Salva</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbw7kxXSV8ds8zPG7fFsJ08U9PEwuwpJ6swgNmIOjoG-V47Upq3FYg9gQIZU_yIANyNxKQ/exec'; 
+        // IL TUO NUOVO URL
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzmOhnuJDy9cj5_6dvkdKDqXjyjBkTkiddB4Wt-Vr2wyIqnM2v-4dO65PgnUcWewZVKZg/exec'; 
         let datiGlobali = [];
         let rowCounter = 0;
         let chartInstance = null;
+        let currentUser = "Admin"; 
 
-        // Funzione Navigazione Bottom Bar
+        function effettuaLogin() {
+            const pass = document.getElementById('passcode').value;
+            // Password temporanea impostata a "admin123"
+            if(pass === "admin123") {
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('main-container').style.display = 'block';
+                
+                fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'log_login', user: currentUser })
+                });
+                caricaDati();
+            } else {
+                document.getElementById('login-err').style.display = 'block';
+            }
+        }
+
         function switchView(viewName, btnElement) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-            
             document.getElementById('view-' + viewName).classList.add('active');
             btnElement.classList.add('active');
         }
@@ -196,139 +175,133 @@
                         popolaTabella(datiGlobali);
                         calcolaStatistiche(datiGlobali, result.impostazioni);
                         document.getElementById('loadingMsg').style.display = 'none';
-                    } else {
-                        throw new Error("Errore nel caricamento");
                     }
-                })
-                .catch(error => {
-                    document.getElementById('loadingMsg').textContent = "Errore di connessione. Riprova.";
-                    document.getElementById('loadingMsg').style.color = "#e74c3c";
                 });
         }
 
-        // Generazione Tabella Completamente Dinamica
         function popolaTabella(dati) {
             const thead = document.getElementById('testaTabella');
             const tbody = document.getElementById('corpoTabella');
-            thead.innerHTML = '';
-            tbody.innerHTML = '';
-            rowCounter = 0;
-
+            thead.innerHTML = ''; tbody.innerHTML = ''; rowCounter = 0;
             if(dati.length === 0) return;
 
-            // Prende le chiavi dal primo oggetto JSON (ovvero le intestazioni di Sheets)
-            const colonne = Object.keys(dati[0]);
-            
-            // Crea l'intestazione dinamicamente
+            const colonneOriginali = Object.keys(dati[0]);
             const trHead = document.createElement('tr');
-            colonne.forEach(col => {
-                const th = document.createElement('th');
-                th.textContent = col;
-                trHead.appendChild(th);
+            
+            colonneOriginali.forEach(col => {
+                if(col !== "rowNumber") {
+                    const th = document.createElement('th');
+                    th.textContent = col;
+                    trHead.appendChild(th);
+                }
             });
+            const thAzioni = document.createElement('th');
+            thAzioni.textContent = "Azioni";
+            trHead.appendChild(thAzioni);
             thead.appendChild(trHead);
 
-            // Inserisce i dati
             dati.forEach(ordine => {
                 if(!ordine.Nome && !ordine.Cognome) return; 
                 rowCounter++;
                 const tr = document.createElement('tr');
                 
-                colonne.forEach(col => {
-                    const td = document.createElement('td');
-                    let valore = ordine[col];
-                    
-                    // Formattazione speciale se la colonna è una data
-                    if(col.toLowerCase().includes('data') && valore) {
-                        const d = new Date(valore);
-                        if(!isNaN(d)) valore = d.toLocaleDateString('it-IT') + " " + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
+                colonneOriginali.forEach(col => {
+                    if(col !== "rowNumber") {
+                        const td = document.createElement('td');
+                        let valore = ordine[col];
+                        if(col.toLowerCase().includes('data') && valore) {
+                            const d = new Date(valore);
+                            if(!isNaN(d)) valore = d.toLocaleDateString('it-IT') + " " + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
+                        }
+                        td.textContent = valore || '-';
+                        tr.appendChild(td);
                     }
-                    
-                    td.textContent = valore || '-';
-                    tr.appendChild(td);
                 });
                 
+                const tdAzioni = document.createElement('td');
+                tdAzioni.innerHTML = `<button class="btn-edit" onclick="apriModale(${ordine.rowNumber}, ${ordine.Panettoni || 0}, ${ordine.Pandori || 0}, '${ordine.Status || 'Prenotato'}')">✏️ Modifica</button>`;
+                tr.appendChild(tdAzioni);
                 tbody.appendChild(tr);
             });
-
             document.getElementById('tabellaOrdini').style.display = 'table';
             document.getElementById('contatoreOrdini').textContent = `Sessione caricata. Totale righe analizzate: ${rowCounter}`;
         }
 
-        function calcolaStatistiche(dati, impostazioni) {
-            let totPanettoni = 0;
-            let totPandori = 0;
+        function apriModale(row, panettoni, pandori, status) {
+            document.getElementById('edit-row').value = row;
+            document.getElementById('edit-pan').value = panettoni;
+            document.getElementById('edit-pan-dori').value = pandori;
+            
+            const sel = document.getElementById('edit-status');
+            for(let i=0; i<sel.options.length; i++) {
+                if(sel.options[i].value === status) { sel.selectedIndex = i; break; }
+            }
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
 
-            // Calcola vendite
+        function chiudiModale() { document.getElementById('edit-modal').style.display = 'none'; }
+
+        function salvaModifica() {
+            const btn = document.getElementById('btn-save-edit');
+            btn.textContent = "Salvataggio..."; btn.disabled = true;
+
+            const row = document.getElementById('edit-row').value;
+            const panettoni = document.getElementById('edit-pan').value;
+            const pandori = document.getElementById('edit-pan-dori').value;
+            const status = document.getElementById('edit-status').value;
+
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'update', rowNumber: row, panettoni: panettoni, pandori: pandori, status: status, user: currentUser })
+            })
+            .then(res => res.json())
+            .then(result => {
+                chiudiModale();
+                caricaDati(); 
+            })
+            .finally(() => {
+                btn.textContent = "Salva"; btn.disabled = false;
+            });
+        }
+
+        function calcolaStatistiche(dati, impostazioni) {
+            let totPanettoni = 0; let totPandori = 0;
             dati.forEach(ordine => {
                 if(!ordine.Nome && !ordine.Cognome) return;
                 totPanettoni += parseInt(ordine.Panettoni) || 0;
                 totPandori += parseInt(ordine.Pandori) || 0;
             });
-
-            // Calcola stock iniziale dalle impostazioni
             let stockInizialePanettoni = parseInt(impostazioni["Totale Panettoni"]) || 0;
             let stockInizialePandori = parseInt(impostazioni["Totale Pandori"]) || 0;
 
             document.getElementById('valPanettoni').textContent = totPanettoni;
             document.getElementById('valPandori').textContent = totPandori;
-            
             document.getElementById('rimanenzePanettoni').textContent = `Su stock di ${stockInizialePanettoni} (Restano: ${stockInizialePanettoni - totPanettoni})`;
             document.getElementById('rimanenzePandori').textContent = `Su stock di ${stockInizialePandori} (Restano: ${stockInizialePandori - totPandori})`;
-
             aggiornaGrafico(totPanettoni, totPandori);
         }
 
         function aggiornaGrafico(panettoni, pandori) {
             const ctx = document.getElementById('graficoVendite').getContext('2d');
-            
-            if(chartInstance) {
-                chartInstance.destroy(); // Distrugge il vecchio grafico prima di ricrearlo
-            }
-
+            if(chartInstance) chartInstance.destroy();
             chartInstance = new Chart(ctx, {
                 type: 'bar',
-                data: {
-                    labels: ['Panettoni', 'Pandori'],
-                    datasets: [{
-                        label: 'Quantità Prenotata',
-                        data: [panettoni, pandori],
-                        backgroundColor: ['#e53935', '#fbbc05'],
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        title: { display: true, text: 'Andamento Prenotazioni', font: { family: 'Nunito', size: 16 } }
-                    },
-                    scales: {
-                        y: { beginAtZero: true, ticks: { stepSize: 1 } }
-                    }
-                }
+                data: { labels: ['Panettoni', 'Pandori'], datasets: [{ label: 'Prenotazioni', data: [panettoni, pandori], backgroundColor: ['#e53935', '#fbbc05'], borderRadius: 8 }] },
+                options: { responsive: true, plugins: { legend: { display: false }, title: { display: true, text: 'Andamento Prenotazioni', font: { family: 'Nunito', size: 16 } } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
             });
         }
 
         function esportaExcel() {
-            if(datiGlobali.length === 0) {
-                alert("Nessun dato da esportare!");
-                return;
-            }
-            const ws = XLSX.utils.json_to_sheet(datiGlobali);
+            if(datiGlobali.length === 0) return alert("Nessun dato!");
+            const datiPuliti = datiGlobali.map(({rowNumber, ...resto}) => resto);
+            const ws = XLSX.utils.json_to_sheet(datiPuliti);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Ordini");
             XLSX.writeFile(wb, "Ordini_WonderLAD.xlsx");
         }
 
-        function eseguiTestLettura() {
-            document.getElementById('loadingMsg').style.display = 'block';
-            document.getElementById('loadingMsg').textContent = "Test di caricamento manuale in corso...";
-            caricaDati();
-        }
-
-        // Inizializzazione
-        window.onload = caricaDati;
+        function eseguiTestLettura() { caricaDati(); }
     </script>
 </body>
 </html>
