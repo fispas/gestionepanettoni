@@ -159,7 +159,6 @@
             .btn-edit, .btn-delete { width: 48%; padding: 0.8rem; font-size: 0.9rem; margin-top: 0.5rem; }
         }
 
-        /* Footer Chiaro */
         .bottom-nav { 
             position: fixed; 
             bottom: 0; 
@@ -340,7 +339,7 @@
         </div>
     </div>
 
-    <!-- Bottom Navigation Dinamica con Sfondo Chiaro -->
+    <!-- Bottom Navigation Dinamica -->
     <nav class="bottom-nav" id="bottomNav">
         <button class="nav-item active" onclick="switchView('dashboard', this)"><span class="nav-icon">📊</span>Dashboard</button>
         <button class="nav-item" onclick="switchView('ordini', this)"><span class="nav-icon">📋</span>Ordini</button>
@@ -465,14 +464,28 @@
                     document.getElementById('main-container').style.display = 'block';
                     document.getElementById('user-badge').textContent = `(${currentUser} - ${currentRole})`;
 
-                    if(currentRole.toLowerCase() === 'administrator') {
-                        const nav = document.getElementById('bottomNav');
-                        nav.innerHTML += `
-                            <button class="nav-item" onclick="switchView('utenti', this)">
-                                <span class="nav-icon">⚙️</span>Utenti
-                            </button>
-                        `;
+                    // Gestione Permessi Ruoli
+                    const isAdmin = currentRole.toLowerCase() === 'administrator';
+                    
+                    // Mostra il pulsante Utenti nella nav solo se Administrator
+                    const nav = document.getElementById('bottomNav');
+                    const existingUtentiBtn = document.getElementById('btn-nav-utenti');
+                    if (isAdmin) {
+                        if (!existingUtentiBtn) {
+                            nav.innerHTML += `
+                                <button id="btn-nav-utenti" class="nav-item" onclick="switchView('utenti', this)">
+                                    <span class="nav-icon">⚙️</span>Utenti
+                                </button>
+                            `;
+                        }
+                    } else if (existingUtentiBtn) {
+                        existingUtentiBtn.remove();
                     }
+
+                    // Nasconde o mostra i pulsanti "Modifica Stock" in base al ruolo
+                    document.querySelectorAll('.stock-edit-btn').forEach(b => {
+                        b.style.display = isAdmin ? 'inline-block' : 'none';
+                    });
 
                     caricaDati();
                 } else {
@@ -489,6 +502,11 @@
         }
 
         function switchView(viewName, btnElement) {
+            // Blocco di sicurezza lato frontend per i Manager
+            if (viewName === 'utenti' && currentRole.toLowerCase() !== 'administrator') {
+                alert("Accesso non autorizzato. La sezione Utenti è riservata agli Administrator.");
+                return;
+            }
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
             document.getElementById('view-' + viewName).classList.add('active');
@@ -528,7 +546,9 @@
                         utentiGlobali = result.utenti || [];
                         impostazioniGlobali = result.impostazioni || {};
                         popolaTabellaOrdini(datiGlobali);
-                        popolaTabellaUtenti(utentiGlobali);
+                        if (currentRole.toLowerCase() === 'administrator') {
+                            popolaTabellaUtenti(utentiGlobali);
+                        }
                         calcolaStatistiche(datiGlobali, impostazioniGlobali);
                         document.getElementById('loadingMsg').style.display = 'none';
                     }
@@ -675,12 +695,18 @@
         }
 
         function apriModaleStock(tipo) {
+            if (currentRole.toLowerCase() !== 'administrator') {
+                alert("Operazione non consentita per il ruolo Manager.");
+                return;
+            }
             document.getElementById('input-tot-pan').value = impostazioniGlobali["Totale Panettoni"] || 0;
             document.getElementById('input-tot-pand').value = impostazioniGlobali["Totale Pandori"] || 0;
             document.getElementById('stock-modal').style.display = 'flex';
         }
 
         function salvaStock() {
+            if (currentRole.toLowerCase() !== 'administrator') return;
+
             const totPan = document.getElementById('input-tot-pan').value;
             const totPand = document.getElementById('input-tot-pand').value;
 
@@ -697,6 +723,8 @@
         }
 
         function apriModaleUtente(mode, row = '', username = '', password = '', ruolo = 'Manager') {
+            if (currentRole.toLowerCase() !== 'administrator') return;
+
             document.getElementById('modal-mode').value = mode;
             document.getElementById('modal-user-row').value = row;
             document.getElementById('modal-username').value = username;
@@ -732,6 +760,8 @@
         }
 
         function salvaUtente() {
+            if (currentRole.toLowerCase() !== 'administrator') return;
+
             const mode = document.getElementById('modal-mode').value;
             const row = document.getElementById('modal-user-row').value;
             const username = document.getElementById('modal-username').value.trim();
@@ -755,6 +785,8 @@
         }
 
         function eliminaUtente(row, username) {
+            if (currentRole.toLowerCase() !== 'administrator') return;
+
             if(confirm(`Sei sicuro di voler eliminare l'utente "${username}"?`)) {
                 fetch(API_URL, {
                     method: 'POST',
