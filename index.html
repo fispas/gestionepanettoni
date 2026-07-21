@@ -3,443 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione WonderLAD</title>
+    <title>Prenotazione Panettoni e Pandori - WonderLAD</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Nunito', sans-serif; background-color: #f4f6f8; color: #333; margin: 0; padding: 0; padding-bottom: 80px; }
-        .header { background-color: #e53935; color: white; padding: 1rem; text-align: center; font-weight: 800; font-size: 1.2rem; position: sticky; top: 0; z-index: 100; }
-        .container { padding: 1rem; max-width: 1000px; margin: 0 auto; display: none; } 
+        body { 
+            font-family: 'Nunito', sans-serif; 
+            background-color: #f4f6f8; 
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+            margin: 0;
+        }
         
-        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f4f6f8; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; }
-        .login-box { background: white; padding: 2.5rem 2rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; border-top: 8px solid #e53935; width: 90%; max-width: 350px; box-sizing: border-box; }
-        .login-box input { padding: 1rem; margin-bottom: 1rem; width: 100%; box-sizing: border-box; border: 2px solid #e9ecef; border-radius: 10px; font-family: 'Nunito'; font-size: 1rem; background-color: #f8f9fa; }
-        .login-box button { background-color: #e53935; color: white; border: none; padding: 1rem; width: 100%; border-radius: 10px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
-
-        .view { display: none; animation: fadeIn 0.3s; }
-        .view.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
-        .stat-card { background: white; padding: 1rem; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; border-bottom: 4px solid #e53935; }
-        .stat-card.pandoro { border-bottom-color: #fbbc05; }
-        .stat-title { font-size: 0.9rem; color: #7f8c8d; font-weight: 700; }
-        .stat-value { font-size: 1.8rem; font-weight: 800; color: #2c3e50; margin: 0.5rem 0; }
-        .stat-detail { font-size: 0.8rem; color: #95a5a6; }
-        .chart-container { background: white; padding: 1rem; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
-
-        .table-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-        .btn-action { background-color: #2ecc71; color: white; border: none; padding: 0.7rem 1rem; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
-        .btn-edit { background-color: #f39c12; color: white; border: none; padding: 0.5rem; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
-        
-        .table-responsive { width: 100%; background: transparent; margin-bottom: 1rem; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e9ecef; font-size: 0.9rem; }
-        th { background-color: #f8f9fa; color: #2c3e50; font-weight: 800; white-space: nowrap; }
-
-        @media screen and (max-width: 768px) {
-            table, thead, tbody, th, td, tr { display: block; }
-            table { background: transparent; box-shadow: none; }
-            thead tr { display: none; }
-            tr { background: white; margin-bottom: 1rem; border-radius: 15px; padding: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e9ecef; }
-            td { border: none; border-bottom: 1px solid #f4f6f8; position: relative; display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; text-align: right; }
-            td::before { content: attr(data-label); font-weight: 800; color: #7f8c8d; text-align: left; padding-right: 15px; flex-shrink: 0; }
-            td:last-child { border-bottom: none; justify-content: flex-end; }
-            .btn-edit { width: 100%; padding: 0.8rem; font-size: 1rem; margin-top: 0.5rem; }
+        .form-container {
+            background: #ffffff;
+            max-width: 450px;
+            width: 100%;
+            padding: 2.5rem 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border-top: 8px solid #e53935; 
+            box-sizing: border-box;
         }
 
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 0.8rem 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.05); z-index: 1000; }
-        .nav-item { background: none; border: none; font-family: 'Nunito', sans-serif; font-size: 0.9rem; font-weight: 700; color: #95a5a6; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        .nav-item.active { color: #e53935; }
-        .nav-icon { font-size: 1.5rem; }
+        h2 { text-align: center; color: #2c3e50; margin-top: 0; font-weight: 800; font-size: 1.8rem; margin-bottom: 0.5rem; }
+        .subtitle { text-align: center; color: #7f8c8d; font-size: 0.95rem; margin-bottom: 2rem; }
 
-        /* Modali */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 3000; }
-        .modal-content { background: white; padding: 2rem; border-radius: 15px; width: 90%; max-width: 400px; box-sizing: border-box; }
-        .modal-content input, .modal-content select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 2px solid #e9ecef; border-radius: 10px; box-sizing: border-box; font-family: 'Nunito'; }
-        .modal-actions { display: flex; justify-content: space-between; gap: 1rem; }
-        .btn-save { background-color: #2ecc71; color: white; border: none; padding: 0.8rem; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; }
-        .btn-cancel { background-color: #e74c3c; color: white; border: none; padding: 0.8rem; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; }
+        input[type="text"], input[type="tel"] { 
+            width: 100%; margin-bottom: 1.2rem; padding: 0.9rem 1rem; border: 2px solid #e9ecef;
+            border-radius: 10px; box-sizing: border-box; font-family: 'Nunito', sans-serif;
+            font-size: 1rem; transition: all 0.3s ease; background-color: #f8f9fa;
+        }
 
-        #contatoreOrdini { font-size: 0.9em; color: #95a5a6; font-weight: 700; text-align: center; margin: 1rem 0; }
-        #loadingMsg { font-weight: bold; color: #3498db; text-align: center; margin: 2rem 0; }
-        .test-btn { background-color: transparent; color: #adb5bd; border: 2px dashed #dee2e6; margin-top: 1rem; width: 100%; padding: 0.8rem; border-radius: 10px; font-family: 'Nunito'; font-weight: 700; cursor: pointer; }
+        input:focus { outline: none; border-color: #fbbc05; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(251, 188, 5, 0.1); }
+
+        .product-selector { display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; border: 2px solid #e9ecef; border-radius: 10px; padding: 1rem; margin-bottom: 1.2rem; }
+        .product-info { display: flex; flex-direction: column; }
+        .product-name { font-weight: 700; font-size: 1.1rem; color: #2c3e50; }
+        .counter-group { display: flex; align-items: center; gap: 15px; }
+
+        .btn-counter { background-color: #e53935; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; font-size: 1.2rem; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background-color 0.2s, transform 0.1s; }
+        .btn-counter:hover { background-color: #c62828; transform: scale(1.05); }
+        .btn-counter:active { transform: scale(0.95); }
+        .count-display { font-size: 1.2rem; font-weight: 800; width: 20px; text-align: center; }
+
+        button[type="submit"] { width: 100%; padding: 1.1rem; background-color: #e53935; color: white; border: none; border-radius: 10px; font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: background-color 0.3s, transform 0.1s; font-family: 'Nunito', sans-serif; margin-top: 0.5rem; box-shadow: 0 4px 6px rgba(229, 57, 53, 0.2); }
+        button[type="submit"]:hover { background-color: #c62828; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(229, 57, 53, 0.3); }
+
+        #statusMsg { font-weight: bold; text-align: center; margin-bottom: 1rem; min-height: 1.5rem; font-size: 1.1rem; }
+        #contatoreOrdini { font-size: 0.9em; color: #95a5a6; text-align: center; margin-bottom: 1.5rem; font-weight: 700; }
+        .test-btn { background-color: transparent; color: #adb5bd; margin-top: 2rem; border: 2px dashed #dee2e6; padding: 0.8rem; border-radius: 10px; cursor: pointer; font-family: 'Nunito', sans-serif; font-weight: 700; transition: all 0.3s; width: 100%; max-width: 450px; box-sizing: border-box; }
+        .test-btn:hover { background-color: #e9ecef; color: #495057; border-color: #adb5bd; }
     </style>
 </head>
 <body>
 
-    <div id="login-overlay">
-        <div class="login-box">
-            <h2 style="margin-top: 0; color: #2c3e50;">Area Riservata</h2>
-            <input type="text" id="username" placeholder="Username">
-            <input type="password" id="passcode" placeholder="Password">
-            <button onclick="effettuaLogin()" id="btn-login">Accedi</button>
-            <p id="login-err" style="color:#e74c3c; display:none; font-size:0.9rem; font-weight: bold; margin-top: 1rem;">Credenziali errate</p>
-        </div>
-    </div>
+    <div class="form-container">
+        <h2>Prenota i tuoi Dolci</h2>
+        <div class="subtitle">Sostieni i nostri progetti con dolcezza</div>
+        
+        <div id="statusMsg"></div>
+        <div id="contatoreOrdini">Ordini registrati in questa sessione: 0</div>
 
-    <div class="header">Pannello WonderLAD <span id="user-badge" style="font-size: 0.8rem; font-weight: normal; opacity: 0.8;"></span></div>
-
-    <div class="container" id="main-container">
-        <div id="loadingMsg">Sincronizzazione dati in corso...</div>
-
-        <!-- Dashboard -->
-        <div id="view-dashboard" class="view active">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-title">Panettoni</div>
-                    <div class="stat-value" id="valPanettoni">0</div>
-                    <div class="stat-detail" id="rimanenzePanettoni">Rimanenze: 0</div>
-                </div>
-                <div class="stat-card pandoro">
-                    <div class="stat-title">Pandori</div>
-                    <div class="stat-value" id="valPandori">0</div>
-                    <div class="stat-detail" id="rimanenzePandori">Rimanenze: 0</div>
+        <form id="ordineForm">
+            <input type="text" id="nome" placeholder="Nome" required>
+            <input type="text" id="cognome" placeholder="Cognome" required>
+            <input type="tel" id="telefono" placeholder="Numero di Telefono" required>
+            
+            <div class="product-selector">
+                <div class="product-info"><span class="product-name">Panettoni</span></div>
+                <div class="counter-group">
+                    <button type="button" class="btn-counter" onclick="updateCount('panettoni', -1)">-</button>
+                    <span id="panettoni-display" class="count-display">0</span>
+                    <button type="button" class="btn-counter" onclick="updateCount('panettoni', 1)">+</button>
                 </div>
             </div>
-            <div class="chart-container"><canvas id="graficoVendite"></canvas></div>
-            <div id="contatoreOrdini">Sessione caricata. Totale righe analizzate: 0</div>
-            <button class="test-btn" onclick="eseguiTestLettura()">⚙️ Ricarica Dati</button>
-        </div>
 
-        <!-- Ordini -->
-        <div id="view-ordini" class="view">
-            <div class="table-controls">
-                <h3 style="margin: 0; color: #2c3e50;">Lista Ordini</h3>
-                <button class="btn-action" onclick="esportaExcel()">📥 Export</button>
+            <div class="product-selector">
+                <div class="product-info"><span class="product-name">Pandori</span></div>
+                <div class="counter-group">
+                    <button type="button" class="btn-counter" onclick="updateCount('pandori', -1)">-</button>
+                    <span id="pandori-display" class="count-display">0</span>
+                    <button type="button" class="btn-counter" onclick="updateCount('pandori', 1)">+</button>
+                </div>
             </div>
-            <div class="table-responsive">
-                <table id="tabellaOrdini" style="display:none;">
-                    <thead id="testaTabella"></thead>
-                    <tbody id="corpoTabella"></tbody>
-                </table>
-            </div>
-        </div>
 
-        <!-- Utenti (Visibile solo se Administrator) -->
-        <div id="view-utenti" class="view">
-            <div class="table-controls">
-                <h3 style="margin: 0; color: #2c3e50;">Gestione Utenti</h3>
-                <button class="btn-action" onclick="apriModaleUtente('add')">➕ Nuovo Utente</button>
-            </div>
-            <div class="table-responsive">
-                <table id="tabellaUtenti">
-                    <thead id="testaUtenti">
-                        <tr><th>Username</th><th>Password</th><th>Ruolo</th><th>Azione</th></tr>
-                    </thead>
-                    <tbody id="corpoUtenti"></tbody>
-                </table>
-            </div>
-        </div>
+            <button type="submit">Conferma Prenotazione</button>
+        </form>
     </div>
 
-    <!-- Bottom Navigation Dinamica -->
-    <nav class="bottom-nav" id="bottomNav">
-        <button class="nav-item active" onclick="switchView('dashboard', this)"><span class="nav-icon">📊</span>Dashboard</button>
-        <button class="nav-item" onclick="switchView('ordini', this)"><span class="nav-icon">📋</span>Ordini</button>
-    </nav>
-
-    <!-- Modale Modifica Ordine -->
-    <div id="edit-modal" class="modal">
-        <div class="modal-content">
-            <h3 style="margin-top:0;">Modifica Ordine</h3>
-            <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Panettoni</label>
-            <input type="number" id="edit-pan" min="0">
-            <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Pandori</label>
-            <input type="number" id="edit-pan-dori" min="0">
-            <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Status</label>
-            <select id="edit-status">
-                <option value="Prenotato">Prenotato</option>
-                <option value="In Preparazione">In Preparazione</option>
-                <option value="Consegnato">Consegnato</option>
-                <option value="Annullato">Annullato</option>
-            </select>
-            <input type="hidden" id="edit-row">
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="chiudiModale('edit-modal')">Annulla</button>
-                <button class="btn-save" onclick="salvaModificaOrdine()">Salva</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modale Gestione Utenti -->
-    <div id="user-modal" class="modal">
-        <div class="modal-content">
-            <h3 id="user-modal-title" style="margin-top:0;">Nuovo Utente</h3>
-            <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Username</label>
-            <input type="text" id="modal-username">
-            <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Password</label>
-            <input type="text" id="modal-password">
-            <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Ruolo</label>
-            <select id="modal-role">
-                <option value="Manager">Manager</option>
-                <option value="Administrator">Administrator</option>
-            </select>
-            <input type="hidden" id="modal-user-row">
-            <input type="hidden" id="modal-mode">
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="chiudiModale('user-modal')">Annulla</button>
-                <button class="btn-save" onclick="salvaUtente()">Salva</button>
-            </div>
-        </div>
-    </div>
+    <button class="test-btn" onclick="eseguiTest()">⚙️ Esegui Test Inserimento Dati</button>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxmgrw77JwQ-tRhJfE34tCPipbN3eNBzY3HaFsyd6o16-rz9lcQ02HQkrYr8h7P8hwUyw/exec'; 
-        let datiGlobali = [];
-        let utentiGlobali = [];
-        let rowCounter = 0;
-        let chartInstance = null;
-        let currentUser = ""; 
-        let currentRole = "";
+        let counterOrdini = 0; let countPanettoni = 0; let countPandori = 0;
 
-        function effettuaLogin() {
-            const user = document.getElementById('username').value.trim();
-            const pass = document.getElementById('passcode').value;
-            const btn = document.getElementById('btn-login');
+        function updateCount(prodotto, valore) {
+            if (prodotto === 'panettoni') {
+                countPanettoni += valore;
+                if (countPanettoni < 0) countPanettoni = 0;
+                document.getElementById('panettoni-display').textContent = countPanettoni;
+            } else if (prodotto === 'pandori') {
+                countPandori += valore;
+                if (countPandori < 0) countPandori = 0;
+                document.getElementById('pandori-display').textContent = countPandori;
+            }
+        }
 
-            if(!user || !pass) return;
+        function eseguiTest() {
+            document.getElementById('nome').value = "TestNome";
+            document.getElementById('cognome').value = "TestCognome";
+            document.getElementById('telefono').value = "3331234567";
+            countPanettoni = 2; countPandori = 1;
+            document.getElementById('panettoni-display').textContent = countPanettoni;
+            document.getElementById('pandori-display').textContent = countPandori;
+            document.getElementById('ordineForm').dispatchEvent(new Event('submit', { cancelable: true }));
+        }
+        
+        document.getElementById('ordineForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const msg = document.getElementById('statusMsg');
+            
+            if (countPanettoni === 0 && countPandori === 0) {
+                msg.textContent = "Seleziona almeno un Panettone o un Pandoro.";
+                msg.style.color = "#e74c3c";
+                return;
+            }
 
-            btn.textContent = "Verifica...";
-            btn.disabled = true;
+            const btn = this.querySelector('button[type="submit"]');
+            btn.disabled = true; btn.textContent = "Attendere..."; msg.textContent = "";
+            
+            const url = 'https://script.google.com/macros/s/AKfycbxmgrw77JwQ-tRhJfE34tCPipbN3eNBzY3HaFsyd6o16-rz9lcQ02HQkrYr8h7P8hwUyw/exec'; 
+            
+            const data = {
+                action: 'insert',
+                nome: document.getElementById('nome').value,
+                cognome: document.getElementById('cognome').value,
+                telefono: document.getElementById('telefono').value,
+                panettoni: countPanettoni,
+                pandori: countPandori
+            };
 
-            fetch(API_URL, {
+            fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'login_check', user: user, pass: pass })
+                body: JSON.stringify(data)
             })
-            .then(res => res.json())
+            .then(response => response.json())
             .then(result => {
                 if(result.status === "success") {
-                    currentUser = user;
-                    currentRole = result.role;
-                    document.getElementById('login-overlay').style.display = 'none';
-                    document.getElementById('main-container').style.display = 'block';
-                    document.getElementById('user-badge').textContent = `(${currentUser} - ${currentRole})`;
-
-                    // Se è administrator, aggiunge dinamicamente il tab Utenti nella bottom bar
-                    if(currentRole.toLowerCase() === 'administrator') {
-                        const nav = document.getElementById('bottomNav');
-                        nav.innerHTML += `
-                            <button class="nav-item" onclick="switchView('utenti', this)">
-                                <span class="nav-icon">👤</span>Utenti
-                            </button>
-                        `;
-                    }
-
-                    caricaDati();
-                } else {
-                    document.getElementById('login-err').style.display = 'block';
-                }
+                    msg.textContent = "Prenotazione confermata con successo! 🎉"; msg.style.color = "#2ecc71";
+                    document.getElementById('ordineForm').reset();
+                    countPanettoni = 0; countPandori = 0;
+                    document.getElementById('panettoni-display').textContent = "0";
+                    document.getElementById('pandori-display').textContent = "0";
+                    counterOrdini++;
+                    document.getElementById('contatoreOrdini').textContent = `Ordini registrati in questa sessione: ${counterOrdini}`;
+                } else { throw new Error("Errore backend"); }
             })
-            .catch(() => {
-                document.getElementById('login-err').style.display = 'block';
+            .catch(error => {
+                msg.textContent = "Si è verificato un errore. Riprova."; msg.style.color = "#e74c3c";
             })
             .finally(() => {
-                btn.textContent = "Accedi";
-                btn.disabled = false;
+                btn.disabled = false; btn.textContent = "Conferma Prenotazione";
             });
-        }
-
-        function switchView(viewName, btnElement) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-            document.getElementById('view-' + viewName).classList.add('active');
-            btnElement.classList.add('active');
-        }
-
-        function caricaDati() {
-            document.getElementById('loadingMsg').style.display = 'block';
-            document.getElementById('tabellaOrdini').style.display = 'none';
-
-            fetch(API_URL)
-                .then(response => response.json())
-                .then(result => {
-                    if(result.status === "success") {
-                        datiGlobali = result.data;
-                        utentiGlobali = result.utenti || [];
-                        popolaTabellaOrdini(datiGlobali);
-                        popolaTabellaUtenti(utentiGlobali);
-                        calcolaStatistiche(datiGlobali, result.impostazioni);
-                        document.getElementById('loadingMsg').style.display = 'none';
-                    }
-                });
-        }
-
-        function popolaTabellaOrdini(dati) {
-            const thead = document.getElementById('testaTabella');
-            const tbody = document.getElementById('corpoTabella');
-            thead.innerHTML = ''; tbody.innerHTML = ''; rowCounter = 0;
-            if(dati.length === 0) return;
-
-            const colonneOriginali = Object.keys(dati[0]);
-            const trHead = document.createElement('tr');
-            
-            colonneOriginali.forEach(col => {
-                if(col !== "rowNumber") {
-                    const th = document.createElement('th');
-                    th.textContent = col;
-                    trHead.appendChild(th);
-                }
-            });
-            const thAzioni = document.createElement('th');
-            thAzioni.textContent = "Azioni";
-            trHead.appendChild(thAzioni);
-            thead.appendChild(trHead);
-
-            dati.forEach(ordine => {
-                if(!ordine.Nome && !ordine.Cognome) return; 
-                rowCounter++;
-                const tr = document.createElement('tr');
-                
-                colonneOriginali.forEach(col => {
-                    if(col !== "rowNumber") {
-                        const td = document.createElement('td');
-                        td.setAttribute('data-label', col);
-                        let valore = ordine[col];
-                        if(col.toLowerCase().includes('data') && valore) {
-                            const d = new Date(valore);
-                            if(!isNaN(d)) valore = d.toLocaleDateString('it-IT') + " " + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
-                        }
-                        td.innerHTML = `<span>${valore || '-'}</span>`;
-                        tr.appendChild(td);
-                    }
-                });
-                
-                const tdAzioni = document.createElement('td');
-                tdAzioni.setAttribute('data-label', 'Azioni');
-                tdAzioni.innerHTML = `<button class="btn-edit" onclick="apriModaleOrdine(${ordine.rowNumber}, ${ordine.Panettoni || 0}, ${ordine.Pandori || 0}, '${ordine.Status || 'Prenotato'}')">✏️ Modifica</button>`;
-                tr.appendChild(tdAzioni);
-                tbody.appendChild(tr);
-            });
-            document.getElementById('tabellaOrdini').style.display = 'table';
-            document.getElementById('contatoreOrdini').textContent = `Sessione caricata. Totale righe analizzate: ${rowCounter}`;
-        }
-
-        function popolaTabellaUtenti(utenti) {
-            const tbody = document.getElementById('corpoUtenti');
-            tbody.innerHTML = '';
-            
-            utenti.forEach(u => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td data-label="Username"><span>${u.Username}</span></td>
-                    <td data-label="Password"><span>••••••</span></td>
-                    <td data-label="Ruolo"><span>${u.Ruolo}</span></td>
-                    <td data-label="Azioni"><button class="btn-edit" onclick="apriModaleUtente('edit', ${u.rowNumber}, '${u.Username}', '${u.Password}', '${u.Ruolo}')">✏️ Modifica</button></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function apriModaleOrdine(row, panettoni, pandori, status) {
-            document.getElementById('edit-row').value = row;
-            document.getElementById('edit-pan').value = panettoni;
-            document.getElementById('edit-pan-dori').value = pandori;
-            
-            const sel = document.getElementById('edit-status');
-            for(let i=0; i<sel.options.length; i++) {
-                if(sel.options[i].value === status) { sel.selectedIndex = i; break; }
-            }
-            document.getElementById('edit-modal').style.display = 'flex';
-        }
-
-        function apriModaleUtente(mode, row = '', username = '', password = '', ruolo = 'Manager') {
-            document.getElementById('modal-mode').value = mode;
-            document.getElementById('modal-user-row').value = row;
-            document.getElementById('modal-username').value = username;
-            document.getElementById('modal-password').value = password;
-            
-            const sel = document.getElementById('modal-role');
-            for(let i=0; i<sel.options.length; i++) {
-                if(sel.options[i].value === ruolo) { sel.selectedIndex = i; break; }
-            }
-
-            document.getElementById('user-modal-title').textContent = mode === 'add' ? 'Nuovo Utente' : 'Modifica Utente';
-            document.getElementById('user-modal').style.display = 'flex';
-        }
-
-        function chiudiModale(modalId) { document.getElementById(modalId).style.display = 'none'; }
-
-        function salvaModificaOrdine() {
-            const row = document.getElementById('edit-row').value;
-            const panettoni = document.getElementById('edit-pan').value;
-            const pandori = document.getElementById('edit-pan-dori').value;
-            const status = document.getElementById('edit-status').value;
-
-            fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'update', rowNumber: row, panettoni: panettoni, pandori: pandori, status: status, user: currentUser })
-            })
-            .then(res => res.json())
-            .then(() => {
-                chiudiModale('edit-modal');
-                caricaDati(); 
-            });
-        }
-
-        function salvaUtente() {
-            const mode = document.getElementById('modal-mode').value;
-            const row = document.getElementById('modal-user-row').value;
-            const username = document.getElementById('modal-username').value.trim();
-            const password = document.getElementById('modal-password').value.trim();
-            const ruolo = document.getElementById('modal-role').value;
-
-            if(!username || !password) return alert("Inserisci username e password!");
-
-            const action = mode === 'add' ? 'add_user' : 'update_user';
-
-            fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: action, rowNumber: row, newUsername: username, newPassword: password, newRole: ruolo, user: currentUser })
-            })
-            .then(res => res.json())
-            .then(() => {
-                chiudiModale('user-modal');
-                caricaDati();
-            });
-        }
-
-        function calcolaStatistiche(dati, impostazioni) {
-            let totPanettoni = 0; let totPandori = 0;
-            dati.forEach(ordine => {
-                if(!ordine.Nome && !ordine.Cognome) return;
-                totPanettoni += parseInt(ordine.Panettoni) || 0;
-                totPandori += parseInt(ordine.Pandori) || 0;
-            });
-            let stockInizialePanettoni = parseInt(impostazioni["Totale Panettoni"]) || 0;
-            let stockInizialePandori = parseInt(impostazioni["Totale Pandori"]) || 0;
-
-            document.getElementById('valPanettoni').textContent = totPanettoni;
-            document.getElementById('valPandori').textContent = totPandori;
-            document.getElementById('rimanenzePanettoni').textContent = `Su stock di ${stockInizialePanettoni} (Restano: ${stockInizialePanettoni - totPanettoni})`;
-            document.getElementById('rimanenzePandori').textContent = `Su stock di ${stockInizialePandori} (Restano: ${stockInizialePandori - totPandori})`;
-            aggiornaGrafico(totPanettoni, totPandori);
-        }
-
-        function aggiornaGrafico(panettoni, pandori) {
-            const ctx = document.getElementById('graficoVendite').getContext('2d');
-            if(chartInstance) chartInstance.destroy();
-            chartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: ['Panettoni', 'Pandori'], datasets: [{ label: 'Prenotazioni', data: [panettoni, pandori], backgroundColor: ['#e53935', '#fbbc05'], borderRadius: 8 }] },
-                options: { responsive: true, plugins: { legend: { display: false }, title: { display: true, text: 'Andamento Prenotazioni', font: { family: 'Nunito', size: 16 } } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
-            });
-        }
-
-        function esportaExcel() {
-            if(datiGlobali.length === 0) return alert("Nessun dato!");
-            const datiPuliti = datiGlobali.map(({rowNumber, ...resto}) => resto);
-            const ws = XLSX.utils.json_to_sheet(datiPuliti);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Ordini");
-            XLSX.writeFile(wb, "Ordini_WonderLAD.xlsx");
-        }
-
-        function eseguiTestLettura() { caricaDati(); }
+        });
     </script>
 </body>
 </html>
