@@ -3,144 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione Ordini - WonderLAD</title>
+    <title>Gestione WonderLAD</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
-    <!-- Libreria per l'export in Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { 
             font-family: 'Nunito', sans-serif; 
             background-color: #f4f6f8; 
             color: #333;
-            padding: 2rem;
             margin: 0;
+            padding: 0;
+            padding-bottom: 80px; /* Spazio per la bottom nav */
         }
         
-        .dashboard-container {
-            background: #ffffff;
+        .header {
+            background-color: #e53935;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            padding: 1rem;
             max-width: 1000px;
             margin: 0 auto;
-            padding: 2rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            border-top: 8px solid #e53935; 
         }
 
-        h2 { color: #2c3e50; font-weight: 800; margin-top: 0; }
-        
-        .header-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
+        /* Gestione Viste (Tab) */
+        .view { display: none; animation: fadeIn 0.3s; }
+        .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Card Statistiche */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 1rem;
+            margin-bottom: 1.5rem;
         }
-
-        button { 
-            padding: 0.8rem 1.5rem; 
-            background-color: #2ecc71; 
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Nunito', sans-serif;
-        }
-
-        button:hover { background-color: #27ae60; transform: translateY(-2px); }
-
-        .table-responsive {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 1rem;
-            min-width: 700px;
-        }
-
-        th, td {
+        .stat-card {
+            background: white;
             padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid #e9ecef;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            text-align: center;
+            border-bottom: 4px solid #e53935;
+        }
+        .stat-card.pandoro { border-bottom-color: #fbbc05; }
+        .stat-title { font-size: 0.9rem; color: #7f8c8d; font-weight: 700; }
+        .stat-value { font-size: 1.8rem; font-weight: 800; color: #2c3e50; margin: 0.5rem 0; }
+        .stat-detail { font-size: 0.8rem; color: #95a5a6; }
+
+        /* Grafico */
+        .chart-container {
+            background: white;
+            padding: 1rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
         }
 
-        th { background-color: #f8f9fa; color: #7f8c8d; font-weight: 700; }
+        /* Tabella */
+        .table-controls { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+        .btn-action {
+            background-color: #2ecc71; color: white; border: none; padding: 0.7rem 1rem;
+            border-radius: 10px; font-weight: bold; cursor: pointer;
+        }
+        .table-responsive { overflow-x: auto; background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e9ecef; font-size: 0.9rem; }
+        th { background-color: #f8f9fa; color: #2c3e50; font-weight: 800; white-space: nowrap; }
         
-        .status-badge {
-            background-color: #f1c40f;
-            color: #fff;
-            padding: 0.3rem 0.6rem;
-            border-radius: 5px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            display: inline-block;
+        /* Bottom Navigation Bar */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: white; display: flex; justify-content: space-around;
+            padding: 0.8rem 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.05);
+            z-index: 1000;
         }
+        .nav-item {
+            background: none; border: none; font-family: 'Nunito', sans-serif;
+            font-size: 0.9rem; font-weight: 700; color: #95a5a6; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+        }
+        .nav-item.active { color: #e53935; }
+        .nav-icon { font-size: 1.5rem; }
 
-        /* Colori dinamici per lo status */
-        .status-prenotato { background-color: #f39c12; }
-        .status-consegnato { background-color: #2ecc71; }
-        .status-annullato { background-color: #e74c3c; }
-
-        #contatoreOrdini { font-size: 0.9em; color: #95a5a6; font-weight: 700; margin-bottom: 1rem; }
-        #loadingMsg { font-weight: bold; color: #3498db; margin-bottom: 1rem;}
+        #contatoreOrdini { font-size: 0.9em; color: #95a5a6; font-weight: 700; text-align: center; margin: 1rem 0; }
+        #loadingMsg { font-weight: bold; color: #3498db; text-align: center; margin: 2rem 0; }
 
         .test-btn {
-            background-color: transparent; 
-            color: #adb5bd;
-            border: 2px dashed #dee2e6; 
-            margin-top: 2rem;
-            width: 100%;
+            background-color: transparent; color: #adb5bd; border: 2px dashed #dee2e6; 
+            margin-top: 1rem; width: 100%; padding: 0.8rem; border-radius: 10px;
+            font-family: 'Nunito', sans-serif; font-weight: 700; cursor: pointer;
         }
-        .test-btn:hover { background-color: #e9ecef; color: #495057; border-color: #adb5bd; }
     </style>
 </head>
 <body>
 
-    <div class="dashboard-container">
-        <div class="header-actions">
-            <h2>Gestione Ordini Panettoni</h2>
-            <button onclick="esportaExcel()">📥 Scarica in Excel</button>
-        </div>
-        
-        <div id="contatoreOrdini">Totale ordini caricati in tabella: 0</div>
-        <div id="loadingMsg">Caricamento dati in corso...</div>
-
-        <div class="table-responsive">
-            <table id="tabellaOrdini" style="display:none;">
-                <thead>
-                    <tr>
-                        <th>Data</th>
-                        <th>Nome</th>
-                        <th>Cognome</th>
-                        <th>Telefono</th>
-                        <th>Quantità</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="corpoTabella">
-                    <!-- I dati verranno inseriti qui -->
-                </tbody>
-            </table>
-        </div>
-        
-        <button class="test-btn" onclick="eseguiTestLettura()">⚙️ Ricarica Dati dal Database</button>
+    <div class="header">
+        Pannello WonderLAD
     </div>
 
+    <div class="container">
+        <div id="loadingMsg">Sincronizzazione dati in corso...</div>
+
+        <!-- VISTA 1: DASHBOARD STATISTICHE -->
+        <div id="view-dashboard" class="view active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-title">Panettoni Prenotati</div>
+                    <div class="stat-value" id="valPanettoni">0</div>
+                    <div class="stat-detail" id="rimanenzePanettoni">Rimanenze: 0</div>
+                </div>
+                <div class="stat-card pandoro">
+                    <div class="stat-title">Pandori Prenotati</div>
+                    <div class="stat-value" id="valPandori">0</div>
+                    <div class="stat-detail" id="rimanenzePandori">Rimanenze: 0</div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="graficoVendite"></canvas>
+            </div>
+            
+            <div id="contatoreOrdini">Sessione caricata. Totale righe analizzate: 0</div>
+            <button class="test-btn" onclick="eseguiTestLettura()">⚙️ Esegui Test Ricarica Dati</button>
+        </div>
+
+        <!-- VISTA 2: TABELLA E GESTIONE -->
+        <div id="view-ordini" class="view">
+            <div class="table-controls">
+                <h3 style="margin: 0; color: #2c3e50;">Lista Ordini</h3>
+                <button class="btn-action" onclick="esportaExcel()">📥 Export Excel</button>
+            </div>
+            <div class="table-responsive">
+                <table id="tabellaOrdini" style="display:none;">
+                    <thead id="testaTabella">
+                        <!-- Intestazioni generate dinamicamente -->
+                    </thead>
+                    <tbody id="corpoTabella">
+                        <!-- Dati generati dinamicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAVIGATION BAR -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchView('dashboard', this)">
+            <span class="nav-icon">📊</span>
+            Dashboard
+        </button>
+        <button class="nav-item" onclick="switchView('ordini', this)">
+            <span class="nav-icon">📋</span>
+            Ordini
+        </button>
+    </nav>
+
     <script>
-        // IL TUO NUOVO URL DEFINITIVO È STATO INSERITO QUI
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxBrYSYhlq31oegNQdVzrhA_M9cUpYP2-qIm5MBPyrOBoP1dA_mf1iYnXJr6K20hG_C4Q/exec'; 
+        const API_URL = 'https://script.google.com/macros/s/AKfycbw7kxXSV8ds8zPG7fFsJ08U9PEwuwpJ6swgNmIOjoG-V47Upq3FYg9gQIZU_yIANyNxKQ/exec'; 
         let datiGlobali = [];
         let rowCounter = 0;
+        let chartInstance = null;
+
+        // Funzione Navigazione Bottom Bar
+        function switchView(viewName, btnElement) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById('view-' + viewName).classList.add('active');
+            btnElement.classList.add('active');
+        }
 
         function caricaDati() {
             document.getElementById('loadingMsg').style.display = 'block';
-            document.getElementById('loadingMsg').textContent = "Caricamento dati in corso...";
-            document.getElementById('loadingMsg').style.color = "#3498db";
             document.getElementById('tabellaOrdini').style.display = 'none';
 
             fetch(API_URL)
@@ -149,56 +194,120 @@
                     if(result.status === "success") {
                         datiGlobali = result.data;
                         popolaTabella(datiGlobali);
+                        calcolaStatistiche(datiGlobali, result.impostazioni);
+                        document.getElementById('loadingMsg').style.display = 'none';
                     } else {
                         throw new Error("Errore nel caricamento");
                     }
                 })
                 .catch(error => {
-                    document.getElementById('loadingMsg').textContent = "Errore durante il caricamento dati. Riprova.";
+                    document.getElementById('loadingMsg').textContent = "Errore di connessione. Riprova.";
                     document.getElementById('loadingMsg').style.color = "#e74c3c";
                 });
         }
 
+        // Generazione Tabella Completamente Dinamica
         function popolaTabella(dati) {
+            const thead = document.getElementById('testaTabella');
             const tbody = document.getElementById('corpoTabella');
+            thead.innerHTML = '';
             tbody.innerHTML = '';
             rowCounter = 0;
 
-            dati.forEach(ordine => {
-                // Ignora eventuali righe vuote del foglio Excel
-                if(!ordine.Nome && !ordine.Cognome) return; 
+            if(dati.length === 0) return;
 
+            // Prende le chiavi dal primo oggetto JSON (ovvero le intestazioni di Sheets)
+            const colonne = Object.keys(dati[0]);
+            
+            // Crea l'intestazione dinamicamente
+            const trHead = document.createElement('tr');
+            colonne.forEach(col => {
+                const th = document.createElement('th');
+                th.textContent = col;
+                trHead.appendChild(th);
+            });
+            thead.appendChild(trHead);
+
+            // Inserisce i dati
+            dati.forEach(ordine => {
+                if(!ordine.Nome && !ordine.Cognome) return; 
                 rowCounter++;
                 const tr = document.createElement('tr');
                 
-                // Formattazione della data e ora italiana
-                let dataFormattata = ordine.Data;
-                if(ordine.Data) {
-                    const d = new Date(ordine.Data);
-                    if(!isNaN(d)) dataFormattata = d.toLocaleDateString('it-IT') + " " + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
-                }
-
-                // Colora il badge dello status in base alla parola
-                let statusClass = "status-badge";
-                let statusTesto = ordine.Status ? ordine.Status.toLowerCase() : '';
-                if(statusTesto.includes('prenotato')) statusClass += " status-prenotato";
-                if(statusTesto.includes('consegnato')) statusClass += " status-consegnato";
-                if(statusTesto.includes('annullato')) statusClass += " status-annullato";
-
-                tr.innerHTML = `
-                    <td>${dataFormattata}</td>
-                    <td><strong>${ordine.Nome || '-'}</strong></td>
-                    <td><strong>${ordine.Cognome || '-'}</strong></td>
-                    <td>${ordine.Telefono || '-'}</td>
-                    <td>${ordine["Quantità"] || ordine.quantita || '-'}</td>
-                    <td><span class="${statusClass}">${ordine.Status || 'In attesa'}</span></td>
-                `;
+                colonne.forEach(col => {
+                    const td = document.createElement('td');
+                    let valore = ordine[col];
+                    
+                    // Formattazione speciale se la colonna è una data
+                    if(col.toLowerCase().includes('data') && valore) {
+                        const d = new Date(valore);
+                        if(!isNaN(d)) valore = d.toLocaleDateString('it-IT') + " " + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
+                    }
+                    
+                    td.textContent = valore || '-';
+                    tr.appendChild(td);
+                });
+                
                 tbody.appendChild(tr);
             });
 
-            document.getElementById('loadingMsg').style.display = 'none';
             document.getElementById('tabellaOrdini').style.display = 'table';
-            document.getElementById('contatoreOrdini').textContent = `Totale ordini caricati in tabella: ${rowCounter}`;
+            document.getElementById('contatoreOrdini').textContent = `Sessione caricata. Totale righe analizzate: ${rowCounter}`;
+        }
+
+        function calcolaStatistiche(dati, impostazioni) {
+            let totPanettoni = 0;
+            let totPandori = 0;
+
+            // Calcola vendite
+            dati.forEach(ordine => {
+                if(!ordine.Nome && !ordine.Cognome) return;
+                totPanettoni += parseInt(ordine.Panettoni) || 0;
+                totPandori += parseInt(ordine.Pandori) || 0;
+            });
+
+            // Calcola stock iniziale dalle impostazioni
+            let stockInizialePanettoni = parseInt(impostazioni["Totale Panettoni"]) || 0;
+            let stockInizialePandori = parseInt(impostazioni["Totale Pandori"]) || 0;
+
+            document.getElementById('valPanettoni').textContent = totPanettoni;
+            document.getElementById('valPandori').textContent = totPandori;
+            
+            document.getElementById('rimanenzePanettoni').textContent = `Su stock di ${stockInizialePanettoni} (Restano: ${stockInizialePanettoni - totPanettoni})`;
+            document.getElementById('rimanenzePandori').textContent = `Su stock di ${stockInizialePandori} (Restano: ${stockInizialePandori - totPandori})`;
+
+            aggiornaGrafico(totPanettoni, totPandori);
+        }
+
+        function aggiornaGrafico(panettoni, pandori) {
+            const ctx = document.getElementById('graficoVendite').getContext('2d');
+            
+            if(chartInstance) {
+                chartInstance.destroy(); // Distrugge il vecchio grafico prima di ricrearlo
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Panettoni', 'Pandori'],
+                    datasets: [{
+                        label: 'Quantità Prenotata',
+                        data: [panettoni, pandori],
+                        backgroundColor: ['#e53935', '#fbbc05'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'Andamento Prenotazioni', font: { family: 'Nunito', size: 16 } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
         }
 
         function esportaExcel() {
@@ -206,19 +315,19 @@
                 alert("Nessun dato da esportare!");
                 return;
             }
-            
-            // Genera e scarica il file Excel
             const ws = XLSX.utils.json_to_sheet(datiGlobali);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Ordini");
-            XLSX.writeFile(wb, "Ordini_Panettoni_WonderLAD.xlsx");
+            XLSX.writeFile(wb, "Ordini_WonderLAD.xlsx");
         }
 
         function eseguiTestLettura() {
+            document.getElementById('loadingMsg').style.display = 'block';
+            document.getElementById('loadingMsg').textContent = "Test di caricamento manuale in corso...";
             caricaDati();
         }
 
-        // Carica i dati in automatico non appena la pagina viene aperta
+        // Inizializzazione
         window.onload = caricaDati;
     </script>
 </body>
