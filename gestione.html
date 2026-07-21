@@ -31,12 +31,17 @@
         .stock-edit-btn { background: #f8f9fa; border: 1px solid #ced4da; padding: 2px 8px; border-radius: 5px; font-size: 0.75rem; cursor: pointer; font-weight: bold; margin-top: 5px; display: inline-block; color: #495057; }
         .stock-edit-btn:hover { background: #e9ecef; }
 
-        /* Alert Box */
+        /* Box Status Cliccabili in Dashboard */
+        .status-summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.8rem; margin-bottom: 1.5rem; }
+        .status-summary-card { background: white; padding: 1rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); text-align: center; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; border: 2px solid transparent; }
+        .status-summary-card:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.08); border-color: #e53935; }
+        .status-summary-title { font-size: 0.85rem; color: #7f8c8d; font-weight: 700; margin-bottom: 0.3rem; }
+        .status-summary-count { font-size: 1.4rem; font-weight: 800; color: #2c3e50; }
+
         .alert-box { background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
 
         .chart-container { background: white; padding: 1rem; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
 
-        /* Filtri & Ricerca */
         .controls-panel { background: white; padding: 1rem; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 1rem; display: flex; flex-direction: column; gap: 10px; }
         .search-input { width: 100%; padding: 0.7rem 1rem; border: 2px solid #e9ecef; border-radius: 10px; box-sizing: border-box; font-family: 'Nunito'; font-size: 0.95rem; background-color: #f8f9fa; }
         .search-input:focus { outline: none; border-color: #e53935; background-color: #fff; }
@@ -50,7 +55,6 @@
         .btn-edit { background-color: #f39c12; color: white; border: none; padding: 0.5rem; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
         .btn-delete { background-color: #e74c3c; color: white; border: none; padding: 0.5rem; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-left: 5px; }
         
-        /* Badge Status */
         .badge-status { padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; display: inline-block; }
         .status-prenotato-da-pagare { background-color: #ffe3e3; color: #c92a2a; }
         .status-prenotato-pagare { background-color: #e6fcf5; color: #0ca678; }
@@ -126,6 +130,36 @@
                     <button class="stock-edit-btn" onclick="apriModaleStock('Pandori')">✏️ Modifica Stock</button>
                 </div>
             </div>
+
+            <!-- Box di Riepilogo Status Cliccabili -->
+            <h3 style="color: #2c3e50; font-size: 1.1rem; margin-bottom: 0.8rem;">Stato Ordini</h3>
+            <div class="status-summary-grid">
+                <div class="status-summary-card" onclick="navigaVersoFiltro('Prenotato - Da Pagare')">
+                    <div class="status-summary-title">Da Pagare</div>
+                    <div class="status-summary-count" id="countDaPagare">0</div>
+                </div>
+                <div class="status-summary-card" onclick="navigaVersoFiltro('Prenotato - Pagato')">
+                    <div class="status-summary-title">Pagati</div>
+                    <div class="status-summary-count" id="countPagati">0</div>
+                </div>
+                <div class="status-summary-card" onclick="navigaVersoFiltro('In Preparazione')">
+                    <div class="status-summary-title">In Preparazione</div>
+                    <div class="status-summary-count" id="countInPreparazione">0</div>
+                </div>
+                <div class="status-summary-card" onclick="navigaVersoFiltro('Da Consegnare')">
+                    <div class="status-summary-title">Da Consegnare</div>
+                    <div class="status-summary-count" id="countDaConsegnare">0</div>
+                </div>
+                <div class="status-summary-card" onclick="navigaVersoFiltro('Consegnato')">
+                    <div class="status-summary-title">Consegnati</div>
+                    <div class="status-summary-count" id="countConsegnati">0</div>
+                </div>
+                <div class="status-summary-card" onclick="navigaVersoFiltro('Annullato')">
+                    <div class="status-summary-title">Annullati</div>
+                    <div class="status-summary-count" id="countAnnullati">0</div>
+                </div>
+            </div>
+
             <div class="chart-container"><canvas id="graficoVendite"></canvas></div>
             <div id="contatoreOrdini">Sessione caricata. Totale righe analizzate: 0</div>
             <button class="test-btn" onclick="eseguiTestLettura()">⚙️ Ricarica Dati</button>
@@ -310,6 +344,29 @@
             btnElement.classList.add('active');
         }
 
+        function navigaVersoFiltro(stato) {
+            filtroStatoAttuale = stato;
+            
+            // Aggiorna i bottoni chip nella vista ordini
+            document.querySelectorAll('.filter-chips .chip').forEach(c => {
+                if(c.textContent.toLowerCase().includes(stato.toLowerCase().replace('prenotato - ', '')) || c.textContent.toLowerCase() === stato.toLowerCase()) {
+                    c.classList.add('active');
+                } else {
+                    c.classList.remove('active');
+                }
+            });
+
+            filtraOrdini();
+
+            // Cambia vista alla tab Ordini attivando il bottone corrispondente nella bottom nav
+            const navButtons = document.querySelectorAll('.bottom-nav .nav-item');
+            navButtons.forEach(btn => {
+                if(btn.textContent.includes('Ordini')) {
+                    switchView('ordini', btn);
+                }
+            });
+        }
+
         function caricaDati() {
             document.getElementById('loadingMsg').style.display = 'block';
             document.getElementById('tabellaOrdini').style.display = 'none';
@@ -398,7 +455,7 @@
             });
             document.getElementById('tabellaOrdini').style.display = 'table';
             document.getElementById('contatoreOrdini').textContent = `Sessione caricata. Totale righe analizzate: ${rowCounter}`;
-            filtraOrdini(); // Applica i filtri attivi
+            filtraOrdini();
         }
 
         function filtraOrdini() {
@@ -564,6 +621,13 @@
         function calcolaStatistiche(dati, impostazioni) {
             let totPanettoni = 0; let totPandori = 0;
             let ordiniDaPagareNonConsegnati = 0;
+            
+            let countDaPagare = 0;
+            let countPagati = 0;
+            let countInPreparazione = 0;
+            let countDaConsegnare = 0;
+            let countConsegnati = 0;
+            let countAnnullati = 0;
 
             dati.forEach(ordine => {
                 if(!ordine.Nome && !ordine.Cognome) return;
@@ -573,10 +637,25 @@
                 totPandori += pand;
 
                 const status = (ordine.Status || "").toLowerCase();
+                if(status.includes('da pagare')) countDaPagare++;
+                if(status.includes('pagato')) countPagati++;
+                if(status.includes('preparazione')) countInPreparazione++;
+                if(status.includes('da consegnare')) countDaConsegnare++;
+                if(status.includes('consegnato')) countConsegnati++;
+                if(status.includes('annullato')) countAnnullati++;
+
                 if(status.includes('da pagare') && !status.includes('consegnato') && !status.includes('annullato')) {
                     ordiniDaPagareNonConsegnati++;
                 }
             });
+
+            // Aggiorna i contatori nei box cliccabili della dashboard
+            document.getElementById('countDaPagare').textContent = countDaPagare;
+            document.getElementById('countPagati').textContent = countPagati;
+            document.getElementById('countInPreparazione').textContent = countInPreparazione;
+            document.getElementById('countDaConsegnare').textContent = countDaConsegnare;
+            document.getElementById('countConsegnati').textContent = countConsegnati;
+            document.getElementById('countAnnullati').textContent = countAnnullati;
 
             let stockInizialePanettoni = parseInt(impostazioni["Totale Panettoni"]) || 0;
             let stockInizialePandori = parseInt(impostazioni["Totale Pandori"]) || 0;
@@ -586,7 +665,6 @@
             document.getElementById('rimanenzePanettoni').textContent = `Su stock di ${stockInizialePanettoni} (Restano: ${stockInizialePanettoni - totPanettoni})`;
             document.getElementById('rimanenzePandori').textContent = `Su stock di ${stockInizialePandori} (Restano: ${stockInizialePandori - totPandori})`;
 
-            // Alert box dinamica in dashboard se ci sono ordini da saldare
             const alertContainer = document.getElementById('alertContainer');
             if(ordiniDaPagareNonConsegnati > 0) {
                 alertContainer.innerHTML = `
