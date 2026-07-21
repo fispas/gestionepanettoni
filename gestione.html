@@ -6,284 +6,14 @@
     <title>Gestione WonderLAD</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;750&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <style>
-        :root {
-            --primary: #5b8e72;
-            --primary-dark: #3a6250;
-            --accent-soft: #94bdad;
-            --accent-light: #eaf4f0;
-            --bg-main: #f8faf7;
-            --card-bg: #ffffff;
-            --text-main: #24352c;
-            --text-muted: #62756d;
-            --border-color: #e1eae5;
-        }
-
-        body { 
-            font-family: 'Nunito', sans-serif; 
-            background-color: var(--bg-main); 
-            color: var(--text-main); 
-            margin: 0; 
-            padding: 0; 
-            padding-bottom: 90px; 
-        }
-
-        .header { 
-            background-color: #ffffff; 
-            color: var(--text-main); 
-            padding: 0.8rem 1.2rem; 
-            font-family: 'Quicksand', sans-serif;
-            font-weight: 750; 
-            font-size: 1.2rem; 
-            position: sticky; 
-            top: 0; 
-            z-index: 100; 
-            border-bottom: 2px solid var(--border-color);
-            box-shadow: 0 4px 15px rgba(91, 142, 114, 0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header-brand { display: flex; align-items: center; gap: 12px; }
-        .header img { height: 34px; width: auto; }
-
-        .header-actions-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-logout {
-            background-color: #fff0f0;
-            color: #d9534f;
-            border: 1px solid #f5c6cb;
-            padding: 0.4rem 0.8rem;
-            border-radius: 10px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: 'Quicksand', sans-serif;
-        }
-        .btn-logout:hover { background-color: #f8d7da; }
-
-        .btn-pdf-header {
-            background-color: var(--accent-light);
-            color: var(--primary-dark);
-            border: 1px solid var(--accent-soft);
-            padding: 0.4rem 0.8rem;
-            border-radius: 10px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: 'Quicksand', sans-serif;
-        }
-        .btn-pdf-header:hover { background-color: var(--accent-soft); color: #fff; }
-
-        .container { padding: 1.2rem 1rem; max-width: 1000px; margin: 0 auto; display: none; } 
-        
-        #login-overlay { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: var(--bg-main); 
-            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; 
-        }
-        .login-box { 
-            background: var(--card-bg); padding: 2.5rem 2rem; border-radius: 24px; 
-            box-shadow: 0 10px 30px rgba(91,142,114,0.08); text-align: center; 
-            border: 2px solid var(--border-color); width: 90%; max-width: 360px; box-sizing: border-box; 
-        }
-        .login-box h2 { font-family: 'Quicksand', sans-serif; color: var(--primary); margin-top: 0; }
-        .login-box input[type="text"], .login-box input[type="password"] { 
-            padding: 0.9rem 1rem; margin-bottom: 1rem; width: 100%; box-sizing: border-box; 
-            border: 2px solid var(--border-color); border-radius: 12px; font-family: 'Nunito'; font-size: 1rem; background-color: #fbfdfe; 
-        }
-        .login-box input:focus { border-color: var(--primary); outline: none; background: #fff; }
-        .login-box button { background-color: var(--primary); color: white; border: none; padding: 1rem; width: 100%; border-radius: 12px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: background 0.2s; }
-        .login-box button:hover { background-color: var(--primary-dark); }
-
-        .view { display: none; animation: fadeIn 0.3s; }
-        .view.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* DASHBOARD RECENTRETED */
-        .dash-selector-bar {
-            display: flex;
-            background: #edf3f0;
-            padding: 6px;
-            border-radius: 16px;
-            margin-bottom: 1.5rem;
-            gap: 6px;
-            border: 1px solid var(--border-color);
-        }
-        .dash-tab-btn {
-            flex: 1;
-            padding: 0.8rem;
-            border: none;
-            border-radius: 12px;
-            font-family: 'Quicksand', sans-serif;
-            font-weight: 750;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            background: transparent;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: center;
-        }
-        .dash-tab-btn.active {
-            background: var(--card-bg);
-            color: var(--primary-dark);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-
-        .stock-section { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
-        @media screen and (max-width: 600px) { .stock-section { grid-template-columns: 1fr; } }
-
-        .stock-card {
-            background: var(--card-bg);
-            padding: 1.2rem;
-            border-radius: 20px;
-            border: 2px solid var(--border-color);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
-            position: relative;
-            cursor: pointer;
-            transition: transform 0.15s;
-        }
-        .stock-card:hover { transform: translateY(-2px); }
-        .stock-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-        .stock-title { font-family: 'Quicksand', sans-serif; font-weight: 750; font-size: 1.05rem; color: var(--text-main); }
-        .stock-numbers { display: flex; align-items: baseline; gap: 8px; margin: 0.4rem 0; }
-        .stock-main-val { font-size: 2.2rem; font-weight: 800; color: var(--primary-dark); }
-        .stock-sub-val { font-size: 0.9rem; color: var(--text-muted); font-weight: 600; }
-        
-        .progress-bar-bg { background: #eef4f1; border-radius: 10px; height: 10px; width: 100%; overflow: hidden; margin: 0.6rem 0; }
-        .progress-bar-fill { background: linear-gradient(90deg, var(--accent-soft), var(--primary)); height: 100%; border-radius: 10px; transition: width 0.4s ease; }
-        
-        .stock-footer-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; }
-        .stock-edit-btn { background: #f0f6f3; border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; font-weight: bold; color: var(--primary-dark); }
-
-        .dash-section-title { font-family: 'Quicksand', sans-serif; font-size: 1rem; font-weight: 750; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.8rem; letter-spacing: 0.5px; }
-
-        .flow-grid { display: grid; grid-template-columns: repeat( auto-fit, minmax(130px, 1fr) ); gap: 0.8rem; margin-bottom: 1.5rem; }
-        .flow-card {
-            background: var(--card-bg);
-            padding: 1rem 0.6rem;
-            border-radius: 16px;
-            border: 2px solid var(--border-color);
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-        .flow-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.04); }
-        .flow-card-title { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; font-family: 'Quicksand', sans-serif; margin-bottom: 0.3rem; }
-        .flow-card-count { font-size: 1.6rem; font-weight: 800; }
-        .flow-card-sub { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; margin-top: 0.3rem; border-top: 1px dashed rgba(0,0,0,0.08); padding-top: 4px; }
-
-        /* Colori Categorie Flussi */
-        .card-st-prenotato { border-color: #bee3f8; background-color: #f0f8ff; }
-        .card-st-prenotato .flow-card-title, .card-st-prenotato .flow-card-count { color: #2b6cb0; }
-
-        .card-st-prep { border-color: #ffe082; background-color: #fffde7; }
-        .card-st-prep .flow-card-title, .card-st-prep .flow-card-count { color: #b7791f; }
-
-        .card-st-consegna { border-color: #e1bee7; background-color: #fcf4fc; }
-        .card-st-consegna .flow-card-title, .card-st-consegna .flow-card-count { color: #6b46c1; }
-
-        .card-st-consegnato { border-color: #c8e6c9; background-color: #f1fbe8; }
-        .card-st-consegnato .flow-card-title, .card-st-consegnato .flow-card-count { color: #2e7d32; }
-
-        .card-st-annullato { border-color: #e2e8f0; background-color: #f8fafc; }
-        .card-st-annullato .flow-card-title, .card-st-annullato .flow-card-count { color: #718096; }
-
-        .card-st-dapagare { border-color: #f5c6cb; background-color: #fff5f5; }
-        .card-st-dapagare .flow-card-title, .card-st-dapagare .flow-card-count { color: #c53030; }
-
-        .card-st-pagato { border-color: #c6f6d5; background-color: #f0fff4; }
-        .card-st-pagato .flow-card-title, .card-st-pagato .flow-card-count { color: #276749; }
-
-        .alert-box { background-color: #fff5f5; border: 1px solid #f5c6cb; color: #c53030; padding: 0.9rem; border-radius: 16px; margin-bottom: 1.2rem; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; }
-
-        .controls-panel { background: var(--card-bg); padding: 1.2rem; border-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 2px solid var(--border-color); margin-bottom: 1rem; display: flex; flex-direction: column; gap: 10px; }
-        .search-input { width: 100%; padding: 0.8rem 1rem; border: 2px solid var(--border-color); border-radius: 12px; box-sizing: border-box; font-family: 'Nunito'; font-size: 0.95rem; background-color: #fbfdfe; }
-        .search-input:focus { outline: none; border-color: var(--primary); background-color: #fff; }
-        
-        .filter-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 5px; }
-        .chip { background: #f0f4f1; border: none; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
-        .chip.active { background: var(--primary); color: white; }
-
-        .table-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-        .btn-action { background-color: var(--primary); color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
-        .btn-edit { background-color: #e2e8f0; color: var(--text-main); border: none; padding: 0.4rem 0.7rem; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
-        .btn-quick-status { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; padding: 0.4rem 0.6rem; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-right: 4px; }
-        .btn-delete { background-color: #fce8e6; color: #c53030; border: 1px solid #f5c6cb; padding: 0.4rem 0.7rem; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-left: 4px; }
-        
-        .badge-status { padding: 5px 10px; border-radius: 8px; font-size: 0.78rem; font-weight: 800; display: inline-block; font-family: 'Quicksand', sans-serif; }
-        .status-prenotato { background-color: #e8f4f8; color: #2b6cb0; }
-        .status-prenotato-da-pagare { background-color: #fce8e6; color: #c53030; }
-        .status-prenotato-pagare { background-color: #e8f5e9; color: #276749; }
-        .status-in-preparazione { background-color: #fff8e1; color: #b7791f; }
-        .status-da-consegnare { background-color: #f3e5f5; color: #6b46c1; }
-        .status-consegnato { background-color: #edf7ed; color: #2e7d32; }
-        .status-annullato { background-color: #f1f3f5; color: #718096; }
-
-        .log-badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; display: inline-block; font-family: 'Quicksand', sans-serif; text-transform: uppercase; }
-        .log-inserimento { background-color: #e8f5e9; color: #2e7d32; }
-        .log-modifica { background-color: #fff8e1; color: #b7791f; }
-        .log-login { background-color: #e8f4f8; color: #2b6cb0; }
-        .log-stock { background-color: #f3e5f5; color: #6b46c1; }
-        .log-utente { background-color: #fce8e6; color: #c53030; }
-        .log-backup { background-color: #edf2f7; color: #4a5568; }
-
-        .wa-link { color: #2e7d32; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
-        .wa-link:hover { text-decoration: underline; }
-
-        .table-responsive { width: 100%; background: transparent; margin-bottom: 1rem; }
-        table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 18px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid var(--border-color); }
-        th, td { padding: 0.9rem; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
-        th { background-color: #f0f4f1; color: var(--text-main); font-weight: 800; font-family: 'Quicksand', sans-serif; white-space: nowrap; }
-
-        @media screen and (max-width: 768px) {
-            table, thead, tbody, th, td, tr { display: block; }
-            table { background: transparent; box-shadow: none; border: none; }
-            thead tr { display: none; }
-            tr { background: var(--card-bg); margin-bottom: 1rem; border-radius: 18px; padding: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 2px solid var(--border-color); }
-            td { border: none; border-bottom: 1px solid #edf2f7; position: relative; display: flex; justify-content: space-between; align-items: center; padding: 0.7rem; text-align: right; }
-            td::before { content: attr(data-label); font-weight: 800; color: var(--text-muted); text-align: left; padding-right: 15px; flex-shrink: 0; font-family: 'Quicksand', sans-serif; }
-            td:last-child { border-bottom: none; justify-content: flex-end; }
-        }
-
-        .bottom-nav { 
-            position: fixed; bottom: 0; left: 0; width: 100%; 
-            background: #ffffff; display: flex; justify-content: space-around; 
-            padding: 0.8rem 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.04); 
-            z-index: 1000; border-top: 2px solid var(--border-color);
-        }
-        .nav-item { 
-            background: none; border: none; font-family: 'Quicksand', sans-serif; 
-            font-size: 0.85rem; font-weight: 750; color: var(--text-muted); 
-            cursor: pointer; display: flex; flex-direction: column; align-items: center; 
-            gap: 4px; transition: color 0.2s;
-        }
-        .nav-item.active { color: var(--primary); }
-        .nav-icon { font-size: 1.4rem; }
-
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 3000; }
-        .modal-content { background: var(--card-bg); padding: 2rem; border-radius: 24px; width: 90%; max-width: 400px; box-sizing: border-box; border: 2px solid var(--border-color); }
-        .modal-content h3 { font-family: 'Quicksand', sans-serif; color: var(--primary); }
-        .modal-content input, .modal-content select { width: 100%; padding: 0.9rem; margin-bottom: 1rem; border: 2px solid var(--border-color); border-radius: 12px; box-sizing: border-box; font-family: 'Nunito'; }
-        .modal-actions { display: flex; justify-content: space-between; gap: 1rem; }
-        .btn-save { background-color: var(--primary); color: white; border: none; padding: 0.9rem; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; }
-        .btn-cancel { background-color: #fce8e6; color: #c53030; border: 1px solid #f5c6cb; padding: 0.9rem; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; }
-
-        #contatoreOrdini { font-size: 0.85em; color: var(--text-muted); font-weight: 700; text-align: center; margin: 1rem 0; font-family: 'Quicksand', sans-serif; }
-        #loadingMsg { font-weight: bold; color: var(--primary); text-align: center; margin: 2rem 0; font-family: 'Quicksand', sans-serif; }
-        .test-btn { background-color: transparent; color: var(--text-muted); border: 2px dashed var(--border-color); margin-top: 1rem; width: 100%; padding: 0.8rem; border-radius: 12px; font-family: 'Quicksand', sans-serif; font-weight: 700; cursor: pointer; }
-    </style>
+    <!-- Collegamento al file di stile dedicato -->
+    <link rel="stylesheet" href="gestionestyle.css">
 </head>
 <body>
 
+    <!-- Overlay di Login -->
     <div id="login-overlay">
         <div class="login-box">
             <h2>WonderLAD</h2>
@@ -295,6 +25,7 @@
         </div>
     </div>
 
+    <!-- Header Principale -->
     <div class="header">
         <div class="header-brand">
             <img src="https://www.wonderlad.org/wp-content/uploads/2020/05/logo-wonderlad.png" alt="WonderLAD Logo" onerror="this.style.display='none'">
@@ -306,13 +37,12 @@
         </div>
     </div>
 
+    <!-- Contenitore Principale -->
     <div class="container" id="main-container">
         <div id="loadingMsg">Sincronizzazione dati in corso...</div>
 
-        <!-- Dashboard Riprogettata Globalmente -->
+        <!-- 1. Vista Dashboard -->
         <div id="view-dashboard" class="view active">
-            
-            <!-- Barra di Switch tra Viste Macro -->
             <div class="dash-selector-bar">
                 <button class="dash-tab-btn active" id="tabModeTutti" onclick="cambiaVistaDashboard('TUTTI', this)">📊 Vista Globale</button>
                 <button class="dash-tab-btn" id="tabModePanettoni" onclick="cambiaVistaDashboard('PANETTONI', this)">🥮 Focus Panettoni</button>
@@ -320,7 +50,6 @@
             </div>
 
             <div id="pdfContent" style="padding: 5px; background: transparent;">
-
                 <!-- Schede Stock e Progresso Magazzino -->
                 <div class="stock-section">
                     <div class="stock-card" onclick="cambiaVistaDashboard('PANETTONI', document.getElementById('tabModePanettoni'))">
@@ -358,7 +87,7 @@
                     </div>
                 </div>
 
-                <!-- Macro Categoria 1: Stato Logistica & Ritiro -->
+                <!-- Flusso Logistico & Consegne -->
                 <div class="dash-section-title">📦 Flusso Logistico & Consegne</div>
                 <div class="flow-grid">
                     <div class="flow-card card-st-prenotato" onclick="navigaVersoFiltro('Prenotato')">
@@ -366,25 +95,21 @@
                         <div class="flow-card-count" id="countPrenotato">0</div>
                         <div class="flow-card-sub" id="subPrenotato">🥮 0 | 🍞 0</div>
                     </div>
-
                     <div class="flow-card card-st-prep" onclick="navigaVersoFiltro('In Preparazione')">
                         <div class="flow-card-title">In Prep.</div>
                         <div class="flow-card-count" id="countInPreparazione">0</div>
                         <div class="flow-card-sub" id="subInPrep">🥮 0 | 🍞 0</div>
                     </div>
-
                     <div class="flow-card card-st-consegna" onclick="navigaVersoFiltro('Da Consegnare')">
                         <div class="flow-card-title">Da Conseg.</div>
                         <div class="flow-card-count" id="countDaConsegnare">0</div>
                         <div class="flow-card-sub" id="subDaConseg">🥮 0 | 🍞 0</div>
                     </div>
-
                     <div class="flow-card card-st-consegnato" onclick="navigaVersoFiltro('Consegnato')">
                         <div class="flow-card-title">Consegnati</div>
                         <div class="flow-card-count" id="countConsegnati">0</div>
                         <div class="flow-card-sub" id="subConsegnati">🥮 0 | 🍞 0</div>
                     </div>
-
                     <div class="flow-card card-st-annullato" onclick="navigaVersoFiltro('Annullato')">
                         <div class="flow-card-title">Annullati</div>
                         <div class="flow-card-count" id="countAnnullati">0</div>
@@ -392,7 +117,7 @@
                     </div>
                 </div>
 
-                <!-- Macro Categoria 2: Stato Incassi e Saldi (Con Alert Integrato) -->
+                <!-- Stato Incassi & Saldi (Con Alert Integrato) -->
                 <div class="dash-section-title">💶 Stato Incassi & Saldi</div>
                 <div id="alertContainer"></div>
                 <div class="flow-grid">
@@ -401,21 +126,19 @@
                         <div class="flow-card-count" id="countDaPagare">0</div>
                         <div class="flow-card-sub" id="subDaPagare">🥮 0 | 🍞 0</div>
                     </div>
-
                     <div class="flow-card card-st-pagato" onclick="navigaVersoFiltro('Prenotato - Pagato')">
                         <div class="flow-card-title">Pagati</div>
                         <div class="flow-card-count" id="countPagati">0</div>
                         <div class="flow-card-sub" id="subPagati">🥮 0 | 🍞 0</div>
                     </div>
                 </div>
-
             </div>
 
             <div id="contatoreOrdini">Sessione caricata. Totale righe analizzate: 0</div>
             <button class="test-btn" onclick="eseguiTestLettura()">⚙️ Ricarica Dati</button>
         </div>
 
-        <!-- Ordini -->
+        <!-- 2. Vista Ordini -->
         <div id="view-ordini" class="view">
             <div class="controls-panel">
                 <input type="text" id="searchOrdini" class="search-input" placeholder="🔍 Cerca per nome, cognome o telefono..." onkeyup="filtraOrdini()">
@@ -442,7 +165,7 @@
             </div>
         </div>
 
-        <!-- Utenti (Solo Administrator) -->
+        <!-- 3. Vista Utenti -->
         <div id="view-utenti" class="view">
             <div class="controls-panel">
                 <input type="text" id="searchUtenti" class="search-input" placeholder="🔍 Cerca utente..." onkeyup="filtraUtenti()">
@@ -461,7 +184,7 @@
             </div>
         </div>
 
-        <!-- Log / Attività (Solo Administrator) -->
+        <!-- 4. Vista Log -->
         <div id="view-log" class="view">
             <div class="controls-panel">
                 <input type="text" id="searchLog" class="search-input" placeholder="🔍 Cerca nei log..." onkeyup="filtraLog()">
@@ -494,13 +217,13 @@
         </div>
     </div>
 
-    <!-- Bottom Navigation Dinamica -->
+    <!-- Bottom Navigation -->
     <nav class="bottom-nav" id="bottomNav">
         <button class="nav-item active" onclick="switchView('dashboard', this)"><span class="nav-icon">📊</span>Dashboard</button>
         <button class="nav-item" onclick="switchView('ordini', this)"><span class="nav-icon">📋</span>Ordini</button>
     </nav>
 
-    <!-- Modale Modifica Ordine -->
+    <!-- Modali di Sistema -->
     <div id="edit-modal" class="modal">
         <div class="modal-content">
             <h3>Modifica Ordine</h3>
@@ -533,11 +256,10 @@
         </div>
     </div>
 
-    <!-- Modale Rapida Registrazione Saldo -->
     <div id="pay-modal" class="modal">
         <div class="modal-content">
             <h3>Registra Saldo Ordine</h3>
-            <p style="font-size:0.88rem; color:var(--text-muted);">Seleziona il metodo di pagamento utilizzato dal cliente:</p>
+            <p style="font-size:0.88rem; color:var(--text-muted);">Seleziona il metodo di pagamento:</p>
             <select id="pay-method-select">
                 <option value="Cash">💶 Cash / Contanti</option>
                 <option value="Bonifico">🏦 Bonifico</option>
@@ -553,7 +275,6 @@
         </div>
     </div>
 
-    <!-- Modale Modifica Stock Iniziale -->
     <div id="stock-modal" class="modal">
         <div class="modal-content">
             <h3 id="stock-modal-title">Modifica Stock</h3>
@@ -568,7 +289,6 @@
         </div>
     </div>
 
-    <!-- Modale Gestione Utenti -->
     <div id="user-modal" class="modal">
         <div class="modal-content">
             <h3 id="user-modal-title">Nuovo Utente</h3>
@@ -590,809 +310,9 @@
         </div>
     </div>
 
-    <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbze7XWXu3OK3PF8TtDUftN-zBjKRuDz_FAcqXFNHtK2Ns6hNeUykEoi92tz0XHRbquEXA/exec'; 
-        let datiGlobali = [];
-        let utentiGlobali = [];
-        let logsGlobali = [];
-        let impostazioniGlobali = {};
-        let rowCounter = 0;
-        let currentUser = ""; 
-        let currentRole = "";
-        let filtroStatoAttuale = "Tutti";
-        let filtroLogCatAttuale = "Tutti";
-        let filtroProdottoDashboard = "TUTTI"; // "TUTTI", "PANETTONI", "PANDORI"
-
-        window.addEventListener('DOMContentLoaded', () => {
-            const sessionUser = sessionStorage.getItem('wonderlad_active_user') || localStorage.getItem('wonderlad_user');
-            const sessionRole = sessionStorage.getItem('wonderlad_active_role');
-
-            if (sessionUser && sessionRole) {
-                currentUser = sessionUser;
-                currentRole = sessionRole;
-                avviaInterfaccia();
-            }
-        });
-
-        function effettuaLogin() {
-            const user = document.getElementById('username').value.trim();
-            const pass = document.getElementById('passcode').value;
-            const btn = document.getElementById('btn-login');
-
-            if(!user || !pass) return;
-
-            btn.textContent = "Verifica...";
-            btn.disabled = true;
-
-            fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'login_check', user: user, pass: pass })
-            })
-            .then(res => res.json())
-            .then(result => {
-                if(result.status === "success") {
-                    currentUser = user;
-                    currentRole = result.role;
-
-                    sessionStorage.setItem('wonderlad_active_user', currentUser);
-                    sessionStorage.setItem('wonderlad_active_role', currentRole);
-
-                    avviaInterfaccia();
-                } else {
-                    document.getElementById('login-err').style.display = 'block';
-                    btn.textContent = "Accedi";
-                    btn.disabled = false;
-                }
-            })
-            .catch(() => {
-                document.getElementById('login-err').style.display = 'block';
-                btn.textContent = "Accedi";
-                btn.disabled = false;
-            });
-        }
-
-        function avviaInterfaccia() {
-            document.getElementById('login-overlay').style.display = 'none';
-            document.getElementById('main-container').style.display = 'block';
-            document.getElementById('user-badge').textContent = `(${currentUser} - ${currentRole})`;
-
-            const isAdmin = currentRole.toLowerCase() === 'administrator';
-            
-            const nav = document.getElementById('bottomNav');
-            const existingUtentiBtn = document.getElementById('btn-nav-utenti');
-            const existingLogBtn = document.getElementById('btn-nav-log');
-
-            if (isAdmin) {
-                if (!existingUtentiBtn) {
-                    nav.innerHTML += `
-                        <button id="btn-nav-utenti" class="nav-item" onclick="switchView('utenti', this)">
-                            <span class="nav-icon">⚙️</span>Utenti
-                        </button>
-                    `;
-                }
-                if (!existingLogBtn) {
-                    nav.innerHTML += `
-                        <button id="btn-nav-log" class="nav-item" onclick="switchView('log', this)">
-                            <span class="nav-icon">📜</span>Log
-                        </button>
-                    `;
-                }
-            } else {
-                if (existingUtentiBtn) existingUtentiBtn.remove();
-                if (existingLogBtn) existingLogBtn.remove();
-            }
-
-            caricaDati();
-        }
-
-        function effettuaLogout() {
-            if (confirm("Vuoi davvero uscire dal sistema?")) {
-                sessionStorage.removeItem('wonderlad_active_user');
-                sessionStorage.removeItem('wonderlad_active_role');
-                location.reload();
-            }
-        }
-
-        function switchView(viewName, btnElement) {
-            if ((viewName === 'utenti' || viewName === 'log') && currentRole.toLowerCase() !== 'administrator') {
-                alert("Accesso non autorizzato. Questa sezione è riservata agli Administrator.");
-                return;
-            }
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-            document.getElementById('view-' + viewName).classList.add('active');
-            btnElement.classList.add('active');
-        }
-
-        function cambiaVistaDashboard(modo, btnElem) {
-            filtroProdottoDashboard = modo;
-            
-            document.querySelectorAll('.dash-tab-btn').forEach(b => b.classList.remove('active'));
-            if(btnElem) btnElem.classList.add('active');
-
-            calcolaStatistiche(datiGlobali, impostazioniGlobali);
-        }
-
-        function navigaVersoFiltro(stato) {
-            filtroStatoAttuale = stato;
-            
-            document.querySelectorAll('#view-ordini .filter-chips .chip').forEach(c => {
-                if(c.textContent.toLowerCase() === stato.toLowerCase() || (stato === 'Prenotato' && c.textContent.toLowerCase() === 'prenotati')) {
-                    c.classList.add('active');
-                } else {
-                    c.classList.remove('active');
-                }
-            });
-
-            filtraOrdini();
-
-            const navButtons = document.querySelectorAll('.bottom-nav .nav-item');
-            navButtons.forEach(btn => {
-                if(btn.textContent.includes('Ordini')) {
-                    switchView('ordini', btn);
-                }
-            });
-        }
-
-        function caricaDati() {
-            document.getElementById('loadingMsg').style.display = 'block';
-            document.getElementById('tabellaOrdini').style.display = 'none';
-
-            fetch(API_URL)
-                .then(response => response.json())
-                .then(result => {
-                    if(result.status === "success") {
-                        datiGlobali = result.data;
-                        utentiGlobali = result.utenti || [];
-                        logsGlobali = result.logs || [];
-                        impostazioniGlobali = result.impostazioni || {};
-
-                        popolaTabellaOrdini(datiGlobali);
-                        
-                        if (currentRole.toLowerCase() === 'administrator') {
-                            popolaTabellaUtenti(utentiGlobali);
-                            popolaTabellaLog(logsGlobali);
-                        }
-
-                        calcolaStatistiche(datiGlobali, impostazioniGlobali);
-                        document.getElementById('loadingMsg').style.display = 'none';
-                    }
-                });
-        }
-
-        function getBadgeClass(status) {
-            if(!status) return 'status-prenotato';
-            const s = status.toLowerCase();
-            if(s === 'prenotato') return 'status-prenotato';
-            if(s.includes('da pagare')) return 'status-prenotato-da-pagare';
-            if(s.includes('pagato')) return 'status-prenotato-pagare';
-            if(s.includes('preparazione')) return 'status-in-preparazione';
-            if(s.includes('da consegnare')) return 'status-da-consegnare';
-            if(s.includes('consegnato')) return 'status-consegnato';
-            if(s.includes('annullato')) return 'status-annullato';
-            return 'status-prenotato';
-        }
-
-        function popolaTabellaOrdini(dati) {
-            const thead = document.getElementById('testaTabella');
-            const tbody = document.getElementById('corpoTabella');
-            thead.innerHTML = ''; tbody.innerHTML = ''; rowCounter = 0;
-            if(dati.length === 0) return;
-
-            const colonneOriginali = Object.keys(dati[0]);
-            const trHead = document.createElement('tr');
-            
-            colonneOriginali.forEach(col => {
-                if(col !== "rowNumber" && col.trim() !== "") {
-                    const th = document.createElement('th');
-                    th.textContent = col;
-                    trHead.appendChild(th);
-                }
-            });
-            const thAzioni = document.createElement('th');
-            thAzioni.textContent = "Azioni";
-            trHead.appendChild(thAzioni);
-            thead.appendChild(trHead);
-
-            dati.forEach(ordine => {
-                if(!ordine.Nome && !ordine.Cognome) return; 
-                rowCounter++;
-                const tr = document.createElement('tr');
-                tr.setAttribute('data-nome', (ordine.Nome + " " + ordine.Cognome + " " + ordine.Telefono).toLowerCase());
-                tr.setAttribute('data-stato', ordine.Status || "");
-                tr.setAttribute('data-panettoni', ordine.Panettoni || 0);
-                tr.setAttribute('data-pandori', ordine.Pandori || 0);
-                
-                colonneOriginali.forEach(col => {
-                    if(col !== "rowNumber" && col.trim() !== "") {
-                        const td = document.createElement('td');
-                        td.setAttribute('data-label', col);
-                        let valore = ordine[col];
-                        
-                        if(col.toLowerCase().includes('data') && valore) {
-                            const d = new Date(valore);
-                            if(!isNaN(d)) valore = d.toLocaleDateString('it-IT') + " " + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
-                        }
-
-                        if(col.toLowerCase() === 'telefono' && valore) {
-                            const cleanTel = String(valore).replace(/\D/g, '');
-                            const msgWa = encodeURIComponent(`Ciao ${ordine.Nome || ''}, ti contattiamo da WonderLAD in merito al tuo ordine per i dolci solidali.`);
-                            valore = `<a href="https://wa.me/39${cleanTel}?text=${msgWa}" target="_blank" class="wa-link">📱 ${valore}</a>`;
-                        }
-                        
-                        if(col.toLowerCase() === 'status' || col.toLowerCase() === 'stato') {
-                            const badgeClass = getBadgeClass(valore);
-                            td.innerHTML = `<span class="badge-status ${badgeClass}">${valore || 'Prenotato'}</span>`;
-                        } else {
-                            td.innerHTML = `<span>${valore || '-'}</span>`;
-                        }
-                        tr.appendChild(td);
-                    }
-                });
-                
-                const currentStatus = ordine.Status || 'Prenotato';
-                let nextStatusBtn = '';
-                if(currentStatus.includes('Da Pagare')) {
-                    nextStatusBtn = `<button class="btn-quick-status" onclick="apriModaleSaldoRapido(${ordine.rowNumber}, ${ordine.Panettoni || 0}, ${ordine.Pandori || 0})">✅ Pagato</button>`;
-                } else if(currentStatus.includes('Da Consegnare') || currentStatus.includes('In Preparazione')) {
-                    nextStatusBtn = `<button class="btn-quick-status" onclick="cambiaStatoRapido(${ordine.rowNumber}, ${ordine.Panettoni || 0}, ${ordine.Pandori || 0}, 'Consegnato', '${ordine["Metodo Pagamento"] || "-"}')">✅ Consegnato</button>`;
-                }
-
-                const tdAzioni = document.createElement('td');
-                tdAzioni.setAttribute('data-label', 'Azioni');
-                tdAzioni.innerHTML = `${nextStatusBtn}<button class="btn-edit" onclick="apriModaleOrdine(${ordine.rowNumber}, ${ordine.Panettoni || 0}, ${ordine.Pandori || 0}, '${ordine.Status || 'Prenotato'}', '${ordine["Metodo Pagamento"] || "-"}')">✏️ Modifica</button>`;
-                tr.appendChild(tdAzioni);
-                tbody.appendChild(tr);
-            });
-            document.getElementById('tabellaOrdini').style.display = 'table';
-            document.getElementById('contatoreOrdini').textContent = `Sessione caricata. Totale righe analizzate: ${rowCounter}`;
-            filtraOrdini();
-        }
-
-        function apriModaleSaldoRapido(rowNumber, panettoni, pandori) {
-            document.getElementById('pay-row').value = rowNumber;
-            document.getElementById('pay-pan').value = panettoni;
-            document.getElementById('pay-pand').value = pandori;
-            document.getElementById('pay-modal').style.display = 'flex';
-        }
-
-        function confermaSaldoRapido() {
-            const rowNumber = document.getElementById('pay-row').value;
-            const panettoni = document.getElementById('pay-pan').value;
-            const pandori = document.getElementById('pay-pand').value;
-            const metodo = document.getElementById('pay-method-select').value;
-
-            cambiaStatoRapido(rowNumber, panettoni, pandori, 'Prenotato - Pagato', metodo);
-            chiudiModale('pay-modal');
-        }
-
-        function cambiaStatoRapido(rowNumber, panettoni, pandori, nuovoStato, metodoPagamento = "-") {
-            fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'update', rowNumber: rowNumber, panettoni: panettoni, pandori: pandori, status: nuovoStato, metodoPagamento: metodoPagamento, user: currentUser })
-            })
-            .then(res => res.json())
-            .then(() => {
-                caricaDati();
-            });
-        }
-
-        function filtraOrdini() {
-            const query = document.getElementById('searchOrdini').value.toLowerCase();
-            const rows = document.querySelectorAll('#corpoTabella tr');
-            
-            rows.forEach(tr => {
-                const testo = tr.getAttribute('data-nome') || "";
-                const stato = tr.getAttribute('data-stato') || "";
-                const panettoni = parseInt(tr.getAttribute('data-panettoni')) || 0;
-                const pandori = parseInt(tr.getAttribute('data-pandori')) || 0;
-                
-                const matchTesto = testo.includes(query);
-                const matchFiltro = (filtroStatoAttuale === 'Tutti' || stato.toLowerCase() === filtroStatoAttuale.toLowerCase());
-                
-                let matchProdotto = true;
-                if (filtroProdottoDashboard === 'PANETTONI') matchProdotto = panettoni > 0;
-                if (filtroProdottoDashboard === 'PANDORI') matchProdotto = pandori > 0;
-
-                if(matchTesto && matchFiltro && matchProdotto) {
-                    tr.style.display = '';
-                } else {
-                    tr.style.display = 'none';
-                }
-            });
-        }
-
-        function setFiltroStato(stato, btnElement) {
-            filtroStatoAttuale = stato;
-            document.querySelectorAll('#view-ordini .filter-chips .chip').forEach(c => c.classList.remove('active'));
-            btnElement.classList.add('active');
-            filtraOrdini();
-        }
-
-        function filtraUtenti() {
-            const query = document.getElementById('searchUtenti').value.toLowerCase();
-            const rows = document.querySelectorAll('#corpoUtenti tr');
-            rows.forEach(tr => {
-                const text = tr.textContent.toLowerCase();
-                tr.style.display = text.includes(query) ? '' : 'none';
-            });
-        }
-
-        function popolaTabellaUtenti(utenti) {
-            const tbody = document.getElementById('corpoUtenti');
-            tbody.innerHTML = '';
-            
-            utenti.forEach(u => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td data-label="Username"><span>${u.Username}</span></td>
-                    <td data-label="Password"><span>••••••</span></td>
-                    <td data-label="Ruolo"><span>${u.Ruolo}</span></td>
-                    <td data-label="Azioni">
-                        <button class="btn-edit" onclick="apriModaleUtente('edit', ${u.rowNumber}, '${u.Username}', '${u.Password}', '${u.Ruolo}')">✏️ Modifica</button>
-                        <button class="btn-delete" onclick="eliminaUtente(${u.rowNumber}, '${u.Username}')">🗑️ Elimina</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function getLogBadgeClass(cat) {
-            if(!cat) return 'log-inserimento';
-            const c = cat.toUpperCase();
-            if(c.includes('INSERIMENTO')) return 'log-inserimento';
-            if(c.includes('MODIFICA')) return 'log-modifica';
-            if(c.includes('LOGIN')) return 'log-login';
-            if(c.includes('STOCK')) return 'log-stock';
-            if(c.includes('UTENTE')) return 'log-utente';
-            if(c.includes('BACKUP')) return 'log-backup';
-            return 'log-inserimento';
-        }
-
-        function popolaTabellaLog(logs) {
-            const tbody = document.getElementById('corpoLog');
-            tbody.innerHTML = '';
-            if(!logs || logs.length === 0) return;
-
-            const logReversi = [...logs].reverse();
-
-            logReversi.forEach(l => {
-                const keys = Object.keys(l);
-                let dataVal = l[keys[0]] || l.Data || l.Timestamp || '-';
-                let catVal = l[keys[1]] || l.Azione || l.Categoria || '-';
-                let userVal = l[keys[2]] || l.Utente || '-';
-                let detVal = l[keys[3]] || l.Dettaglio || l.Descrizione || '-';
-
-                if(dataVal !== '-' && !isNaN(new Date(dataVal))) {
-                    const d = new Date(dataVal);
-                    dataVal = d.toLocaleDateString('it-IT') + ' ' + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
-                }
-
-                const badgeClass = getLogBadgeClass(catVal);
-
-                const tr = document.createElement('tr');
-                tr.setAttribute('data-cat', String(catVal).toUpperCase());
-                tr.innerHTML = `
-                    <td data-label="Data/Ora"><span>${dataVal}</span></td>
-                    <td data-label="Categoria"><span class="log-badge ${badgeClass}">${catVal}</span></td>
-                    <td data-label="Utente"><strong>${userVal}</strong></td>
-                    <td data-label="Dettaglio"><span>${detVal}</span></td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            filtraLog();
-        }
-
-        function setFiltroLogCat(cat, btnElement) {
-            filtroLogCatAttuale = cat;
-            document.querySelectorAll('#logFilterChips .chip').forEach(c => c.classList.remove('active'));
-            btnElement.classList.add('active');
-            filtraLog();
-        }
-
-        function filtraLog() {
-            const query = document.getElementById('searchLog').value.toLowerCase();
-            const rows = document.querySelectorAll('#corpoLog tr');
-            
-            rows.forEach(tr => {
-                const text = tr.textContent.toLowerCase();
-                const cat = tr.getAttribute('data-cat') || "";
-                
-                const matchTesto = text.includes(query);
-                const matchCat = (filtroLogCatAttuale === 'Tutti' || cat.includes(filtroLogCatAttuale.toUpperCase()));
-
-                if(matchTesto && matchCat) {
-                    tr.style.display = '';
-                } else {
-                    tr.style.display = 'none';
-                }
-            });
-        }
-
-        function apriModaleOrdine(row, panettoni, pandori, status, metodo = "-") {
-            document.getElementById('edit-row').value = row;
-            document.getElementById('edit-pan').value = panettoni;
-            document.getElementById('edit-pan-dori').value = pandori;
-            
-            const selStatus = document.getElementById('edit-status');
-            for(let i=0; i<selStatus.options.length; i++) {
-                if(selStatus.options[i].value.toLowerCase() === status.toLowerCase()) { selStatus.selectedIndex = i; break; }
-            }
-
-            const selMetodo = document.getElementById('edit-metodo-pagamento');
-            for(let i=0; i<selMetodo.options.length; i++) {
-                if(selMetodo.options[i].value.toLowerCase() === metodo.toLowerCase()) { selMetodo.selectedIndex = i; break; }
-            }
-
-            document.getElementById('edit-modal').style.display = 'flex';
-        }
-
-        function apriModaleStock(tipo) {
-            if (currentRole.toLowerCase() !== 'administrator') {
-                alert("Operazione non consentita per il ruolo Manager.");
-                return;
-            }
-            document.getElementById('input-tot-pan').value = impostazioniGlobali["Totale Panettoni"] || 0;
-            document.getElementById('input-tot-pand').value = impostazioniGlobali["Totale Pandori"] || 0;
-            document.getElementById('stock-modal').style.display = 'flex';
-        }
-
-        function salvaStock() {
-            if (currentRole.toLowerCase() !== 'administrator') return;
-
-            const totPan = document.getElementById('input-tot-pan').value;
-            const totPand = document.getElementById('input-tot-pand').value;
-
-            fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'update_stock', totPanettoni: totPan, totPandori: totPand, user: currentUser })
-            })
-            .then(res => res.json())
-            .then(() => {
-                chiudiModale('stock-modal');
-                caricaDati();
-            });
-        }
-
-        function apriModaleUtente(mode, row = '', username = '', password = '', ruolo = 'Manager') {
-            if (currentRole.toLowerCase() !== 'administrator') return;
-
-            document.getElementById('modal-mode').value = mode;
-            document.getElementById('modal-user-row').value = row;
-            document.getElementById('modal-username').value = username;
-            document.getElementById('modal-password').value = password;
-            
-            const sel = document.getElementById('modal-role');
-            for(let i=0; i<sel.options.length; i++) {
-                if(sel.options[i].value === ruolo) { sel.selectedIndex = i; break; }
-            }
-
-            document.getElementById('user-modal-title').textContent = mode === 'add' ? 'Nuovo Utente' : 'Modifica Utente / Resetta Password';
-            document.getElementById('user-modal').style.display = 'flex';
-        }
-
-        function chiudiModale(modalId) { 
-            document.getElementById(modalId).style.display = 'none'; 
-            
-            if (modalId === 'user-modal') {
-                document.getElementById('modal-username').value = '';
-                document.getElementById('modal-password').value = '';
-            } else if (modalId === 'edit-modal') {
-                document.getElementById('edit-pan').value = '';
-                document.getElementById('edit-pan-dori').value = '';
-            }
-        }
-
-        function salvaModificaOrdine() {
-            const row = document.getElementById('edit-row').value;
-            const panettoni = document.getElementById('edit-pan').value;
-            const pandori = document.getElementById('edit-pan-dori').value;
-            const status = document.getElementById('edit-status').value;
-            const metodo = document.getElementById('edit-metodo-pagamento').value;
-
-            fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'update', rowNumber: row, panettoni: panettoni, pandori: pandori, status: status, metodoPagamento: metodo, user: currentUser })
-            })
-            .then(res => res.json())
-            .then(() => {
-                chiudiModale('edit-modal');
-                caricaDati(); 
-            });
-        }
-
-        function salvaUtente() {
-            if (currentRole.toLowerCase() !== 'administrator') return;
-
-            const mode = document.getElementById('modal-mode').value;
-            const row = document.getElementById('modal-user-row').value;
-            const username = document.getElementById('modal-username').value.trim();
-            const password = document.getElementById('modal-password').value.trim();
-            const ruolo = document.getElementById('modal-role').value;
-
-            if(!username || !password) return alert("Inserisci username e password!");
-
-            const action = mode === 'add' ? 'add_user' : 'update_user';
-
-            fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: action, rowNumber: row, newUsername: username, newPassword: password, newRole: ruolo, user: currentUser })
-            })
-            .then(res => res.json())
-            .then(() => {
-                chiudiModale('user-modal');
-                caricaDati();
-            });
-        }
-
-        function eliminaUtente(row, username) {
-            if (currentRole.toLowerCase() !== 'administrator') return;
-
-            if(confirm(`Sei sicuro di voler eliminare l'utente "${username}"?`)) {
-                fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'delete_user', rowNumber: row, user: currentUser })
-                })
-                .then(res => res.json())
-                .then(() => {
-                    caricaDati();
-                });
-            }
-        }
-
-        function calcolaStatistiche(dati, impostazioni) {
-            let totPanettoni = 0; let totPandori = 0;
-            let ordiniDaPagareNonConsegnati = 0;
-            
-            let stats = {
-                'prenotato': { count: 0, pan: 0, pand: 0 },
-                'da_pagare': { count: 0, pan: 0, pand: 0 },
-                'pagato': { count: 0, pan: 0, pand: 0 },
-                'preparazione': { count: 0, pan: 0, pand: 0 },
-                'da_consegnare': { count: 0, pan: 0, pand: 0 },
-                'consegnato': { count: 0, pan: 0, pand: 0 },
-                'annullato': { count: 0, pan: 0, pand: 0 }
-            };
-
-            dati.forEach(ordine => {
-                if(!ordine.Nome && !ordine.Cognome) return;
-                const pan = parseInt(ordine.Panettoni) || 0;
-                const pand = parseInt(ordine.Pandori) || 0;
-
-                // Controllo se l'ordine rientra nel focus selezionato (Globale, Panettoni o Pandori)
-                let corrispondeFocus = true;
-                if (filtroProdottoDashboard === 'PANETTONI' && pan <= 0) corrispondeFocus = false;
-                if (filtroProdottoDashboard === 'PANDORI' && pand <= 0) corrispondeFocus = false;
-
-                if (corrispondeFocus) {
-                    totPanettoni += pan;
-                    totPandori += pand;
-
-                    const status = (ordine.Status || "").toLowerCase();
-
-                    const sommaStato = (key) => {
-                        stats[key].count++;
-                        stats[key].pan += pan;
-                        stats[key].pand += pand;
-                    };
-
-                    if(status === 'prenotato') sommaStato('prenotato');
-                    if(status.includes('da pagare')) sommaStato('da_pagare');
-                    if(status.includes('pagato')) sommaStato('pagato');
-                    if(status.includes('preparazione')) sommaStato('preparazione');
-                    if(status.includes('da consegnare')) sommaStato('da_consegnare');
-                    if(status.includes('consegnato')) sommaStato('consegnato');
-                    if(status.includes('annullato')) sommaStato('annullato');
-
-                    if(status.includes('da pagare') && !status.includes('consegnato') && !status.includes('annullato')) {
-                        ordiniDaPagareNonConsegnati++;
-                    }
-                }
-            });
-
-            // Popola contatori flussi e incassi coerentemente con il focus
-            const impostaBoxFlow = (idCount, idSub, key) => {
-                document.getElementById(idCount).textContent = stats[key].count;
-                document.getElementById(idSub).textContent = `🥮 ${stats[key].pan} | 🍞 ${stats[key].pand}`;
-            };
-
-            impostaBoxFlow('countPrenotato', 'subPrenotato', 'prenotato');
-            impostaBoxFlow('countDaPagare', 'subDaPagare', 'da_pagare');
-            impostaBoxFlow('countPagati', 'subPagati', 'pagato');
-            impostaBoxFlow('countInPreparazione', 'subInPrep', 'preparazione');
-            impostaBoxFlow('countDaConsegnare', 'subDaConseg', 'da_consegnare');
-            impostaBoxFlow('countConsegnati', 'subConsegnati', 'consegnato');
-            impostaBoxFlow('countAnnullati', 'subAnnullati', 'annullato');
-
-            // Stock e barre di progresso
-            let stockInizialePanettoni = parseInt(impostazioni["Totale Panettoni"]) || 0;
-            let stockInizialePandori = parseInt(impostazioni["Totale Pandori"]) || 0;
-
-            document.getElementById('valPanettoni').textContent = totPanettoni;
-            document.getElementById('lblTotPanettoni').textContent = `prenotati su ${stockInizialePanettoni}`;
-            document.getElementById('rimanenzePanettoni').textContent = `Rimanenza: ${stockInizialePanettoni - totPanettoni} pz`;
-            const percPan = stockInizialePanettoni > 0 ? Math.min(100, Math.round((totPanettoni / stockInizialePanettoni) * 100)) : 0;
-            document.getElementById('barPanettoni').style.width = percPan + '%';
-
-            document.getElementById('valPandori').textContent = totPandori;
-            document.getElementById('lblTotPandori').textContent = `prenotati su ${stockInizialePandori}`;
-            document.getElementById('rimanenzePandori').textContent = `Rimanenza: ${stockInizialePandori - totPandori} pz`;
-            const percPand = stockInizialePandori > 0 ? Math.min(100, Math.round((totPandori / stockInizialePandori) * 100)) : 0;
-            document.getElementById('barPandori').style.width = percPand + '%';
-
-            // Alert spostato nella zona Stato Incassi & Saldi
-            const alertContainer = document.getElementById('alertContainer');
-            if(ordiniDaPagareNonConsegnati > 0) {
-                alertContainer.innerHTML = `
-                    <div class="alert-box">
-                        <span>⚠️</span>
-                        <span>Attenzione: ci sono <strong>${ordiniDaPagareNonConsegnati} ordini</strong> con stato "Da Pagare" da saldare!</span>
-                    </div>
-                `;
-            } else {
-                alertContainer.innerHTML = '';
-            }
-        }
-
-        function esportaPDF() {
-            if (!datiGlobali || datiGlobali.length === 0) return alert("Nessun dato da esportare!");
-
-            const containerPDF = document.createElement('div');
-            containerPDF.style.padding = '15px';
-            containerPDF.style.fontFamily = 'Nunito, sans-serif';
-            containerPDF.style.backgroundColor = '#ffffff';
-            containerPDF.style.color = '#24352c';
-
-            let page1 = `
-                <div style="page-break-after: always; break-after: page;">
-                    <div style="text-align: center; border-bottom: 2px solid #5b8e72; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-                        <div style="text-align: left;">
-                            <h2 style="color: #5b8e72; margin: 0; font-family: Quicksand, sans-serif; font-size: 22px;">WonderLAD Onlus</h2>
-                            <p style="font-size: 13px; color: #62756d; margin: 4px 0 0 0;">Report Generale e Statistiche - ${new Date().toLocaleDateString('it-IT')}</p>
-                        </div>
-                        <img src="https://www.wonderlad.org/wp-content/uploads/2020/05/logo-wonderlad.png" style="height: 38px;" />
-                    </div>
-
-                    <h3 style="color: #5b8e72; font-family: Quicksand, sans-serif; margin-bottom: 10px; font-size: 16px;">Riepilogo Scorte</h3>
-                    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-                        <div style="flex: 1; border: 2px solid #5b8e72; padding: 12px; border-radius: 12px; text-align: center; background: #f6fff8;">
-                            <div style="font-size: 11px; font-weight: bold; color: #62756d;">PANETTONI PRENOTATI</div>
-                            <div style="font-size: 24px; font-weight: bold; color: #5b8e72; margin: 4px 0;">${document.getElementById('valPanettoni').textContent}</div>
-                            <div style="font-size: 11px; color: #62756d;">${document.getElementById('rimanenzePanettoni').textContent}</div>
-                        </div>
-                        <div style="flex: 1; border: 2px solid #94bdad; padding: 12px; border-radius: 12px; text-align: center; background: #eaf4f0;">
-                            <div style="font-size: 11px; font-weight: bold; color: #62756d;">PANDORI PRENOTATI</div>
-                            <div style="font-size: 24px; font-weight: bold; color: #3a6250; margin: 4px 0;">${document.getElementById('valPandori').textContent}</div>
-                            <div style="font-size: 11px; color: #62756d;">${document.getElementById('rimanenzePandori').textContent}</div>
-                        </div>
-                    </div>
-
-                    <h3 style="color: #5b8e72; font-family: Quicksand, sans-serif; margin-bottom: 10px; font-size: 16px;">Conteggio Ordini per Stato</h3>
-                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 12px;">
-                        <thead>
-                            <tr style="background: #f0f4f1;">
-                                <th style="padding: 8px; border: 1px solid #e1eae5; text-align: left;">Stato Ordine</th>
-                                <th style="padding: 8px; border: 1px solid #e1eae5; text-align: center;">N° Ordini</th>
-                                <th style="padding: 8px; border: 1px solid #e1eae5; text-align: center;">Dettaglio (Pan / Pand)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td style="padding: 6px; border: 1px solid #e1eae5;">Prenotati Generici</td>
-                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center; font-weight: bold;">${document.getElementById('countPrenotato').textContent}</td>
-                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center;">${document.getElementById('subPrenotato').textContent}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 6px; border: 1px solid #e1eae5;">Da Pagare</td>
-                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center; font-weight: bold; color: #c53030;">${document.getElementById('countDaPagare').textContent}</td>
-                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center;">${document.getElementById('subDaPagare').textContent}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 6px; border: 1px solid #e1eae5;">Pagati</td>
-                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center; font-weight: bold; color: #276749;">${document.getElementById('countPagati').textContent}</td>
-                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center;">${document.getElementById('subPagati').textContent}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 6px; border: 1px solid #e1eae5;">In Preparazione</td>
-                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center; font-weight: bold; color: #b7791f;">${document.getElementById('countInPreparazione').textContent}</td>
-                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center;">${document.getElementById('subInPrep').textContent}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 6px; border: 1px solid #e1eae5;">Da Consegnare</td>
-                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center; font-weight: bold; color: #6b46c1;">${document.getElementById('countDaConsegnare').textContent}</td>
-                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center;">${document.getElementById('subDaConseg').textContent}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 6px; border: 1px solid #e1eae5;">Consegnati</td>
-                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center; font-weight: bold; color: #2e7d32;">${document.getElementById('countConsegnati').textContent}</td>
-                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center;">${document.getElementById('subConsegnati').textContent}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 6px; border: 1px solid #e1eae5;">Annullati</td>
-                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center; font-weight: bold; color: #718096;">${document.getElementById('countAnnullati').textContent}</td>
-                                <td style="padding: 6px; border: 1px solid #e1eae5; text-align: center;">${document.getElementById('subAnnullati').textContent}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            `;
-
-            let rowsTableHTML = '';
-            datiGlobali.forEach((o, i) => {
-                if (!o.Nome && !o.Cognome) return;
-                let dStr = o.Data || '-';
-                if (dStr !== '-' && !isNaN(new Date(dStr))) {
-                    const d = new Date(dStr);
-                    dStr = d.toLocaleDateString('it-IT') + ' ' + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
-                }
-                rowsTableHTML += `
-                    <tr style="background: ${i % 2 === 0 ? '#ffffff' : '#f6fff8'};">
-                        <td style="padding: 6px; border: 1px solid #e1eae5; font-size: 10px;">${dStr}</td>
-                        <td style="padding: 6px; border: 1px solid #e1eae5; font-size: 11px; font-weight: bold;">${o.Nome || ''} ${o.Cognome || ''}</td>
-                        <td style="padding: 6px; border: 1px solid #e1eae5; font-size: 10px;">${o.Telefono || '-'}</td>
-                        <td style="padding: 6px; border: 1px solid #e1eae5; font-size: 11px; text-align: center;">${o.Panettoni || 0}</td>
-                        <td style="padding: 6px; border: 1px solid #e1eae5; font-size: 11px; text-align: center;">${o.Pandori || 0}</td>
-                        <td style="padding: 6px; border: 1px solid #e1eae5; font-size: 10px; font-weight: bold;">${o.Status || 'Prenotato'}</td>
-                        <td style="padding: 6px; border: 1px solid #e1eae5; font-size: 10px;">${o["Metodo Pagamento"] || '-'}</td>
-                    </tr>
-                `;
-            });
-
-            let page2 = `
-                <div>
-                    <div style="text-align: center; border-bottom: 2px solid #5b8e72; padding-bottom: 10px; margin-bottom: 15px;">
-                        <h3 style="color: #5b8e72; margin: 0; font-family: Quicksand, sans-serif; font-size: 18px;">Elenco Completo Ordini Registrati</h3>
-                    </div>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
-                        <thead>
-                            <tr style="background: #5b8e72; color: white;">
-                                <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Data</th>
-                                <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Cliente</th>
-                                <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Telefono</th>
-                                <th style="padding: 7px; border: 1px solid #3a6250; text-align: center;">Panettoni</th>
-                                <th style="padding: 7px; border: 1px solid #3a6250; text-align: center;">Pandori</th>
-                                <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Stato</th>
-                                <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Pagamento</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${rowsTableHTML}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-
-            containerPDF.innerHTML = page1 + page2;
-
-            const opt = {
-                margin:       10,
-                filename:     `Report_WonderLAD_${new Date().toISOString().slice(0,10)}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak:    { mode: ['css', 'legacy'] }
-            };
-
-            html2pdf().from(containerPDF).set(opt).save();
-        }
-
-        function esportaExcel() {
-            if(datiGlobali.length === 0) return alert("Nessun dato!");
-            const datiPuliti = datiGlobali.map(({rowNumber, ...resto}) => resto);
-            const ws = XLSX.utils.json_to_sheet(datiPuliti);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Ordini");
-            XLSX.writeFile(wb, "Ordini_WonderLAD.xlsx");
-        }
-
-        function eseguiTestLettura() { caricaDati(); }
-    </script>
+    <!-- Collegamento ai moduli JavaScript separati che definiremo nei prossimi passaggi -->
+    <script src="api.js"></script>
+    <script src="dashboard.js"></script>
+    <script src="ordini-utenti.js"></script>
 </body>
 </html>
