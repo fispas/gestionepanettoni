@@ -3,63 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prenotazione Panettoni e Pandori - WonderLAD</title>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <title>Prenotazione Dolci Solidali - WonderLAD</title>
+    <!-- Importazione Font Ufficiali -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;750&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
+        /* Variabili Colore WonderLAD */
+        :root {
+            --primary: #d32f2f;
+            --primary-dark: #b71c1c;
+            --accent: #f57c00;
+            --bg-main: #fcf9f5;
+            --card-bg: #ffffff;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --border-color: #e2e8f0;
+        }
+
         body { 
             font-family: 'Nunito', sans-serif; 
-            background-color: #f4f6f8; 
-            color: #333;
+            background-color: var(--bg-main); 
+            color: var(--text-main);
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 2rem 1rem;
             margin: 0;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
+        
         .form-container {
-            background: #ffffff;
+            background: var(--card-bg);
             max-width: 450px;
             width: 100%;
             padding: 2.5rem 2rem;
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            border-top: 8px solid #e53935; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+            border-top: 8px solid var(--primary); 
             box-sizing: border-box;
         }
-        h2 { text-align: center; color: #2c3e50; margin-top: 0; font-weight: 800; font-size: 1.8rem; margin-bottom: 0.5rem; }
-        .subtitle { text-align: center; color: #7f8c8d; font-size: 0.95rem; margin-bottom: 2rem; }
-        input[type="text"], input[type="tel"] { 
-            width: 100%; margin-bottom: 1.2rem; padding: 0.9rem 1rem; border: 2px solid #e9ecef;
-            border-radius: 10px; box-sizing: border-box; font-family: 'Nunito', sans-serif;
-            font-size: 1rem; transition: all 0.3s ease; background-color: #f8f9fa;
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 1.5rem;
         }
-        input:focus { outline: none; border-color: #fbbc05; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(251, 188, 5, 0.1); }
-        .product-selector { display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; border: 2px solid #e9ecef; border-radius: 10px; padding: 1rem; margin-bottom: 1.2rem; }
+
+        .logo-container img {
+            max-height: 60px;
+            width: auto;
+        }
+
+        h2 { 
+            text-align: center; 
+            color: var(--primary-dark); 
+            margin-top: 0; 
+            font-weight: 750; 
+            font-size: 1.8rem; 
+            margin-bottom: 0.3rem; 
+            font-family: 'Quicksand', sans-serif; 
+        }
+        
+        .subtitle { 
+            text-align: center; 
+            color: var(--text-muted); 
+            font-size: 0.95rem; 
+            margin-bottom: 2rem; 
+            font-weight: 600; 
+        }
+
+        input[type="text"], input[type="tel"] { 
+            width: 100%; 
+            margin-bottom: 1.2rem; 
+            padding: 0.9rem 1rem; 
+            border: 2px solid var(--border-color);
+            border-radius: 12px; 
+            box-sizing: border-box; 
+            font-family: 'Nunito', sans-serif;
+            font-size: 1rem; 
+            transition: all 0.3s ease; 
+            background-color: #f7fafc; 
+        }
+
+        input:focus { 
+            outline: none; 
+            border-color: var(--accent); 
+            background-color: #ffffff; 
+            box-shadow: 0 0 0 4px rgba(245, 124, 0, 0.1); 
+        }
+
+        .product-selector { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background-color: #f7fafc; 
+            border: 2px solid var(--border-color); 
+            border-radius: 12px; 
+            padding: 1rem; 
+            margin-bottom: 1.2rem; 
+            transition: border-color 0.3s;
+        }
+
+        .product-selector:hover {
+            border-color: #cbd5e0;
+        }
+
         .product-info { display: flex; flex-direction: column; }
-        .product-name { font-weight: 700; font-size: 1.1rem; color: #2c3e50; }
+        .product-name { font-weight: 750; font-size: 1.1rem; color: var(--text-main); font-family: 'Quicksand', sans-serif; }
+        
         .counter-group { display: flex; align-items: center; gap: 15px; }
-        .btn-counter { background-color: #e53935; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; font-size: 1.2rem; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background-color 0.2s, transform 0.1s; }
-        .btn-counter:hover { background-color: #c62828; transform: scale(1.05); }
+
+        .btn-counter { 
+            background-color: var(--primary); 
+            color: white; 
+            border: none; 
+            width: 38px; 
+            height: 38px; 
+            border-radius: 50%; 
+            font-size: 1.4rem; 
+            font-weight: bold; 
+            cursor: pointer; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            transition: background-color 0.2s, transform 0.1s; 
+            box-shadow: 0 2px 5px rgba(211, 47, 47, 0.2);
+        }
+        .btn-counter:hover { background-color: var(--primary-dark); transform: scale(1.05); }
         .btn-counter:active { transform: scale(0.95); }
-        .count-display { font-size: 1.2rem; font-weight: 800; width: 20px; text-align: center; }
-        button[type="submit"] { width: 100%; padding: 1.1rem; background-color: #e53935; color: white; border: none; border-radius: 10px; font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: background-color 0.3s, transform 0.1s; font-family: 'Nunito', sans-serif; margin-top: 0.5rem; box-shadow: 0 4px 6px rgba(229, 57, 53, 0.2); }
-        button[type="submit"]:hover { background-color: #c62828; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(229, 57, 53, 0.3); }
-        #statusMsg { font-weight: bold; text-align: center; margin-bottom: 1rem; min-height: 1.5rem; font-size: 1.1rem; }
-        #contatoreOrdini { font-size: 0.9em; color: #95a5a6; text-align: center; margin-bottom: 1.5rem; font-weight: 700; }
-        .test-btn { background-color: transparent; color: #adb5bd; margin-top: 2rem; border: 2px dashed #dee2e6; padding: 0.8rem; border-radius: 10px; cursor: pointer; font-family: 'Nunito', sans-serif; font-weight: 700; transition: all 0.3s; width: 100%; max-width: 450px; box-sizing: border-box; }
-        .test-btn:hover { background-color: #e9ecef; color: #495057; border-color: #adb5bd; }
+        .count-display { font-size: 1.2rem; font-weight: 800; width: 25px; text-align: center; color: var(--text-main); }
+
+        button[type="submit"] { 
+            width: 100%; 
+            padding: 1.1rem; 
+            background-color: var(--primary); 
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 1.15rem; 
+            font-weight: 750; 
+            cursor: pointer; 
+            transition: background-color 0.3s, transform 0.1s; 
+            font-family: 'Quicksand', sans-serif; 
+            margin-top: 0.5rem; 
+            box-shadow: 0 4px 12px rgba(211, 47, 47, 0.2); 
+        }
+        button[type="submit"]:hover { 
+            background-color: var(--primary-dark); 
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 15px rgba(211, 47, 47, 0.3); 
+        }
+
+        #statusMsg { font-weight: bold; text-align: center; margin-bottom: 1rem; min-height: 1.5rem; font-size: 1.1rem; font-family: 'Quicksand', sans-serif; }
+        #contatoreOrdini { font-size: 0.85em; color: var(--text-muted); text-align: center; margin-bottom: 1.5rem; font-weight: 700; }
+        
+        .test-btn { 
+            background-color: transparent; 
+            color: var(--text-muted); 
+            margin-top: 2rem; 
+            border: 2px dashed var(--border-color); 
+            padding: 0.8rem; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-family: 'Quicksand', sans-serif; 
+            font-weight: 700; 
+            transition: all 0.3s; 
+            width: 100%; 
+            max-width: 450px; 
+            box-sizing: border-box; 
+        }
+        .test-btn:hover { background-color: #edf2f7; color: var(--text-main); border-color: #cbd5e0; }
     </style>
 </head>
 <body>
+
     <div class="form-container">
+        <!-- Inserimento Logo Ufficiale WonderLAD -->
+        <div class="logo-container">
+            <img src="https://www.wonderlad.org/wp-content/uploads/2020/05/logo-wonderlad.png" alt="Logo WonderLAD Onlus" onerror="this.style.display='none'">
+        </div>
+
         <h2>Prenota i tuoi Dolci</h2>
         <div class="subtitle">Sostieni i nostri progetti con dolcezza</div>
+        
         <div id="statusMsg"></div>
         <div id="contatoreOrdini">Ordini registrati in questa sessione: 0</div>
+
         <form id="ordineForm">
             <input type="text" id="nome" placeholder="Nome" required>
             <input type="text" id="cognome" placeholder="Cognome" required>
             <input type="tel" id="telefono" placeholder="Numero di Telefono" required>
+            
             <div class="product-selector">
                 <div class="product-info"><span class="product-name">Panettoni</span></div>
                 <div class="counter-group">
@@ -68,6 +201,7 @@
                     <button type="button" class="btn-counter" onclick="updateCount('panettoni', 1)">+</button>
                 </div>
             </div>
+
             <div class="product-selector">
                 <div class="product-info"><span class="product-name">Pandori</span></div>
                 <div class="counter-group">
@@ -76,14 +210,20 @@
                     <button type="button" class="btn-counter" onclick="updateCount('pandori', 1)">+</button>
                 </div>
             </div>
+
             <button type="submit">Conferma Prenotazione</button>
         </form>
     </div>
+
+    <!-- Bottone di test (opzionale, puoi nasconderlo se non serve ai clienti) -->
     <button class="test-btn" onclick="eseguiTest()">⚙️ Esegui Test Inserimento Dati</button>
 
     <script>
+        // L'API è stata aggiornata con l'ultimo link fornito
         const API_URL = 'https://script.google.com/macros/s/AKfycbxffi8Y2pJ8h5S10uVknkP7f64YMFyo0Fyvv88SwH52HiIdASQ4RTh2Ww9nzjaqy-_lOQ/exec';
-        let counterOrdini = 0; let countPanettoni = 0; let countPandori = 0;
+        let counterOrdini = 0; 
+        let countPanettoni = 0; 
+        let countPandori = 0;
 
         function updateCount(prodotto, valore) {
             if (prodotto === 'panettoni') {
@@ -101,7 +241,8 @@
             document.getElementById('nome').value = "TestNome";
             document.getElementById('cognome').value = "TestCognome";
             document.getElementById('telefono').value = "3331234567";
-            countPanettoni = 2; countPandori = 1;
+            countPanettoni = 2; 
+            countPandori = 1;
             document.getElementById('panettoni-display').textContent = countPanettoni;
             document.getElementById('pandori-display').textContent = countPandori;
             document.getElementById('ordineForm').dispatchEvent(new Event('submit', { cancelable: true }));
@@ -110,13 +251,17 @@
         document.getElementById('ordineForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const msg = document.getElementById('statusMsg');
+            
             if (countPanettoni === 0 && countPandori === 0) {
                 msg.textContent = "Seleziona almeno un Panettone o un Pandoro.";
-                msg.style.color = "#e74c3c";
+                msg.style.color = "#e53e3e"; // Rosso errore in stile con il tema
                 return;
             }
+
             const btn = this.querySelector('button[type="submit"]');
-            btn.disabled = true; btn.textContent = "Attendere..."; msg.textContent = "";
+            btn.disabled = true; 
+            btn.textContent = "Attendere..."; 
+            msg.textContent = "";
             
             const data = {
                 action: 'insert',
@@ -135,20 +280,26 @@
             .then(response => response.json())
             .then(result => {
                 if(result.status === "success") {
-                    msg.textContent = "Prenotazione confermata con successo! 🎉"; msg.style.color = "#2ecc71";
+                    msg.textContent = "Prenotazione confermata con successo! 🎉"; 
+                    msg.style.color = "#38a169"; // Verde successo in stile col tema
                     document.getElementById('ordineForm').reset();
-                    countPanettoni = 0; countPandori = 0;
+                    countPanettoni = 0; 
+                    countPandori = 0;
                     document.getElementById('panettoni-display').textContent = "0";
                     document.getElementById('pandori-display').textContent = "0";
                     counterOrdini++;
                     document.getElementById('contatoreOrdini').textContent = `Ordini registrati in questa sessione: ${counterOrdini}`;
-                } else { throw new Error("Errore backend"); }
+                } else { 
+                    throw new Error("Errore backend"); 
+                }
             })
             .catch(error => {
-                msg.textContent = "Si è verificato un errore. Riprova."; msg.style.color = "#e74c3c";
+                msg.textContent = "Si è verificato un errore. Riprova."; 
+                msg.style.color = "#e53e3e";
             })
             .finally(() => {
-                btn.disabled = false; btn.textContent = "Conferma Prenotazione";
+                btn.disabled = false; 
+                btn.textContent = "Conferma Prenotazione";
             });
         });
     </script>
