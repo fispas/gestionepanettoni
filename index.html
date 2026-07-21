@@ -97,6 +97,7 @@
     <button class="test-btn" onclick="eseguiTest()">⚙️ Esegui Test Inserimento Dati</button>
 
     <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzSIBLORkFGCUDfI8j7t6YRIGaqrVEaRr1Gjlrx5i5TYS6P9Aq_S-ZMJsJd9To4H-3g/exec';
         let counterOrdini = 0; let countPanettoni = 0; let countPandori = 0;
 
         function updateCount(prodotto, valore) {
@@ -134,8 +135,6 @@
             const btn = this.querySelector('button[type="submit"]');
             btn.disabled = true; btn.textContent = "Attendere..."; msg.textContent = "";
             
-            const url = 'https://script.google.com/macros/s/AKfycbxmgrw77JwQ-tRhJfE34tCPipbN3eNBzY3HaFsyd6o16-rz9lcQ02HQkrYr8h7P8hwUyw/exec'; 
-            
             const data = {
                 action: 'insert',
                 nome: document.getElementById('nome').value,
@@ -145,7 +144,7 @@
                 pandori: countPandori
             };
 
-            fetch(url, {
+            fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(data)
