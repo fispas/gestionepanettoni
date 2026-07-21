@@ -1,3 +1,4 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -191,10 +192,9 @@
             <input 
                 type="tel" 
                 id="telefono" 
-                placeholder="Numero di Telefono" 
-                inputmode="numeric" 
-                pattern="[0-9]+" 
-                oninput="this.value = this.value.replace(/[^0-9]/g, '')" 
+                placeholder="Numero di Telefono (es. +39...)" 
+                inputmode="tel" 
+                oninput="this.value = this.value.replace(/[^\d+]/g, '').replace(/(?!^)\+/g, '')" 
                 required>
             
             <div class="product-selector">
@@ -254,6 +254,9 @@
             e.preventDefault();
             const msg = document.getElementById('statusMsg');
             
+            if (countPanettoni < 0) countPanettoni = 0;
+            if (countPandori < 0) countPandori = 0;
+
             if (countPanettoni === 0 && countPandori === 0) {
                 msg.textContent = "Seleziona almeno un Panettone o un Pandoro.";
                 msg.style.color = "#d9534f";
@@ -267,9 +270,9 @@
             
             const data = {
                 action: 'insert',
-                nome: document.getElementById('nome').value,
-                cognome: document.getElementById('cognome').value,
-                telefono: document.getElementById('telefono').value,
+                nome: document.getElementById('nome').value.trim(),
+                cognome: document.getElementById('cognome').value.trim(),
+                telefono: document.getElementById('telefono').value.trim(),
                 panettoni: countPanettoni,
                 pandori: countPandori
             };
@@ -292,11 +295,12 @@
                     counterOrdini++;
                     document.getElementById('contatoreOrdini').textContent = `Ordini registrati in questa sessione: ${counterOrdini}`;
                 } else { 
-                    throw new Error("Errore backend"); 
+                    throw new Error(result.message || "Errore sconosciuto dal backend"); 
                 }
             })
             .catch(error => {
-                msg.textContent = "Si è verificato un errore. Riprova."; 
+                console.error("Errore durante l'invio dell'ordine:", error);
+                msg.textContent = "Si è verificato un errore di connessione. Riprova."; 
                 msg.style.color = "#d9534f";
             })
             .finally(() => {
