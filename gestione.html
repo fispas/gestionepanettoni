@@ -30,7 +30,6 @@
             padding-bottom: 90px; 
         }
 
-        /* Header Chiaro e Luminoso */
         .header { 
             background-color: #ffffff; 
             color: var(--text-main); 
@@ -115,7 +114,6 @@
         
         .stock-edit-btn { background: var(--accent-light); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; font-weight: bold; margin-top: 8px; display: inline-block; color: var(--primary-dark); }
 
-        /* Box Status Cliccabili con Toni Pastello Tenui */
         .status-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-bottom: 1.5rem; }
         @media screen and (max-width: 600px) {
             .status-summary-grid { grid-template-columns: repeat(2, 1fr); }
@@ -128,22 +126,16 @@
 
         .card-prenotato { background-color: #e8f4f8; border-color: #bee3f8; }
         .card-prenotato .status-summary-title, .card-prenotato .status-summary-count { color: #2b6cb0; }
-        
         .card-da-pagare { background-color: #fce8e6; border-color: #f5c6cb; }
         .card-da-pagare .status-summary-title, .card-da-pagare .status-summary-count { color: #c53030; }
-        
         .card-pagato { background-color: #e8f5e9; border-color: #c6f6d5; }
         .card-pagato .status-summary-title, .card-pagato .status-summary-count { color: #276749; }
-        
         .card-preparazione { background-color: #fff8e1; border-color: #ffe082; }
         .card-preparazione .status-summary-title, .card-preparazione .status-summary-count { color: #b7791f; }
-        
         .card-da-consegnare { background-color: #f3e5f5; border-color: #e1bee7; }
         .card-da-consegnare .status-summary-title, .card-da-consegnare .status-summary-count { color: #6b46c1; }
-        
         .card-consegnato { background-color: #edf7ed; border-color: #c8e6c9; }
         .card-consegnato .status-summary-title, .card-consegnato .status-summary-count { color: #2e7d32; }
-        
         .card-annullato { background-color: #f1f3f5; border-color: #e2e8f0; grid-column: span 3; }
         .card-annullato .status-summary-title, .card-annullato .status-summary-count { color: #718096; }
 
@@ -378,6 +370,29 @@
                 </table>
             </div>
         </div>
+
+        <!-- Log / Attività (Solo Administrator) -->
+        <div id="view-log" class="view">
+            <div class="controls-panel">
+                <input type="text" id="searchLog" class="search-input" placeholder="🔍 Cerca nei log (es. azionamento, utente, parola chiave)..." onkeyup="filtraLog()">
+            </div>
+            <div class="table-controls">
+                <h3 style="margin: 0; color: var(--text-main); font-family: 'Quicksand', sans-serif;">Registro Attività & Audit Log</h3>
+            </div>
+            <div class="table-responsive">
+                <table id="tabellaLog">
+                    <thead>
+                        <tr>
+                            <th>Data/Ora</th>
+                            <th>Categoria</th>
+                            <th>Utente</th>
+                            <th>Dettaglio Attività</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoLog"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- Bottom Navigation Dinamica -->
@@ -450,9 +465,10 @@
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxffi8Y2pJ8h5S10uVknkP7f64YMFyo0Fyvv88SwH52HiIdASQ4RTh2Ww9nzjaqy-_lOQ/exec'; 
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxX62PXj7nrrHyv2xI3g2TxPnxw6Db2I2W_x-5mEghc_8dHQvUiIGvwm4PTmY8RIQy0Vw/exec'; 
         let datiGlobali = [];
         let utentiGlobali = [];
+        let logsGlobali = [];
         let impostazioniGlobali = {};
         let rowCounter = 0;
         let chartInstance = null;
@@ -533,6 +549,8 @@
             
             const nav = document.getElementById('bottomNav');
             const existingUtentiBtn = document.getElementById('btn-nav-utenti');
+            const existingLogBtn = document.getElementById('btn-nav-log');
+
             if (isAdmin) {
                 if (!existingUtentiBtn) {
                     nav.innerHTML += `
@@ -541,8 +559,16 @@
                         </button>
                     `;
                 }
-            } else if (existingUtentiBtn) {
-                existingUtentiBtn.remove();
+                if (!existingLogBtn) {
+                    nav.innerHTML += `
+                        <button id="btn-nav-log" class="nav-item" onclick="switchView('log', this)">
+                            <span class="nav-icon">📜</span>Log
+                        </button>
+                    `;
+                }
+            } else {
+                if (existingUtentiBtn) existingUtentiBtn.remove();
+                if (existingLogBtn) existingLogBtn.remove();
             }
 
             document.querySelectorAll('.stock-edit-btn').forEach(b => {
@@ -563,8 +589,8 @@
         }
 
         function switchView(viewName, btnElement) {
-            if (viewName === 'utenti' && currentRole.toLowerCase() !== 'administrator') {
-                alert("Accesso non autorizzato. La sezione Utenti è riservata agli Administrator.");
+            if ((viewName === 'utenti' || viewName === 'log') && currentRole.toLowerCase() !== 'administrator') {
+                alert("Accesso non autorizzato. Questa sezione è riservata agli Administrator.");
                 return;
             }
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -604,11 +630,16 @@
                     if(result.status === "success") {
                         datiGlobali = result.data;
                         utentiGlobali = result.utenti || [];
+                        logsGlobali = result.logs || [];
                         impostazioniGlobali = result.impostazioni || {};
+
                         popolaTabellaOrdini(datiGlobali);
+                        
                         if (currentRole.toLowerCase() === 'administrator') {
                             popolaTabellaUtenti(utentiGlobali);
+                            popolaTabellaLog(logsGlobali);
                         }
+
                         calcolaStatistiche(datiGlobali, impostazioniGlobali);
                         document.getElementById('loadingMsg').style.display = 'none';
                     }
@@ -667,7 +698,6 @@
                             if(!isNaN(d)) valore = d.toLocaleDateString('it-IT') + " " + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
                         }
 
-                        // Link diretto a WhatsApp per il Telefono
                         if(col.toLowerCase() === 'telefono' && valore) {
                             const cleanTel = String(valore).replace(/\D/g, '');
                             const msgWa = encodeURIComponent(`Ciao ${ordine.Nome || ''}, ti contattiamo da WonderLAD in merito al tuo ordine per i dolci solidali.`);
@@ -766,6 +796,46 @@
                     </td>
                 `;
                 tbody.appendChild(tr);
+            });
+        }
+
+        function popolaTabellaLog(logs) {
+            const tbody = document.getElementById('corpoLog');
+            tbody.innerHTML = '';
+            if(!logs || logs.length === 0) return;
+
+            // Mostra i log ordinati dal più recente al meno recente
+            const logReversi = [...logs].reverse();
+
+            logReversi.forEach(l => {
+                const keys = Object.keys(l);
+                let dataVal = l[keys[0]] || l.Data || l.Timestamp || '-';
+                let catVal = l[keys[1]] || l.Azione || l.Categoria || '-';
+                let userVal = l[keys[2]] || l.Utente || '-';
+                let detVal = l[keys[3]] || l.Dettaglio || l.Descrizione || '-';
+
+                if(dataVal !== '-' && !isNaN(new Date(dataVal))) {
+                    const d = new Date(dataVal);
+                    dataVal = d.toLocaleDateString('it-IT') + ' ' + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td data-label="Data/Ora"><span>${dataVal}</span></td>
+                    <td data-label="Categoria"><span class="badge-status status-prenotato">${catVal}</span></td>
+                    <td data-label="Utente"><strong>${userVal}</strong></td>
+                    <td data-label="Dettaglio"><span>${detVal}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filtraLog() {
+            const query = document.getElementById('searchLog').value.toLowerCase();
+            const rows = document.querySelectorAll('#corpoLog tr');
+            rows.forEach(tr => {
+                const text = tr.textContent.toLowerCase();
+                tr.style.display = text.includes(query) ? '' : 'none';
             });
         }
 
