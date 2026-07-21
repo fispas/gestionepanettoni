@@ -9,40 +9,14 @@ function cambiaVistaDashboard(modo, btnElem) {
     calcolaStatistiche(datiGlobali, impostazioniGlobali);
 }
 
-function navigaVersoFiltro(stato) {
-    filtroStatoAttuale = stato;
-    
-    document.querySelectorAll('#view-ordini .filter-chips .chip').forEach(c => {
-        if(c.textContent.toLowerCase() === stato.toLowerCase() || (stato === 'Prenotato' && c.textContent.toLowerCase() === 'prenotati')) {
-            c.classList.add('active');
-        } else {
-            c.classList.remove('active');
-        }
-    });
-
-    filtraOrdini();
-
-    const navButtons = document.querySelectorAll('.bottom-nav .nav-item');
-    navButtons.forEach(btn => {
-        if(btn.textContent.includes('Ordini')) {
-            switchView('ordini', btn);
-        }
-    });
-}
-
 function calcolaStatistiche(dati, impostazioni) {
-    let totPanettoni = 0; let totPandori = 0;
-    let ordiniDaPagareNonConsegnati = 0;
+    let totPanettoni = 0; 
+    let totPandori = 0;
     
-    let stats = {
-        'prenotato': { count: 0, pan: 0, pand: 0 },
-        'da_pagare': { count: 0, pan: 0, pand: 0 },
-        'pagato': { count: 0, pan: 0, pand: 0 },
-        'preparazione': { count: 0, pan: 0, pand: 0 },
-        'da_consegnare': { count: 0, pan: 0, pand: 0 },
-        'consegnato': { count: 0, pan: 0, pand: 0 },
-        'annullato': { count: 0, pan: 0, pand: 0 }
-    };
+    // Contenitori per le liste di azione rapida
+    let ordiniDaIncassareList = [];
+    let ordiniDaPreparareList = [];
+    let ordiniProntiList = [];
 
     dati.forEach(ordine => {
         if(!ordine.Nome && !ordine.Cognome) return;
@@ -59,41 +33,18 @@ function calcolaStatistiche(dati, impostazioni) {
 
             const status = (ordine.Status || "").toLowerCase();
 
-            const sommaStato = (key) => {
-                stats[key].count++;
-                stats[key].pan += pan;
-                stats[key].pand += pand;
-            };
-
-            if(status === 'prenotato') sommaStato('prenotato');
-            if(status.includes('da pagare')) sommaStato('da_pagare');
-            if(status.includes('pagato')) sommaStato('pagato');
-            if(status.includes('preparazione')) sommaStato('preparazione');
-            if(status.includes('da consegnare')) sommaStato('da_consegnare');
-            if(status.includes('consegnato')) sommaStato('consegnato');
-            if(status.includes('annullato')) sommaStato('annullato');
-
+            // Categorizzazione per il Command Center Operativo
             if(status.includes('da pagare') && !status.includes('consegnato') && !status.includes('annullato')) {
-                ordiniDaPagareNonConsegnati++;
+                ordiniDaIncassareList.push(ordine);
+            } else if(status.includes('preparazione') || status.includes('prenotato')) {
+                ordiniDaPreparareList.push(ordine);
+            } else if(status.includes('da consegnare') || status.includes('consegnato')) {
+                ordiniProntiList.push(ordine);
             }
         }
     });
 
-    const impostaBoxFlow = (idCount, idSub, key) => {
-        const elCount = document.getElementById(idCount);
-        const elSub = document.getElementById(idSub);
-        if(elCount) elCount.textContent = stats[key].count;
-        if(elSub) elSub.textContent = `🥮 ${stats[key].pan} | 🍞 ${stats[key].pand}`;
-    };
-
-    impostaBoxFlow('countPrenotato', 'subPrenotato', 'prenotato');
-    impostaBoxFlow('countDaPagare', 'subDaPagare', 'da_pagare');
-    impostaBoxFlow('countPagati', 'subPagati', 'pagato');
-    impostaBoxFlow('countInPreparazione', 'subInPrep', 'preparazione');
-    impostaBoxFlow('countDaConsegnare', 'subDaConseg', 'da_consegnare');
-    impostaBoxFlow('countConsegnati', 'subConsegnati', 'consegnato');
-    impostaBoxFlow('countAnnullati', 'subAnnullati', 'annullato');
-
+    // 1. Aggiornamento Scorte e Rimanenze
     let stockInizialePanettoni = parseInt(impostazioni["Totale Panettoni"]) || 0;
     let stockInizialePandori = parseInt(impostazioni["Totale Pandori"]) || 0;
 
@@ -119,19 +70,71 @@ function calcolaStatistiche(dati, impostazioni) {
     const percPand = stockInizialePandori > 0 ? Math.min(100, Math.round((totPandori / stockInizialePandori) * 100)) : 0;
     if(barPand) barPand.style.width = percPand + '%';
 
-    const alertContainer = document.getElementById('alertContainer');
-    if(alertContainer) {
-        if(ordiniDaPagareNonConsegnati > 0) {
-            alertContainer.innerHTML = `
-                <div class="alert-box">
-                    <span>⚠️</span>
-                    <span>Area Finanziaria: ci sono <strong>${ordiniDaPagareNonConsegnati} ordini</strong> in sospeso con stato "Da Pagare" da riscuotere.</span>
-                </div>
-            `;
-        } else {
-            alertContainer.innerHTML = '';
-        }
+    // 2. Rendering delle Aree di Azione del Command Center nella Dashboard
+    renderizzaAreaCommandCenter('areaDaIncassare', ordiniDaIncassareList, 'incasso');
+    renderizzaAreaCommandCenter('areaDaPreparare', ordiniDaPreparareList, 'preparazione');
+    renderizzaAreaCommandCenter('areaPronti', ordiniProntiList, 'consegna');
+}
+
+function renderizzaAreaCommandCenter(containerId, listaOrdini, tipoArea) {
+    let container = document.getElementById(containerId);
+    
+    // Se il container non esiste ancora nell'HTML, lo creiamo al volo dinamicamente
+    if (!container) {
+        container = document.createElement('div');
+        container.id = containerId;
+        container.style.marginBottom = "1.5rem";
+        // Lo inseriamo subito dopo la barra di selezione nella vista dashboard
+        const dashboardView = document.getElementById('view-dashboard');
+        if(dashboardView) dashboardView.appendChild(container);
     }
+
+    if (listaOrdini.length === 0) {
+        container.innerHTML = `
+            <div style="background: var(--card-bg); padding: 1rem; border-radius: 14px; border: 2px solid var(--border-color); text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+                ✅ Nessun elemento critico in questa sezione.
+            </div>
+        `;
+        return;
+    }
+
+    let righeHTML = '';
+    listaOrdini.slice(0, 5).forEach(o => { // Mostriamo i primi 5 più urgenti per mantenere la dashboard pulita
+        let azioniBtn = '';
+        if (tipoArea === 'incasso') {
+            azioniBtn = `<button class="btn-quick-status" onclick="apriModaleSaldoRapido(${o.rowNumber}, ${o.Panettoni || 0}, ${o.Pandori || 0})">💶 Incassa Subito</button>`;
+        } else if (tipoArea === 'preparazione') {
+            azioniBtn = `<button class="btn-quick-status" onclick="cambiaStatoRapido(${o.rowNumber}, ${o.Panettoni || 0}, ${o.Pandori || 0}, 'Da Consegnare', '${o["Metodo Pagamento"] || "-"}')">📦 Pronto</button>`;
+        } else {
+            azioniBtn = `<button class="btn-quick-status" onclick="cambiaStatoRapido(${o.rowNumber}, ${o.Panettoni || 0}, ${o.Pandori || 0}, 'Consegnato', '${o["Metodo Pagamento"] || "-"}')">✅ Consegna</button>`;
+        }
+
+        righeHTML += `
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 0.7rem 1rem; border-radius: 12px; margin-bottom: 6px; border: 1px solid var(--border-color);">
+                <div>
+                    <strong>${o.Nome} ${o.Cognome}</strong> 
+                    <span style="font-size: 0.8rem; color: var(--text-muted); margin-left: 8px;">(🥮 ${o.Panettoni || 0} | 🍞 ${o.Pandori || 0})</span>
+                </div>
+                <div>${azioniBtn}</div>
+            </div>
+        `;
+    });
+
+    let titoloSezione = "📌 Azioni Richieste";
+    let coloreBordo = "var(--primary)";
+    if(tipoArea === 'incasso') { titoloSezione = "🔴 Priorità Finanziaria: Da Incassare"; coloreBordo = "#c53030"; }
+    if(tipoArea === 'preparazione') { titoloSezione = "🟡 Priorità Logistica: Da Preparare"; coloreBordo = "#b7791f"; }
+    if(tipoArea === 'consegna') { titoloSezione = "🟢 Operativi: Pronti / In Consegna"; coloreBordo = "#2e7d32"; }
+
+    container.innerHTML = `
+        <div style="font-family: 'Quicksand', sans-serif; font-size: 0.95rem; font-weight: 750; color: ${coloreBordo}; margin-bottom: 0.5rem; text-transform: uppercase;">
+            ${titoloSezione} (${listaOrdini.length})
+        </div>
+        <div style="background: var(--card-bg); padding: 0.8rem; border-radius: 16px; border: 2px solid var(--border-color);">
+            ${righeHTML}
+            ${listaOrdini.length > 5 ? `<div style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">E altri ${listaOrdini.length - 5} ordini in questa categoria...</div>` : ''}
+        </div>
+    `;
 }
 
 function esportaPDF() {
@@ -143,33 +146,12 @@ function esportaPDF() {
     containerPDF.style.backgroundColor = '#ffffff';
     containerPDF.style.color = '#24352c';
 
-    let page1 = `
-        <div style="page-break-after: always; break-after: page;">
-            <div style="text-align: center; border-bottom: 2px solid #5b8e72; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-                <div style="text-align: left;">
-                    <h2 style="color: #5b8e72; margin: 0; font-family: Quicksand, sans-serif; font-size: 22px;">WonderLAD Onlus</h2>
-                    <p style="font-size: 13px; color: #62756d; margin: 4px 0 0 0;">Report Operativo - ${new Date().toLocaleDateString('it-IT')}</p>
-                </div>
-                <img src="https://www.wonderlad.org/wp-content/uploads/2020/05/logo-wonderlad.png" style="height: 38px;" />
-            </div>
-
-            <h3 style="color: #5b8e72; font-family: Quicksand, sans-serif; margin-bottom: 10px; font-size: 16px;">Riepilogo Scorte</h3>
-            <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-                <div style="flex: 1; border: 2px solid #5b8e72; padding: 12px; border-radius: 12px; text-align: center; background: #f6fff8;">
-                    <div style="font-size: 11px; font-weight: bold; color: #62756d;">PANETTONI PRENOTATI</div>
-                    <div style="font-size: 24px; font-weight: bold; color: #5b8e72; margin: 4px 0;">${document.getElementById('valPanettoni').textContent}</div>
-                    <div style="font-size: 11px; color: #62756d;">${document.getElementById('rimanenzePanettoni').textContent}</div>
-                </div>
-                <div style="flex: 1; border: 2px solid #94bdad; padding: 12px; border-radius: 12px; text-align: center; background: #eaf4f0;">
-                    <div style="font-size: 11px; font-weight: bold; color: #62756d;">PANDORI PRENOTATI</div>
-                    <div style="font-size: 24px; font-weight: bold; color: #3a6250; margin: 4px 0;">${document.getElementById('valPandori').textContent}</div>
-                    <div style="font-size: 11px; color: #62756d;">${document.getElementById('rimanenzePandori').textContent}</div>
-                </div>
-            </div>
+    containerPDF.innerHTML = `
+        <div style="text-align: center; border-bottom: 2px solid #5b8e72; padding-bottom: 12px; margin-bottom: 20px;">
+            <h2 style="color: #5b8e72; margin: 0; font-family: Quicksand, sans-serif; font-size: 22px;">WonderLAD Onlus</h2>
+            <p style="font-size: 13px; color: #62756d; margin: 4px 0 0 0;">Report Operativo Command Center - ${new Date().toLocaleDateString('it-IT')}</p>
         </div>
     `;
-
-    containerPDF.innerHTML = page1;
 
     const opt = {
         margin:       10,
