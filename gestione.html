@@ -32,8 +32,9 @@
         .table-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
         .btn-action { background-color: #2ecc71; color: white; border: none; padding: 0.7rem 1rem; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
         .btn-edit { background-color: #f39c12; color: white; border: none; padding: 0.5rem; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
+        .btn-delete { background-color: #e74c3c; color: white; border: none; padding: 0.5rem; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-left: 5px; }
         
-        .table-responsive { width: 100%; background: transparent; }
+        .table-responsive { width: 100%; background: transparent; margin-bottom: 1rem; }
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e9ecef; font-size: 0.9rem; }
         th { background-color: #f8f9fa; color: #2c3e50; font-weight: 800; white-space: nowrap; }
@@ -46,7 +47,7 @@
             td { border: none; border-bottom: 1px solid #f4f6f8; position: relative; display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; text-align: right; }
             td::before { content: attr(data-label); font-weight: 800; color: #7f8c8d; text-align: left; padding-right: 15px; flex-shrink: 0; }
             td:last-child { border-bottom: none; justify-content: flex-end; }
-            .btn-edit { width: 100%; padding: 0.8rem; font-size: 1rem; margin-top: 0.5rem; }
+            .btn-edit, .btn-delete { width: 48%; padding: 0.8rem; font-size: 0.9rem; margin-top: 0.5rem; }
         }
 
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 0.8rem 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.05); z-index: 1000; }
@@ -54,7 +55,7 @@
         .nav-item.active { color: #e53935; }
         .nav-icon { font-size: 1.5rem; }
 
-        #edit-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 3000; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 3000; }
         .modal-content { background: white; padding: 2rem; border-radius: 15px; width: 90%; max-width: 400px; box-sizing: border-box; }
         .modal-content input, .modal-content select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 2px solid #e9ecef; border-radius: 10px; box-sizing: border-box; font-family: 'Nunito'; }
         .modal-actions { display: flex; justify-content: space-between; gap: 1rem; }
@@ -83,6 +84,7 @@
     <div class="container" id="main-container">
         <div id="loadingMsg">Sincronizzazione dati in corso...</div>
 
+        <!-- Dashboard -->
         <div id="view-dashboard" class="view active">
             <div class="stats-grid">
                 <div class="stat-card">
@@ -101,6 +103,7 @@
             <button class="test-btn" onclick="eseguiTestLettura()">⚙️ Ricarica Dati</button>
         </div>
 
+        <!-- Ordini -->
         <div id="view-ordini" class="view">
             <div class="table-controls">
                 <h3 style="margin: 0; color: #2c3e50;">Lista Ordini</h3>
@@ -113,14 +116,32 @@
                 </table>
             </div>
         </div>
+
+        <!-- Utenti (Solo Administrator) -->
+        <div id="view-utenti" class="view">
+            <div class="table-controls">
+                <h3 style="margin: 0; color: #2c3e50;">Gestione Utenti</h3>
+                <button class="btn-action" onclick="apriModaleUtente('add')">➕ Nuovo Utente</button>
+            </div>
+            <div class="table-responsive">
+                <table id="tabellaUtenti">
+                    <thead id="testaUtenti">
+                        <tr><th>Username</th><th>Password</th><th>Ruolo</th><th>Azione</th></tr>
+                    </thead>
+                    <tbody id="corpoUtenti"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
-    <nav class="bottom-nav">
+    <!-- Bottom Navigation Dinamica -->
+    <nav class="bottom-nav" id="bottomNav">
         <button class="nav-item active" onclick="switchView('dashboard', this)"><span class="nav-icon">📊</span>Dashboard</button>
         <button class="nav-item" onclick="switchView('ordini', this)"><span class="nav-icon">📋</span>Ordini</button>
     </nav>
 
-    <div id="edit-modal">
+    <!-- Modale Modifica Ordine -->
+    <div id="edit-modal" class="modal">
         <div class="modal-content">
             <h3 style="margin-top:0;">Modifica Ordine</h3>
             <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Panettoni</label>
@@ -136,15 +157,38 @@
             </select>
             <input type="hidden" id="edit-row">
             <div class="modal-actions">
-                <button class="btn-cancel" onclick="chiudiModale()">Annulla</button>
-                <button class="btn-save" id="btn-save-edit" onclick="salvaModifica()">Salva</button>
+                <button class="btn-cancel" onclick="chiudiModale('edit-modal')">Annulla</button>
+                <button class="btn-save" onclick="salvaModificaOrdine()">Salva</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale Gestione Utenti -->
+    <div id="user-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="user-modal-title" style="margin-top:0;">Nuovo Utente</h3>
+            <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Username</label>
+            <input type="text" id="modal-username">
+            <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Password</label>
+            <input type="text" id="modal-password" placeholder="Inserisci o resetta password">
+            <label style="font-weight: bold; font-size: 0.9rem; color: #7f8c8d;">Ruolo</label>
+            <select id="modal-role">
+                <option value="Manager">Manager</option>
+                <option value="Administrator">Administrator</option>
+            </select>
+            <input type="hidden" id="modal-user-row">
+            <input type="hidden" id="modal-mode">
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="chiudiModale('user-modal')">Annulla</button>
+                <button class="btn-save" onclick="salvaUtente()">Salva</button>
             </div>
         </div>
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxmgrw77JwQ-tRhJfE34tCPipbN3eNBzY3HaFsyd6o16-rz9lcQ02HQkrYr8h7P8hwUyw/exec'; 
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzSIBLORkFGCUDfI8j7t6YRIGaqrVEaRr1Gjlrx5i5TYS6P9Aq_S-ZMJsJd9To4H-3g/exec'; 
         let datiGlobali = [];
+        let utentiGlobali = [];
         let rowCounter = 0;
         let chartInstance = null;
         let currentUser = ""; 
@@ -173,6 +217,16 @@
                     document.getElementById('login-overlay').style.display = 'none';
                     document.getElementById('main-container').style.display = 'block';
                     document.getElementById('user-badge').textContent = `(${currentUser} - ${currentRole})`;
+
+                    if(currentRole.toLowerCase() === 'administrator') {
+                        const nav = document.getElementById('bottomNav');
+                        nav.innerHTML += `
+                            <button class="nav-item" onclick="switchView('utenti', this)">
+                                <span class="nav-icon">⚙️</span>Utenti
+                            </button>
+                        `;
+                    }
+
                     caricaDati();
                 } else {
                     document.getElementById('login-err').style.display = 'block';
@@ -203,14 +257,16 @@
                 .then(result => {
                     if(result.status === "success") {
                         datiGlobali = result.data;
-                        popolaTabella(datiGlobali);
+                        utentiGlobali = result.utenti || [];
+                        popolaTabellaOrdini(datiGlobali);
+                        popolaTabellaUtenti(utentiGlobali);
                         calcolaStatistiche(datiGlobali, result.impostazioni);
                         document.getElementById('loadingMsg').style.display = 'none';
                     }
                 });
         }
 
-        function popolaTabella(dati) {
+        function popolaTabellaOrdini(dati) {
             const thead = document.getElementById('testaTabella');
             const tbody = document.getElementById('corpoTabella');
             thead.innerHTML = ''; tbody.innerHTML = ''; rowCounter = 0;
@@ -252,7 +308,7 @@
                 
                 const tdAzioni = document.createElement('td');
                 tdAzioni.setAttribute('data-label', 'Azioni');
-                tdAzioni.innerHTML = `<button class="btn-edit" onclick="apriModale(${ordine.rowNumber}, ${ordine.Panettoni || 0}, ${ordine.Pandori || 0}, '${ordine.Status || 'Prenotato'}')">✏️ Modifica</button>`;
+                tdAzioni.innerHTML = `<button class="btn-edit" onclick="apriModaleOrdine(${ordine.rowNumber}, ${ordine.Panettoni || 0}, ${ordine.Pandori || 0}, '${ordine.Status || 'Prenotato'}')">✏️ Modifica</button>`;
                 tr.appendChild(tdAzioni);
                 tbody.appendChild(tr);
             });
@@ -260,7 +316,26 @@
             document.getElementById('contatoreOrdini').textContent = `Sessione caricata. Totale righe analizzate: ${rowCounter}`;
         }
 
-        function apriModale(row, panettoni, pandori, status) {
+        function popolaTabellaUtenti(utenti) {
+            const tbody = document.getElementById('corpoUtenti');
+            tbody.innerHTML = '';
+            
+            utenti.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td data-label="Username"><span>${u.Username}</span></td>
+                    <td data-label="Password"><span>••••••</span></td>
+                    <td data-label="Ruolo"><span>${u.Ruolo}</span></td>
+                    <td data-label="Azioni">
+                        <button class="btn-edit" onclick="apriModaleUtente('edit', ${u.rowNumber}, '${u.Username}', '${u.Password}', '${u.Ruolo}')">✏️ Modifica</button>
+                        <button class="btn-delete" onclick="eliminaUtente(${u.rowNumber}, '${u.Username}')">🗑️ Elimina</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function apriModaleOrdine(row, panettoni, pandori, status) {
             document.getElementById('edit-row').value = row;
             document.getElementById('edit-pan').value = panettoni;
             document.getElementById('edit-pan-dori').value = pandori;
@@ -272,12 +347,24 @@
             document.getElementById('edit-modal').style.display = 'flex';
         }
 
-        function chiudiModale() { document.getElementById('edit-modal').style.display = 'none'; }
+        function apriModaleUtente(mode, row = '', username = '', password = '', ruolo = 'Manager') {
+            document.getElementById('modal-mode').value = mode;
+            document.getElementById('modal-user-row').value = row;
+            document.getElementById('modal-username').value = username;
+            document.getElementById('modal-password').value = password;
+            
+            const sel = document.getElementById('modal-role');
+            for(let i=0; i<sel.options.length; i++) {
+                if(sel.options[i].value === ruolo) { sel.selectedIndex = i; break; }
+            }
 
-        function salvaModifica() {
-            const btn = document.getElementById('btn-save-edit');
-            btn.textContent = "Salvataggio..."; btn.disabled = true;
+            document.getElementById('user-modal-title').textContent = mode === 'add' ? 'Nuovo Utente' : 'Modifica Utente / Resetta Password';
+            document.getElementById('user-modal').style.display = 'flex';
+        }
 
+        function chiudiModale(modalId) { document.getElementById(modalId).style.display = 'none'; }
+
+        function salvaModificaOrdine() {
             const row = document.getElementById('edit-row').value;
             const panettoni = document.getElementById('edit-pan').value;
             const pandori = document.getElementById('edit-pan-dori').value;
@@ -289,13 +376,47 @@
                 body: JSON.stringify({ action: 'update', rowNumber: row, panettoni: panettoni, pandori: pandori, status: status, user: currentUser })
             })
             .then(res => res.json())
-            .then(result => {
-                chiudiModale();
+            .then(() => {
+                chiudiModale('edit-modal');
                 caricaDati(); 
-            })
-            .finally(() => {
-                btn.textContent = "Salva"; btn.disabled = false;
             });
+        }
+
+        function salvaUtente() {
+            const mode = document.getElementById('modal-mode').value;
+            const row = document.getElementById('modal-user-row').value;
+            const username = document.getElementById('modal-username').value.trim();
+            const password = document.getElementById('modal-password').value.trim();
+            const ruolo = document.getElementById('modal-role').value;
+
+            if(!username || !password) return alert("Inserisci username e password!");
+
+            const action = mode === 'add' ? 'add_user' : 'update_user';
+
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: action, rowNumber: row, newUsername: username, newPassword: password, newRole: ruolo, user: currentUser })
+            })
+            .then(res => res.json())
+            .then(() => {
+                chiudiModale('user-modal');
+                caricaDati();
+            });
+        }
+
+        function eliminaUtente(row, username) {
+            if(confirm(`Sei sicuro di voler eliminare l'utente "${username}"?`)) {
+                fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'delete_user', rowNumber: row, user: currentUser })
+                })
+                .then(res => res.json())
+                .then(() => {
+                    caricaDati();
+                });
+            }
         }
 
         function calcolaStatistiche(dati, impostazioni) {
