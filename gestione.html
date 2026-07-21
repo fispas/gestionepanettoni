@@ -165,6 +165,15 @@
         .status-consegnato { background-color: #edf7ed; color: #2e7d32; }
         .status-annullato { background-color: #f1f3f5; color: #718096; }
 
+        /* Badge colorati specifici per le categorie dei Log */
+        .log-badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; display: inline-block; font-family: 'Quicksand', sans-serif; text-transform: uppercase; }
+        .log-inserimento { background-color: #e8f5e9; color: #2e7d32; }
+        .log-modifica { background-color: #fff8e1; color: #b7791f; }
+        .log-login { background-color: #e8f4f8; color: #2b6cb0; }
+        .log-stock { background-color: #f3e5f5; color: #6b46c1; }
+        .log-utente { background-color: #fce8e6; color: #c53030; }
+        .log-backup { background-color: #edf2f7; color: #4a5568; }
+
         .wa-link { color: #2e7d32; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
         .wa-link:hover { text-decoration: underline; }
 
@@ -371,10 +380,19 @@
             </div>
         </div>
 
-        <!-- Log / Attività (Solo Administrator) -->
+        <!-- Log / Attività (Solo Administrator) con Filtro Categoria e Ricerca -->
         <div id="view-log" class="view">
             <div class="controls-panel">
                 <input type="text" id="searchLog" class="search-input" placeholder="🔍 Cerca nei log (es. azionamento, utente, parola chiave)..." onkeyup="filtraLog()">
+                <div class="filter-chips" id="logFilterChips">
+                    <button class="chip active" onclick="setFiltroLogCat('Tutti', this)">Tutti</button>
+                    <button class="chip" onclick="setFiltroLogCat('INSERIMENTO', this)">Inserimento</button>
+                    <button class="chip" onclick="setFiltroLogCat('MODIFICA', this)">Modifica</button>
+                    <button class="chip" onclick="setFiltroLogCat('LOGIN', this)">Login</button>
+                    <button class="chip" onclick="setFiltroLogCat('STOCK', this)">Stock</button>
+                    <button class="chip" onclick="setFiltroLogCat('UTENTE', this)">Utente</button>
+                    <button class="chip" onclick="setFiltroLogCat('BACKUP', this)">Backup</button>
+                </div>
             </div>
             <div class="table-controls">
                 <h3 style="margin: 0; color: var(--text-main); font-family: 'Quicksand', sans-serif;">Registro Attività & Audit Log</h3>
@@ -465,7 +483,7 @@
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxX62PXj7nrrHyv2xI3g2TxPnxw6Db2I2W_x-5mEghc_8dHQvUiIGvwm4PTmY8RIQy0Vw/exec'; 
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxffi8Y2pJ8h5S10uVknkP7f64YMFyo0Fyvv88SwH52HiIdASQ4RTh2Ww9nzjaqy-_lOQ/exec'; 
         let datiGlobali = [];
         let utentiGlobali = [];
         let logsGlobali = [];
@@ -475,6 +493,7 @@
         let currentUser = ""; 
         let currentRole = "";
         let filtroStatoAttuale = "Tutti";
+        let filtroLogCatAttuale = "Tutti";
 
         window.addEventListener('DOMContentLoaded', () => {
             const sessionUser = sessionStorage.getItem('wonderlad_active_user') || localStorage.getItem('wonderlad_user');
@@ -766,7 +785,7 @@
 
         function setFiltroStato(stato, btnElement) {
             filtroStatoAttuale = stato;
-            document.querySelectorAll('.filter-chips .chip').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('#view-ordini .filter-chips .chip').forEach(c => c.classList.remove('active'));
             btnElement.classList.add('active');
             filtraOrdini();
         }
@@ -799,12 +818,23 @@
             });
         }
 
+        function getLogBadgeClass(cat) {
+            if(!cat) return 'log-inserimento';
+            const c = cat.toUpperCase();
+            if(c.includes('INSERIMENTO')) return 'log-inserimento';
+            if(c.includes('MODIFICA')) return 'log-modifica';
+            if(c.includes('LOGIN')) return 'log-login';
+            if(c.includes('STOCK')) return 'log-stock';
+            if(c.includes('UTENTE')) return 'log-utente';
+            if(c.includes('BACKUP')) return 'log-backup';
+            return 'log-inserimento';
+        }
+
         function popolaTabellaLog(logs) {
             const tbody = document.getElementById('corpoLog');
             tbody.innerHTML = '';
             if(!logs || logs.length === 0) return;
 
-            // Mostra i log ordinati dal più recente al meno recente
             const logReversi = [...logs].reverse();
 
             logReversi.forEach(l => {
@@ -819,23 +849,45 @@
                     dataVal = d.toLocaleDateString('it-IT') + ' ' + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
                 }
 
+                const badgeClass = getLogBadgeClass(catVal);
+
                 const tr = document.createElement('tr');
+                tr.setAttribute('data-cat', String(catVal).toUpperCase());
                 tr.innerHTML = `
                     <td data-label="Data/Ora"><span>${dataVal}</span></td>
-                    <td data-label="Categoria"><span class="badge-status status-prenotato">${catVal}</span></td>
+                    <td data-label="Categoria"><span class="log-badge ${badgeClass}">${catVal}</span></td>
                     <td data-label="Utente"><strong>${userVal}</strong></td>
                     <td data-label="Dettaglio"><span>${detVal}</span></td>
                 `;
                 tbody.appendChild(tr);
             });
+
+            filtraLog();
+        }
+
+        function setFiltroLogCat(cat, btnElement) {
+            filtroLogCatAttuale = cat;
+            document.querySelectorAll('#logFilterChips .chip').forEach(c => c.classList.remove('active'));
+            btnElement.classList.add('active');
+            filtraLog();
         }
 
         function filtraLog() {
             const query = document.getElementById('searchLog').value.toLowerCase();
             const rows = document.querySelectorAll('#corpoLog tr');
+            
             rows.forEach(tr => {
                 const text = tr.textContent.toLowerCase();
-                tr.style.display = text.includes(query) ? '' : 'none';
+                const cat = tr.getAttribute('data-cat') || "";
+                
+                const matchTesto = text.includes(query);
+                const matchCat = (filtroLogCatAttuale === 'Tutti' || cat.includes(filtroLogCatAttuale.toUpperCase()));
+
+                if(matchTesto && matchCat) {
+                    tr.style.display = '';
+                } else {
+                    tr.style.display = 'none';
+                }
             });
         }
 
