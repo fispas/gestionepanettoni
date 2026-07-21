@@ -7,6 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Libreria per generare il PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body { font-family: 'Nunito', sans-serif; background-color: #f4f6f8; color: #333; margin: 0; padding: 0; padding-bottom: 80px; }
         .header { background-color: #e53935; color: white; padding: 1rem; text-align: center; font-weight: 800; font-size: 1.2rem; position: sticky; top: 0; z-index: 100; }
@@ -23,6 +25,10 @@
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
+        .dashboard-header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .btn-pdf { background-color: #3498db; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2); }
+        .btn-pdf:hover { background-color: #2980b9; }
+
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
         .stat-card { background: white; padding: 1rem; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; border-bottom: 4px solid #e53935; position: relative; }
         .stat-card.pandoro { border-bottom-color: #fbbc05; }
@@ -33,6 +39,7 @@
         .stock-edit-btn { background: #f8f9fa; border: 1px solid #ced4da; padding: 2px 8px; border-radius: 5px; font-size: 0.75rem; cursor: pointer; font-weight: bold; margin-top: 5px; display: inline-block; color: #495057; }
         .stock-edit-btn:hover { background: #e9ecef; }
 
+        /* Box Status Cliccabili in Dashboard con Colori Coordinati */
         .status-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-bottom: 1.5rem; }
         @media screen and (max-width: 600px) {
             .status-summary-grid { grid-template-columns: repeat(2, 1fr); }
@@ -137,56 +144,64 @@
 
         <!-- Dashboard -->
         <div id="view-dashboard" class="view active">
-            <div id="alertContainer"></div>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-title">Panettoni</div>
-                    <div class="stat-value" id="valPanettoni">0</div>
-                    <div class="stat-detail" id="rimanenzePanettoni">Rimanenze: 0</div>
-                    <button class="stock-edit-btn" onclick="apriModaleStock('Panettoni')">✏️ Modifica Stock</button>
-                </div>
-                <div class="stat-card pandoro">
-                    <div class="stat-title">Pandori</div>
-                    <div class="stat-value" id="valPandori">0</div>
-                    <div class="stat-detail" id="rimanenzePandori">Rimanenze: 0</div>
-                    <button class="stock-edit-btn" onclick="apriModaleStock('Pandori')">✏️ Modifica Stock</button>
-                </div>
+            <div class="dashboard-header-actions">
+                <h3 style="color: #2c3e50; font-size: 1.1rem; margin: 0;">Panoramica Generale</h3>
+                <button class="btn-pdf" onclick="esportaPDF()">📄 Esporta PDF</button>
             </div>
 
-            <!-- Box di Riepilogo Status Cliccabili Colorati -->
-            <h3 style="color: #2c3e50; font-size: 1.1rem; margin-bottom: 0.8rem;">Stato Ordini</h3>
-            <div class="status-summary-grid">
-                <div class="status-summary-card card-prenotato" onclick="navigaVersoFiltro('Prenotato')">
-                    <div class="status-summary-title">Prenotati</div>
-                    <div class="status-summary-count" id="countPrenotato">0</div>
+            <!-- Area che verrà convertita in PDF -->
+            <div id="pdfContent">
+                <div id="alertContainer"></div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-title">Panettoni</div>
+                        <div class="stat-value" id="valPanettoni">0</div>
+                        <div class="stat-detail" id="rimanenzePanettoni">Rimanenze: 0</div>
+                        <button class="stock-edit-btn" onclick="apriModaleStock('Panettoni')">✏️ Modifica Stock</button>
+                    </div>
+                    <div class="stat-card pandoro">
+                        <div class="stat-title">Pandori</div>
+                        <div class="stat-value" id="valPandori">0</div>
+                        <div class="stat-detail" id="rimanenzePandori">Rimanenze: 0</div>
+                        <button class="stock-edit-btn" onclick="apriModaleStock('Pandori')">✏️ Modifica Stock</button>
+                    </div>
                 </div>
-                <div class="status-summary-card card-da-pagare" onclick="navigaVersoFiltro('Prenotato - Da Pagare')">
-                    <div class="status-summary-title">Da Pagare</div>
-                    <div class="status-summary-count" id="countDaPagare">0</div>
+
+                <h3 style="color: #2c3e50; font-size: 1.1rem; margin-bottom: 0.8rem;">Stato Ordini</h3>
+                <div class="status-summary-grid">
+                    <div class="status-summary-card card-prenotato" onclick="navigaVersoFiltro('Prenotato')">
+                        <div class="status-summary-title">Prenotati</div>
+                        <div class="status-summary-count" id="countPrenotato">0</div>
+                    </div>
+                    <div class="status-summary-card card-da-pagare" onclick="navigaVersoFiltro('Prenotato - Da Pagare')">
+                        <div class="status-summary-title">Da Pagare</div>
+                        <div class="status-summary-count" id="countDaPagare">0</div>
+                    </div>
+                    <div class="status-summary-card card-pagato" onclick="navigaVersoFiltro('Prenotato - Pagato')">
+                        <div class="status-summary-title">Pagati</div>
+                        <div class="status-summary-count" id="countPagati">0</div>
+                    </div>
+                    <div class="status-summary-card card-preparazione" onclick="navigaVersoFiltro('In Preparazione')">
+                        <div class="status-summary-title">In Prep.</div>
+                        <div class="status-summary-count" id="countInPreparazione">0</div>
+                    </div>
+                    <div class="status-summary-card card-da-consegnare" onclick="navigaVersoFiltro('Da Consegnare')">
+                        <div class="status-summary-title">Da Conseg.</div>
+                        <div class="status-summary-count" id="countDaConsegnare">0</div>
+                    </div>
+                    <div class="status-summary-card card-consegnato" onclick="navigaVersoFiltro('Consegnato')">
+                        <div class="status-summary-title">Consegnati</div>
+                        <div class="status-summary-count" id="countConsegnati">0</div>
+                    </div>
+                    <div class="status-summary-card card-annullato" onclick="navigaVersoFiltro('Annullato')">
+                        <div class="status-summary-title">Annullati</div>
+                        <div class="status-summary-count" id="countAnnullati">0</div>
+                    </div>
                 </div>
-                <div class="status-summary-card card-pagato" onclick="navigaVersoFiltro('Prenotato - Pagato')">
-                    <div class="status-summary-title">Pagati</div>
-                    <div class="status-summary-count" id="countPagati">0</div>
-                </div>
-                <div class="status-summary-card card-preparazione" onclick="navigaVersoFiltro('In Preparazione')">
-                    <div class="status-summary-title">In Prep.</div>
-                    <div class="status-summary-count" id="countInPreparazione">0</div>
-                </div>
-                <div class="status-summary-card card-da-consegnare" onclick="navigaVersoFiltro('Da Consegnare')">
-                    <div class="status-summary-title">Da Conseg.</div>
-                    <div class="status-summary-count" id="countDaConsegnare">0</div>
-                </div>
-                <div class="status-summary-card card-consegnato" onclick="navigaVersoFiltro('Consegnato')">
-                    <div class="status-summary-title">Consegnati</div>
-                    <div class="status-summary-count" id="countConsegnati">0</div>
-                </div>
-                <div class="status-summary-card card-annullato" onclick="navigaVersoFiltro('Annullato')">
-                    <div class="status-summary-title">Annullati</div>
-                    <div class="status-summary-count" id="countAnnullati">0</div>
-                </div>
+
+                <div class="chart-container"><canvas id="graficoVendite"></canvas></div>
             </div>
 
-            <div class="chart-container"><canvas id="graficoVendite"></canvas></div>
             <div id="contatoreOrdini">Sessione caricata. Totale righe analizzate: 0</div>
             <button class="test-btn" onclick="eseguiTestLettura()">⚙️ Ricarica Dati</button>
         </div>
@@ -318,7 +333,6 @@
         let currentRole = "";
         let filtroStatoAttuale = "Tutti";
 
-        // Al caricamento della pagina, controlla se ci sono credenziali memorizzate
         window.addEventListener('DOMContentLoaded', () => {
             const savedUser = localStorage.getItem('wonderlad_user');
             const savedPass = localStorage.getItem('wonderlad_pass');
@@ -326,7 +340,7 @@
                 document.getElementById('username').value = savedUser;
                 document.getElementById('passcode').value = savedPass;
                 document.getElementById('rememberMe').checked = true;
-                effettuaLogin(); // Esegue il login automatico
+                effettuaLogin();
             }
         });
 
@@ -352,7 +366,6 @@
                     currentUser = user;
                     currentRole = result.role;
 
-                    // Gestione localStorage per "Ricorda credenziali"
                     if (remember) {
                         localStorage.setItem('wonderlad_user', user);
                         localStorage.setItem('wonderlad_pass', pass);
@@ -707,7 +720,7 @@
             document.getElementById('countInPreparazione').textContent = countInPreparazione;
             document.getElementById('countDaConsegnare').textContent = countDaConsegnare;
             document.getElementById('countConsegnati').textContent = countConsegnati;
-            document.getElementById('countAnnullati').textContent = countAnnullato;
+            document.getElementById('countAnnullato').textContent = countAnnullato;
 
             let stockInizialePanettoni = parseInt(impostazioni["Totale Panettoni"]) || 0;
             let stockInizialePandori = parseInt(impostazioni["Totale Pandori"]) || 0;
@@ -740,6 +753,18 @@
                 data: { labels: ['Panettoni', 'Pandori'], datasets: [{ label: 'Prenotazioni', data: [panettoni, pandori], backgroundColor: ['#e53935', '#fbbc05'], borderRadius: 8 }] },
                 options: { responsive: true, plugins: { legend: { display: false }, title: { display: true, text: 'Andamento Prenotazioni', font: { family: 'Nunito', size: 16 } } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
             });
+        }
+
+        function esportaPDF() {
+            const element = document.getElementById('pdfContent');
+            const opt = {
+                margin:       10,
+                filename:     'Report_WonderLAD.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().from(element).set(opt).save();
         }
 
         function esportaExcel() {
