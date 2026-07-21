@@ -3,34 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prenotazione Panettoni</title>
+    <title>Prenotazione Panettoni - WonderLAD</title>
+    <!-- Importazione font arrotondato e amichevole da Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; max-width: 400px; margin: 2rem auto; padding: 1rem; }
-        input, button { width: 100%; margin-bottom: 1rem; padding: 0.5rem; box-sizing: border-box; }
-        #statusMsg { font-weight: bold; margin-bottom: 1rem; }
-        #contatoreOrdini { font-size: 0.9em; color: #555; }
-        .test-btn { background-color: #f0f0f0; margin-top: 2rem; border: 1px dashed #ccc; }
+        body { 
+            font-family: 'Nunito', sans-serif; 
+            background-color: #f4f6f8; /* Sfondo grigio chiarissimo/azzurrato */
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+            margin: 0;
+        }
+        
+        .form-container {
+            background: #ffffff;
+            max-width: 450px;
+            width: 100%;
+            padding: 2.5rem 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border-top: 8px solid #e53935; /* Accento rosso primario */
+            box-sizing: border-box;
+        }
+
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-top: 0;
+            font-weight: 800;
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+
+        input { 
+            width: 100%; 
+            margin-bottom: 1.2rem; 
+            padding: 0.9rem 1rem; 
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            box-sizing: border-box; 
+            font-family: 'Nunito', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background-color: #f8f9fa;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #fbbc05; /* Dettaglio giallo in focus */
+            background-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(251, 188, 5, 0.1);
+        }
+
+        button[type="submit"] { 
+            width: 100%; 
+            padding: 1.1rem; 
+            background-color: #e53935; 
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            font-family: 'Nunito', sans-serif;
+            margin-top: 0.5rem;
+            box-shadow: 0 4px 6px rgba(229, 57, 53, 0.2);
+        }
+
+        button[type="submit"]:hover {
+            background-color: #c62828;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(229, 57, 53, 0.3);
+        }
+
+        button[type="submit"]:active {
+            transform: translateY(0);
+        }
+
+        #statusMsg { 
+            font-weight: bold; 
+            text-align: center;
+            margin-bottom: 1rem; 
+            min-height: 1.5rem;
+            font-size: 1.1rem;
+        }
+
+        #contatoreOrdini { 
+            font-size: 0.9em; 
+            color: #95a5a6; 
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+        }
+
+        .test-btn { 
+            background-color: transparent; 
+            color: #adb5bd;
+            margin-top: 2rem; 
+            border: 2px dashed #dee2e6; 
+            padding: 0.8rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            transition: all 0.3s;
+            width: 100%;
+            max-width: 450px;
+            box-sizing: border-box;
+        }
+
+        .test-btn:hover {
+            background-color: #e9ecef;
+            color: #495057;
+            border-color: #adb5bd;
+        }
     </style>
 </head>
 <body>
-    <h2>Prenota il tuo Panettone</h2>
-    
-    <div id="statusMsg"></div>
-    <div id="contatoreOrdini">Contatore ordini sessione corrente: 0</div><br>
 
-    <form id="ordineForm">
-        <input type="text" id="nome" placeholder="Nome" required>
-        <input type="text" id="cognome" placeholder="Cognome" required>
-        <input type="tel" id="telefono" placeholder="Numero di Telefono" required>
-        <input type="number" id="quantita" placeholder="Quantità" min="1" required>
-        <button type="submit">Prenota</button>
-    </form>
+    <div class="form-container">
+        <h2>Prenota il tuo Panettone</h2>
+        <div class="subtitle">Sostieni i nostri progetti con dolcezza</div>
+        
+        <div id="statusMsg"></div>
+        <div id="contatoreOrdini">Ordini registrati in questa sessione: 0</div>
 
-    <button class="test-btn" onclick="eseguiTest()">Test Inserimento Dati</button>
+        <form id="ordineForm">
+            <input type="text" id="nome" placeholder="Nome" required>
+            <input type="text" id="cognome" placeholder="Cognome" required>
+            <input type="tel" id="telefono" placeholder="Numero di Telefono" required>
+            <input type="number" id="quantita" placeholder="Quantità desiderata" min="1" required>
+            <button type="submit">Conferma Prenotazione</button>
+        </form>
+    </div>
+
+    <!-- Pulsante di test mantenuto come da direttive -->
+    <button class="test-btn" onclick="eseguiTest()">⚙️ Esegui Test Inserimento Dati</button>
 
     <script>
         let counterOrdini = 0;
 
+        // Funzione di test mantenuta invariata
         function eseguiTest() {
             document.getElementById('nome').value = "TestNome";
             document.getElementById('cognome').value = "TestCognome";
@@ -45,9 +169,10 @@
             const btn = this.querySelector('button');
             const msg = document.getElementById('statusMsg');
             btn.disabled = true;
-            msg.textContent = "Invio in corso...";
-            msg.style.color = "blue";
-
+            btn.textContent = "Attendere...";
+            msg.textContent = "";
+            
+            // Endpoint precedentemente configurato
             const url = 'https://script.google.com/macros/s/AKfycbwGcqx3YYR5bExxWd0weMoFpM9mKDjmD1JqdUmcLpsj6blvEN3kweON72r4qoGVD88HRw/exec'; 
             const data = {
                 nome: document.getElementById('nome').value,
@@ -66,22 +191,23 @@
             .then(response => response.json())
             .then(result => {
                 if(result.status === "success") {
-                    msg.textContent = "Prenotazione confermata!";
-                    msg.style.color = "green";
+                    msg.textContent = "Prenotazione confermata con successo! 🎉";
+                    msg.style.color = "#2ecc71"; // Verde positivo
                     document.getElementById('ordineForm').reset();
                     
                     counterOrdini++;
-                    document.getElementById('contatoreOrdini').textContent = `Contatore ordini sessione corrente: ${counterOrdini}`;
+                    document.getElementById('contatoreOrdini').textContent = `Ordini registrati in questa sessione: ${counterOrdini}`;
                 } else {
                     throw new Error("Errore backend");
                 }
             })
             .catch(error => {
-                msg.textContent = "Errore durante la prenotazione.";
-                msg.style.color = "red";
+                msg.textContent = "Si è verificato un errore. Riprova.";
+                msg.style.color = "#e74c3c"; // Rosso errore
             })
             .finally(() => {
                 btn.disabled = false;
+                btn.textContent = "Conferma Prenotazione";
             });
         });
     </script>
