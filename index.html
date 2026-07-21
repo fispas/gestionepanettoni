@@ -16,7 +16,6 @@
             padding: 2rem 1rem;
             margin: 0;
         }
-        
         .form-container {
             background: #ffffff;
             max-width: 450px;
@@ -27,31 +26,24 @@
             border-top: 8px solid #e53935; 
             box-sizing: border-box;
         }
-
         h2 { text-align: center; color: #2c3e50; margin-top: 0; font-weight: 800; font-size: 1.8rem; margin-bottom: 0.5rem; }
         .subtitle { text-align: center; color: #7f8c8d; font-size: 0.95rem; margin-bottom: 2rem; }
-
         input[type="text"], input[type="tel"] { 
             width: 100%; margin-bottom: 1.2rem; padding: 0.9rem 1rem; border: 2px solid #e9ecef;
             border-radius: 10px; box-sizing: border-box; font-family: 'Nunito', sans-serif;
             font-size: 1rem; transition: all 0.3s ease; background-color: #f8f9fa;
         }
-
         input:focus { outline: none; border-color: #fbbc05; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(251, 188, 5, 0.1); }
-
         .product-selector { display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; border: 2px solid #e9ecef; border-radius: 10px; padding: 1rem; margin-bottom: 1.2rem; }
         .product-info { display: flex; flex-direction: column; }
         .product-name { font-weight: 700; font-size: 1.1rem; color: #2c3e50; }
         .counter-group { display: flex; align-items: center; gap: 15px; }
-
         .btn-counter { background-color: #e53935; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; font-size: 1.2rem; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background-color 0.2s, transform 0.1s; }
         .btn-counter:hover { background-color: #c62828; transform: scale(1.05); }
         .btn-counter:active { transform: scale(0.95); }
         .count-display { font-size: 1.2rem; font-weight: 800; width: 20px; text-align: center; }
-
         button[type="submit"] { width: 100%; padding: 1.1rem; background-color: #e53935; color: white; border: none; border-radius: 10px; font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: background-color 0.3s, transform 0.1s; font-family: 'Nunito', sans-serif; margin-top: 0.5rem; box-shadow: 0 4px 6px rgba(229, 57, 53, 0.2); }
         button[type="submit"]:hover { background-color: #c62828; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(229, 57, 53, 0.3); }
-
         #statusMsg { font-weight: bold; text-align: center; margin-bottom: 1rem; min-height: 1.5rem; font-size: 1.1rem; }
         #contatoreOrdini { font-size: 0.9em; color: #95a5a6; text-align: center; margin-bottom: 1.5rem; font-weight: 700; }
         .test-btn { background-color: transparent; color: #adb5bd; margin-top: 2rem; border: 2px dashed #dee2e6; padding: 0.8rem; border-radius: 10px; cursor: pointer; font-family: 'Nunito', sans-serif; font-weight: 700; transition: all 0.3s; width: 100%; max-width: 450px; box-sizing: border-box; }
@@ -59,19 +51,15 @@
     </style>
 </head>
 <body>
-
     <div class="form-container">
         <h2>Prenota i tuoi Dolci</h2>
         <div class="subtitle">Sostieni i nostri progetti con dolcezza</div>
-        
         <div id="statusMsg"></div>
         <div id="contatoreOrdini">Ordini registrati in questa sessione: 0</div>
-
         <form id="ordineForm">
             <input type="text" id="nome" placeholder="Nome" required>
             <input type="text" id="cognome" placeholder="Cognome" required>
             <input type="tel" id="telefono" placeholder="Numero di Telefono" required>
-            
             <div class="product-selector">
                 <div class="product-info"><span class="product-name">Panettoni</span></div>
                 <div class="counter-group">
@@ -80,7 +68,6 @@
                     <button type="button" class="btn-counter" onclick="updateCount('panettoni', 1)">+</button>
                 </div>
             </div>
-
             <div class="product-selector">
                 <div class="product-info"><span class="product-name">Pandori</span></div>
                 <div class="counter-group">
@@ -89,11 +76,9 @@
                     <button type="button" class="btn-counter" onclick="updateCount('pandori', 1)">+</button>
                 </div>
             </div>
-
             <button type="submit">Conferma Prenotazione</button>
         </form>
     </div>
-
     <button class="test-btn" onclick="eseguiTest()">⚙️ Esegui Test Inserimento Dati</button>
 
     <script>
@@ -125,13 +110,11 @@
         document.getElementById('ordineForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const msg = document.getElementById('statusMsg');
-            
             if (countPanettoni === 0 && countPandori === 0) {
                 msg.textContent = "Seleziona almeno un Panettone o un Pandoro.";
                 msg.style.color = "#e74c3c";
                 return;
             }
-
             const btn = this.querySelector('button[type="submit"]');
             btn.disabled = true; btn.textContent = "Attendere..."; msg.textContent = "";
             
