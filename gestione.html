@@ -259,6 +259,21 @@
 
         #contatoreOrdini { font-size: 0.85em; color: var(--text-muted); font-weight: 700; text-align: center; margin: 1rem 0; font-family: 'Quicksand', sans-serif; }
         #loadingMsg { font-weight: bold; color: var(--primary); text-align: center; margin: 2rem 0; font-family: 'Quicksand', sans-serif; }
+        
+        .seed-btn {
+            background: var(--accent-light);
+            color: var(--primary-dark);
+            border: 2px dashed var(--accent-soft);
+            padding: 0.9rem;
+            border-radius: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 1rem;
+            font-family: 'Quicksand', sans-serif;
+            transition: all 0.2s;
+        }
+        .seed-btn:hover { background: #dcece4; }
     </style>
 </head>
 <body>
@@ -267,10 +282,10 @@
         <div class="login-box">
             <h2>WonderLAD</h2>
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Accesso Area Riservata</p>
-            <input type="text" id="username" placeholder="Email o Username">
-            <input type="password" id="passcode" placeholder="Password">
-            <button onclick="effettuaLogin()" id="btn-login">Accedi</button>
-            <p id="login-err" style="color:#c53030; display:none; font-size:0.9rem; font-weight: bold; margin-top: 1rem;">Credenziali errate</p>
+            <input type="text" id="username" placeholder="Email o Username (es. admin)">
+            <input type="password" id="passcode" placeholder="Password (minimo 6 caratteri)">
+            <button onclick="effettuaLogin()" id="btn-login">Accedi / Registrati</button>
+            <p id="login-err" style="color:#c53030; display:none; font-size:0.9rem; font-weight: bold; margin-top: 1rem;"></p>
         </div>
     </div>
 
@@ -390,6 +405,7 @@
             </div>
 
             <div id="contatoreOrdini">Sessione caricata. Totale ordini: 0</div>
+            <button class="seed-btn" onclick="popolaDatiTest()">🚀 Popola DB con Dati di Prova</button>
         </div>
 
         <!-- Ordini -->
@@ -548,7 +564,7 @@
 
         let datiGlobali = [];
         let logsGlobali = [];
-        let impostazioniGlobali = { "Totale Panettoni": 0, "Totale Pandori": 0 };
+        let impostazioniGlobali = { "Totale Panettoni": 500, "Totale Pandori": 500 };
         let chartInstance = null;
         let currentUserEmail = ""; 
         let filtroStatoAttuale = "Tutti";
@@ -560,7 +576,7 @@
                 currentUserEmail = user.email;
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('main-container').style.display = 'block';
-                document.getElementById('user-badge').textContent = `(${currentUserEmail})`;
+                document.getElementById('user-badge').textContent = `(${currentUserEmail.split('@')[0]})`;
 
                 const nav = document.getElementById('bottomNav');
                 if(!document.getElementById('btn-nav-log')) {
@@ -582,14 +598,21 @@
             const user = document.getElementById('username').value.trim();
             const pass = document.getElementById('passcode').value;
             const btn = document.getElementById('btn-login');
+            const errObj = document.getElementById('login-err');
 
-            if(!user || !pass) return;
+            if(!user || !pass) {
+                errObj.textContent = "Inserisci username/email e password!";
+                errObj.style.display = 'block';
+                return;
+            }
 
             btn.textContent = "Verifica...";
             btn.disabled = true;
+            errObj.style.display = 'none';
 
             let emailFormat = user.includes('@') ? user : user + "@wonderlad.org";
 
+            // Tenta il Login
             auth.signInWithEmailAndPassword(emailFormat, pass)
             .then(() => {
                 db.collection("logs").add({
@@ -599,11 +622,29 @@
                     dettaglio: "Accesso effettuato al pannello di gestione"
                 });
             })
-            .catch(() => {
-                document.getElementById('login-err').style.display = 'block';
+            .catch((error) => {
+                // Se l'utente non esiste, lo crea automaticamente per evitare blocco
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                    auth.createUserWithEmailAndPassword(emailFormat, pass)
+                    .then(() => {
+                        db.collection("logs").add({
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                            categoria: "UTENTE",
+                            utente: emailFormat,
+                            dettaglio: "Nuovo account creato ed effettuato il login"
+                        });
+                    })
+                    .catch((err2) => {
+                        errObj.textContent = "Errore: la password deve avere almeno 6 caratteri!";
+                        errObj.style.display = 'block';
+                    });
+                } else {
+                    errObj.textContent = "Errore: " + error.message;
+                    errObj.style.display = 'block';
+                }
             })
             .finally(() => {
-                btn.textContent = "Accedi";
+                btn.textContent = "Accedi / Registrati";
                 btn.disabled = false;
             });
         }
@@ -621,6 +662,12 @@
             db.collection("impostazioni").doc("stock").onSnapshot(doc => {
                 if (doc.exists) {
                     impostazioniGlobali = doc.data();
+                } else {
+                    // Crea stock iniziale di default se mancante
+                    db.collection("impostazioni").doc("stock").set({
+                        "Totale Panettoni": 500,
+                        "Totale Pandori": 500
+                    });
                 }
                 calcolaStatistiche(datiGlobali, impostazioniGlobali);
             });
@@ -645,6 +692,31 @@
                 });
                 popolaTabellaLog(logsGlobali);
             });
+        }
+
+        function popolaDatiTest() {
+            const ordiniTest = [
+                { nome: "Mario", cognome: "Rossi", telefono: "3381234567", panettoni: 2, pandori: 1, status: "Prenotato - Da Pagare", metodoPagamento: "-" },
+                { nome: "Giuseppe", cognome: "Verdi", telefono: "3409876543", panettoni: 1, pandori: 3, status: "Prenotato - Pagato", metodoPagamento: "Cash" },
+                { nome: "Elena", cognome: "Bianchi", telefono: "3201122334", panettoni: 4, pandori: 2, status: "In Preparazione", metodoPagamento: "POS" },
+                { nome: "Francesca", cognome: "Neri", telefono: "3334455667", panettoni: 0, pandori: 2, status: "Da Consegnare", metodoPagamento: "Bonifico" }
+            ];
+
+            ordiniTest.forEach(o => {
+                db.collection("ordini").add({
+                    ...o,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            });
+
+            db.collection("logs").add({
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                categoria: "INSERIMENTO",
+                utente: currentUserEmail,
+                dettaglio: "Inseriti ordini e dati di prova nel DB"
+            });
+
+            alert("Dati di prova inseriti con successo!");
         }
 
         function switchView(viewName, btnElement) {
@@ -982,8 +1054,8 @@
             impostaBoxFlow('countConsegnati', 'subConsegnati', 'consegnato');
             impostaBoxFlow('countAnnullati', 'subAnnullati', 'annullato');
 
-            let stockInizialePanettoni = parseInt(impostazioni["Totale Panettoni"]) || 0;
-            let stockInizialePandori = parseInt(impostazioni["Totale Pandori"]) || 0;
+            let stockInizialePanettoni = parseInt(impostazioni["Totale Panettoni"]) || 500;
+            let stockInizialePandori = parseInt(impostazioni["Totale Pandori"]) || 500;
 
             document.getElementById('valPanettoni').textContent = totPanettoni;
             document.getElementById('lblTotPanettoni').textContent = `prenotati su ${stockInizialePanettoni}`;
@@ -993,7 +1065,7 @@
 
             document.getElementById('valPandori').textContent = totPandori;
             document.getElementById('lblTotPandori').textContent = `prenotati su ${stockInizialePandori}`;
-            document.getElementById('rimanenzePandori').textContent = `Rimanenza: ${stockInizialePandori - stockInizialePandori ? stockInizialePandori - totPandori : 0} pz`;
+            document.getElementById('rimanenzePandori').textContent = `Rimanenza: ${stockInizialePandori - totPandori} pz`;
             const percPand = stockInizialePandori > 0 ? Math.min(100, Math.round((totPandori / stockInizialePandori) * 100)) : 0;
             document.getElementById('barPandori').style.width = percPand + '%';
 
