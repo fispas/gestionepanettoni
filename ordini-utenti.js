@@ -1,6 +1,7 @@
-// ordini-utenti.js (Firebase Native Adaptation)
+// ordini-utenti.js
 let datiGlobali = [];
 let logsGlobali = [];
+let utentiGlobali = [];
 let impostazioniGlobali = { "Totale Panettoni": 500, "Totale Pandori": 500 };
 let currentUserEmail = ""; 
 let filtroStatoAttuale = "Tutti";
@@ -14,15 +15,6 @@ auth.onAuthStateChanged(user => {
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('main-container').style.display = 'block';
         document.getElementById('user-badge').textContent = `(${currentUserEmail.split('@')[0]})`;
-
-        const nav = document.getElementById('bottomNav');
-        if(!document.getElementById('btn-nav-log')) {
-            nav.innerHTML += `
-                <button id="btn-nav-log" class="nav-item" onclick="switchView('log', this)">
-                    <span class="nav-icon">📜</span>Log
-                </button>
-            `;
-        }
         avviaAscoltoInTempoReale();
     } else {
         document.getElementById('login-overlay').style.display = 'flex';
@@ -100,7 +92,84 @@ function avviaAscoltoInTempoReale() {
         logsGlobali = [];
         snapshot.forEach(doc => logsGlobali.push({ id: doc.id, ...doc.data() }));
         popolaTabellaLog(logsGlobali);
+        caricaUtentiStaff();
     });
+}
+
+function caricaUtentiStaff() {
+    db.collection("logs").where("categoria", "==", "LOGIN").get().then(snapshot => {
+        const setUtenti = new Set();
+        snapshot.forEach(doc => {
+            if(doc.data().utente) setUtenti.add(doc.data().utente);
+        });
+        utentiGlobali = Array.from(setUtenti).map(email => ({ email: email }));
+        popolaTabellaUtenti(utentiGlobali);
+    });
+}
+
+function popolaTabellaUtenti(utenti) {
+    const tbody = document.getElementById('corpoUtenti');
+    tbody.innerHTML = '';
+    
+    if(utenti.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Nessun utente registrato nei log di accesso.</td></tr>`;
+        return;
+    }
+
+    utenti.forEach(u => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td data-label="Email"><span>${u.email}</span></td>
+            <td data-label="Stato"><span class="badge-status status-consegnato">Attivo</span></td>
+            <td data-label="Azioni">
+                <button class="btn-delete" onclick="notificaInfoUtente('${u.email}')">ℹ️ Info</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function filtraUtenti() {
+    const query = document.getElementById('searchUtenti').value.toLowerCase();
+    const rows = document.querySelectorAll('#corpoUtenti tr');
+    rows.forEach(tr => {
+        const text = tr.textContent.toLowerCase();
+        tr.style.display = text.includes(query) ? '' : 'none';
+    });
+}
+
+function apriModaleNuovoUtente() {
+    document.getElementById('modal-email').value = '';
+    document.getElementById('modal-password').value = '';
+    document.getElementById('user-modal').style.display = 'flex';
+}
+
+function salvaNuovoUtente() {
+    const email = document.getElementById('modal-email').value.trim();
+    const password = document.getElementById('modal-password').value.trim();
+
+    if(!email || !password) {
+        alert("Inserisci email e password valida!");
+        return;
+    }
+
+    const secondaryApp = firebase.initializeApp(firebaseConfig, "Secondary");
+    secondaryApp.auth().createUserWithEmailAndPassword(email, password)
+    .then(() => {
+        alert(`Utente ${email} creato con successo!`);
+        aggiungiLogAPI("UTENTE", currentUserEmail, `Creato nuovo account operatore: ${email}`);
+        secondaryApp.delete();
+        chiudiModale('user-modal');
+        caricaUtentiStaff();
+    })
+    .catch(error => {
+        alert("Errore durante la creazione: " + error.message);
+        secondaryApp.delete();
+    });
+}
+
+function notificaInfoUtente(email) {
+    alert(`L'utente ${email} è registrato su Firebase Auth. La gestione avanzata o la rimozione possono essere effettuate direttamente dalla Console Firebase.`);
 }
 
 function switchView(viewName, btnElement) {
@@ -234,7 +303,7 @@ function popolaTabellaLog(logs) {
         }
 
         const catVal = l.categoria || 'INSERIMENTO';
-        const badgeClass = catVal.toLowerCase().includes('login') ? 'log-login' : (catVal.toLowerCase().includes('modifica') ? 'log-modifica' : 'log-inserimento');
+        const badgeClass = catVal.toLowerCase().includes('login') ? 'log-login' : (catVal.toLowerCase().includes('modifica') ? 'log-modifica' : (catVal.toLowerCase().includes('utente') ? 'log-utente' : 'log-inserimento'));
 
         const tr = document.createElement('tr');
         tr.setAttribute('data-cat', String(catVal).toUpperCase());
