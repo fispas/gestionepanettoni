@@ -1,4 +1,3 @@
-<!-- gestione.html -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -190,21 +189,21 @@
             </div>
         </div>
 
-        <!-- Utenti -->
+        <!-- Utenti (Riservato Admin) -->
         <div id="view-utenti" class="view">
             <div class="controls-panel">
-                <input type="text" id="searchUtenti" class="search-input" placeholder="🔍 Cerca per email utente..." onkeyup="filtraUtenti()">
+                <input type="text" id="searchUtenti" class="search-input" placeholder="🔍 Cerca utente per username o email..." onkeyup="filtraUtenti()">
             </div>
             <div class="table-controls">
                 <h3 style="margin: 0; color: var(--text-main); font-family: 'Quicksand', sans-serif;">Gestione Utenti Staff</h3>
-                <button class="btn-action" onclick="apriModaleNuovoUtente()">➕ Nuovo Utente</button>
+                <button class="btn-action" onclick="apriModaleUtente('add')">➕ Aggiungi Utente</button>
             </div>
             <div class="table-responsive">
                 <table id="tabellaUtenti">
                     <thead>
                         <tr>
-                            <th>Email Utente</th>
-                            <th>Stato</th>
+                            <th>Username / Email</th>
+                            <th>Ruolo</th>
                             <th>Azioni</th>
                         </tr>
                     </thead>
@@ -213,7 +212,7 @@
             </div>
         </div>
 
-        <!-- Log / Attività -->
+        <!-- Log / Attività (Riservato Admin) -->
         <div id="view-log" class="view">
             <div class="controls-panel">
                 <input type="text" id="searchLog" class="search-input" placeholder="🔍 Cerca nei log..." onkeyup="filtraLog()">
@@ -248,8 +247,7 @@
     <nav class="bottom-nav" id="bottomNav">
         <button class="nav-item active" onclick="switchView('dashboard', this)"><span class="nav-icon">📊</span>Dashboard</button>
         <button class="nav-item" onclick="switchView('ordini', this)"><span class="nav-icon">📋</span>Ordini</button>
-        <button class="nav-item" onclick="switchView('utenti', this)"><span class="nav-icon">👥</span>Utenti</button>
-        <button class="nav-item" onclick="switchView('log', this)"><span class="nav-icon">📜</span>Log</button>
+        <!-- I pulsanti Utenti e Log vengono iniettati dinamicamente in base al ruolo Administrator -->
     </nav>
 
     <!-- Modali -->
@@ -319,13 +317,20 @@
     <div id="user-modal" class="modal">
         <div class="modal-content">
             <h3 id="user-modal-title">Nuovo Utente Staff</h3>
-            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Email</label>
-            <input type="email" id="modal-email" placeholder="es. operatore@wonderlad.org">
-            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Password Temporanea (min. 6 caratteri)</label>
+            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Email / Username</label>
+            <input type="text" id="modal-username" placeholder="es. admin o admin@wonderlad.org">
+            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Password (min. 6 caratteri)</label>
             <input type="password" id="modal-password" placeholder="••••••••">
+            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Ruolo</label>
+            <select id="modal-role">
+                <option value="Manager">Manager</option>
+                <option value="Administrator">Administrator</option>
+            </select>
+            <input type="hidden" id="modal-mode" value="add">
+            <input type="hidden" id="modal-user-id">
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="chiudiModale('user-modal')">Annulla</button>
-                <button class="btn-save" onclick="salvaNuovoUtente()">Crea Utente</button>
+                <button class="btn-save" onclick="salvaUtente()">Salva</button>
             </div>
         </div>
     </div>
