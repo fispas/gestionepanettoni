@@ -1,45 +1,46 @@
-const API_URL = 'https://script.google.com/macros/s/AKfycbze7XWXu3OK3PF8TtDUftN-zBjKRuDz_FAcqXFNHtK2Ns6hNeUykEoi92tz0XHRbquEXA/exec';
+// api.js (Firebase Configuration & Global Wrappers)
+const firebaseConfig = {
+    apiKey: "AIzaSyAjwLhDJkxtriCjGygPMPgk4Fjc_d_rtDs",
+    authDomain: "wonderlad-ordini.firebaseapp.com",
+    projectId: "wonderlad-ordini",
+    storageBucket: "wonderlad-ordini.firebasestorage.app",
+    messagingSenderId: "1016384282148",
+    appId: "1:1016384282148:web:8e8c16e889baed9d09c2b1",
+    measurementId: "G-065ZY1K7JX"
+};
+
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.firestore();
+const auth = firebase.auth();
 
 function effettuaLoginAPI(user, pass) {
-    return fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'login_check', user: user, pass: pass })
-    }).then(res => res.json());
+    let emailFormat = user.includes('@') ? user : user + "@wonderlad.org";
+    return auth.signInWithEmailAndPassword(emailFormat, pass);
 }
 
-function recuperaDatiAPI() {
-    return fetch(API_URL).then(res => res.json());
+function registraNuovoUtenteAPI(user, pass) {
+    let emailFormat = user.includes('@') ? user : user + "@wonderlad.org";
+    return auth.createUserWithEmailAndPassword(emailFormat, pass);
 }
 
-function inviaAggiornamentoOrdineAPI(payload) {
-    return fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
-    }).then(res => res.json());
+function inviaAggiornamentoOrdineAPI(docId, payload) {
+    return db.collection("ordini").doc(docId).update(payload);
 }
 
-function gestisciStockAPI(totPan, totPand, user) {
-    return fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'update_stock', totPanettoni: totPan, totPandori: totPand, user: user })
-    }).then(res => res.json());
+function gestisciStockAPI(totPan, totPand) {
+    return db.collection("impostazioni").doc("stock").set({
+        "Totale Panettoni": parseInt(totPan) || 0,
+        "Totale Pandori": parseInt(totPand) || 0
+    });
 }
 
-function gestisciUtenteAPI(actionType, row, username, password, ruolo, user) {
-    return fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: actionType, rowNumber: row, newUsername: username, newPassword: password, newRole: ruolo, user: user })
-    }).then(res => res.json());
-}
-
-function eliminaUtenteAPI(row, user) {
-    return fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'delete_user', rowNumber: row, user: user })
-    }).then(res => res.json());
+function aggiungiLogAPI(categoria, utente, dettaglio) {
+    return db.collection("logs").add({
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        categoria: categoria,
+        utente: utente,
+        dettaglio: dettaglio
+    });
 }
