@@ -1,4 +1,4 @@
-// api.js (Firebase Configuration & Global Wrappers)
+// api.js
 const firebaseConfig = {
     apiKey: "AIzaSyAjwLhDJkxtriCjGygPMPgk4Fjc_d_rtDs",
     authDomain: "wonderlad-ordini.firebaseapp.com",
