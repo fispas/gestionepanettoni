@@ -1,4 +1,3 @@
-// dashboard.js
 let filtroProdottoDashboard = "TUTTI";
 let chartInstance = null;
 
