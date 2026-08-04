@@ -1,4 +1,3 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -6,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prenotazione Dolci Solidali - WonderLAD</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;750&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- SDK Firebase Compat -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <style>
         :root {
             --primary: #6b9080;
@@ -44,10 +48,7 @@
             margin-bottom: 2rem;
         }
 
-        .header-bar img {
-            max-height: 48px;
-            width: auto;
-        }
+        .header-bar img { max-height: 48px; width: auto; }
 
         .form-container {
             background: var(--card-bg);
@@ -192,9 +193,10 @@
             <input 
                 type="tel" 
                 id="telefono" 
-                placeholder="Numero di Telefono (es. +39...)" 
-                inputmode="tel" 
-                oninput="this.value = this.value.replace(/[^\d+]/g, '').replace(/(?!^)\+/g, '')" 
+                placeholder="Numero di Telefono" 
+                inputmode="numeric" 
+                pattern="[0-9]+" 
+                oninput="this.value = this.value.replace(/[^0-9]/g, '')" 
                 required>
             
             <div class="product-selector">
@@ -222,7 +224,19 @@
     <button class="test-btn" onclick="eseguiTest()">⚙️ Esegui Test Inserimento Dati</button>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbze7XWXu3OK3PF8TtDUftN-zBjKRuDz_FAcqXFNHtK2Ns6hNeUykEoi92tz0XHRbquEXA/exec';
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjwLhDJkxtriCjGygPMPgk4Fjc_d_rtDs",
+            authDomain: "wonderlad-ordini.firebaseapp.com",
+            projectId: "wonderlad-ordini",
+            storageBucket: "wonderlad-ordini.firebasestorage.app",
+            messagingSenderId: "1016384282148",
+            appId: "1:1016384282148:web:8e8c16e889baed9d09c2b1",
+            measurementId: "G-065ZY1K7JX"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         let counterOrdini = 0; 
         let countPanettoni = 0; 
         let countPandori = 0;
@@ -254,9 +268,6 @@
             e.preventDefault();
             const msg = document.getElementById('statusMsg');
             
-            if (countPanettoni < 0) countPanettoni = 0;
-            if (countPandori < 0) countPandori = 0;
-
             if (countPanettoni === 0 && countPandori === 0) {
                 msg.textContent = "Seleziona almeno un Panettone o un Pandoro.";
                 msg.style.color = "#d9534f";
@@ -268,39 +279,40 @@
             btn.textContent = "Attendere..."; 
             msg.textContent = "";
             
-            const data = {
-                action: 'insert',
-                nome: document.getElementById('nome').value.trim(),
-                cognome: document.getElementById('cognome').value.trim(),
-                telefono: document.getElementById('telefono').value.trim(),
-                panettoni: countPanettoni,
-                pandori: countPandori
-            };
+            const nomeVal = document.getElementById('nome').value;
+            const cognomeVal = document.getElementById('cognome').value;
+            const telefonoVal = document.getElementById('telefono').value;
 
-            fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(data)
+            db.collection("ordini").add({
+                nome: nomeVal,
+                cognome: cognomeVal,
+                telefono: telefonoVal,
+                panettoni: countPanettoni,
+                pandori: countPandori,
+                status: "Prenotato - Da Pagare",
+                metodoPagamento: "-",
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
             })
-            .then(response => response.json())
-            .then(result => {
-                if(result.status === "success") {
-                    msg.textContent = "Prenotazione confermata con successo! 🎉"; 
-                    msg.style.color = "#6b9080";
-                    document.getElementById('ordineForm').reset();
-                    countPanettoni = 0; 
-                    countPandori = 0;
-                    document.getElementById('panettoni-display').textContent = "0";
-                    document.getElementById('pandori-display').textContent = "0";
-                    counterOrdini++;
-                    document.getElementById('contatoreOrdini').textContent = `Ordini registrati in questa sessione: ${counterOrdini}`;
-                } else { 
-                    throw new Error(result.message || "Errore sconosciuto dal backend"); 
-                }
+            .then((docRef) => {
+                db.collection("logs").add({
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    categoria: "INSERIMENTO",
+                    utente: "Cliente Web",
+                    dettaglio: `Nuovo ordine da ${nomeVal} ${cognomeVal} (${countPanettoni} Panettoni, ${countPandori} Pandori)`
+                });
+
+                msg.textContent = "Prenotazione confermata con successo! 🎉"; 
+                msg.style.color = "#6b9080";
+                document.getElementById('ordineForm').reset();
+                countPanettoni = 0; 
+                countPandori = 0;
+                document.getElementById('panettoni-display').textContent = "0";
+                document.getElementById('pandori-display').textContent = "0";
+                counterOrdini++;
+                document.getElementById('contatoreOrdini').textContent = `Ordini registrati in questa sessione: ${counterOrdini}`;
             })
-            .catch(error => {
-                console.error("Errore durante l'invio dell'ordine:", error);
-                msg.textContent = "Si è verificato un errore di connessione. Riprova."; 
+            .catch((error) => {
+                msg.textContent = "Si è verificato un errore. Riprova."; 
                 msg.style.color = "#d9534f";
             })
             .finally(() => {
