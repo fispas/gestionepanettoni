@@ -1,4 +1,4 @@
-// dashboard.js (Firebase Native Adaptation)
+// dashboard.js
 let filtroProdottoDashboard = "TUTTI";
 let chartInstance = null;
 
