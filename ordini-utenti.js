@@ -1,9 +1,9 @@
-// ordini-utenti.js
 let datiGlobali = [];
 let logsGlobali = [];
 let utentiGlobali = [];
 let impostazioniGlobali = { "Totale Panettoni": 500, "Totale Pandori": 500 };
 let currentUserEmail = ""; 
+let currentRole = "Manager";
 let filtroStatoAttuale = "Tutti";
 let filtroLogCatAttuale = "Tutti";
 let esecuzioniTestLettura = 0;
@@ -12,15 +12,46 @@ let rowCounter = 0;
 auth.onAuthStateChanged(user => {
     if (user) {
         currentUserEmail = user.email;
-        document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('main-container').style.display = 'block';
-        document.getElementById('user-badge').textContent = `(${currentUserEmail.split('@')[0]})`;
-        avviaAscoltoInTempoReale();
+        
+        // Verifica il ruolo dell'utente loggato dalla collezione 'utenti' su Firestore
+        db.collection("utenti").where("username", "==", currentUserEmail).get().then(snapshot => {
+            if (!snapshot.empty) {
+                currentRole = snapshot.docs[0].data().ruolo || "Manager";
+            } else {
+                // Se non presente, assegna Administrator di default al primo o Manager agli altri
+                currentRole = "Administrator"; 
+            }
+            
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('main-container').style.display = 'block';
+            document.getElementById('user-badge').textContent = `(${currentUserEmail.split('@')[0]} - ${currentRole})`;
+
+            configuraNavigazioneRuoli();
+            avviaAscoltoInTempoReale();
+        });
     } else {
         document.getElementById('login-overlay').style.display = 'flex';
         document.getElementById('main-container').style.display = 'none';
     }
 });
+
+function configuraNavigazioneRuoli() {
+    const nav = document.getElementById('bottomNav');
+    const isAdmin = currentRole.toLowerCase() === 'administrator';
+    
+    let navHTML = `
+        <button class="nav-item active" onclick="switchView('dashboard', this)"><span class="nav-icon">📊</span>Dashboard</button>
+        <button class="nav-item" onclick="switchView('ordini', this)"><span class="nav-icon">📋</span>Ordini</button>
+    `;
+
+    if (isAdmin) {
+        navHTML += `
+            <button id="btn-nav-utenti" class="nav-item" onclick="switchView('utenti', this)"><span class="nav-icon">👥</span>Utenti</button>
+            <button id="btn-nav-log" class="nav-item" onclick="switchView('log', this)"><span class="nav-icon">📜</span>Log</button>
+        `;
+    }
+    nav.innerHTML = navHTML;
+}
 
 function effettuaLogin() {
     const user = document.getElementById('username').value.trim();
@@ -38,14 +69,17 @@ function effettuaLogin() {
     btn.disabled = true;
     errObj.style.display = 'none';
 
+    let emailFormat = user.includes('@') ? user : user + "@wonderlad.org";
+
     effettuaLoginAPI(user, pass)
     .then(() => {
-        aggiungiLogAPI("LOGIN", user, "Accesso effettuato al pannello di gestione");
+        aggiungiLogAPI("LOGIN", emailFormat, "Accesso effettuato al pannello di gestione");
     })
     .catch((error) => {
         if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
             registraNuovoUtenteAPI(user, pass).then(() => {
-                aggiungiLogAPI("UTENTE", user, "Nuovo account creato ed effettuato il login");
+                db.collection("utenti").add({ username: emailFormat, ruolo: "Administrator" });
+                aggiungiLogAPI("UTENTE", emailFormat, "Nuovo account admin creato ed effettuato il login");
             }).catch(() => {
                 errObj.textContent = "Errore: la password deve avere almeno 6 caratteri!";
                 errObj.style.display = 'block';
@@ -88,23 +122,19 @@ function avviaAscoltoInTempoReale() {
         document.getElementById('contatoreOrdini').textContent = `Righe caricate e analizzate dal db: ${rowCounter}`;
     });
 
-    db.collection("logs").orderBy("timestamp", "desc").limit(100).onSnapshot(snapshot => {
-        logsGlobali = [];
-        snapshot.forEach(doc => logsGlobali.push({ id: doc.id, ...doc.data() }));
-        popolaTabellaLog(logsGlobali);
-        caricaUtentiStaff();
-    });
-}
-
-function caricaUtentiStaff() {
-    db.collection("logs").where("categoria", "==", "LOGIN").get().then(snapshot => {
-        const setUtenti = new Set();
-        snapshot.forEach(doc => {
-            if(doc.data().utente) setUtenti.add(doc.data().utente);
+    if (currentRole.toLowerCase() === 'administrator') {
+        db.collection("logs").orderBy("timestamp", "desc").limit(100).onSnapshot(snapshot => {
+            logsGlobali = [];
+            snapshot.forEach(doc => logsGlobali.push({ id: doc.id, ...doc.data() }));
+            popolaTabellaLog(logsGlobali);
         });
-        utentiGlobali = Array.from(setUtenti).map(email => ({ email: email }));
-        popolaTabellaUtenti(utentiGlobali);
-    });
+
+        db.collection("utenti").onSnapshot(snapshot => {
+            utentiGlobali = [];
+            snapshot.forEach(doc => utentiGlobali.push({ id: doc.id, ...doc.data() }));
+            popolaTabellaUtenti(utentiGlobali);
+        });
+    }
 }
 
 function popolaTabellaUtenti(utenti) {
@@ -112,17 +142,18 @@ function popolaTabellaUtenti(utenti) {
     tbody.innerHTML = '';
     
     if(utenti.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Nessun utente registrato nei log di accesso.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Nessun utente configurato.</td></tr>`;
         return;
     }
 
     utenti.forEach(u => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td data-label="Email"><span>${u.email}</span></td>
-            <td data-label="Stato"><span class="badge-status status-consegnato">Attivo</span></td>
+            <td data-label="Username"><span>${u.username}</span></td>
+            <td data-label="Ruolo"><span>${u.ruolo}</span></td>
             <td data-label="Azioni">
-                <button class="btn-delete" onclick="notificaInfoUtente('${u.email}')">ℹ️ Info</button>
+                <button class="btn-edit" onclick="apriModaleUtente('edit', '${u.id}', '${u.username}', '${u.ruolo}')">✏️ Modifica</button>
+                <button class="btn-delete" onclick="eliminaUtente('${u.id}', '${u.username}')">🗑️ Elimina</button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -138,41 +169,73 @@ function filtraUtenti() {
     });
 }
 
-function apriModaleNuovoUtente() {
-    document.getElementById('modal-email').value = '';
+function apriModaleUtente(mode, id = '', username = '', ruolo = 'Manager') {
+    if (currentRole.toLowerCase() !== 'administrator') return;
+
+    document.getElementById('modal-mode').value = mode;
+    document.getElementById('modal-user-id').value = id;
+    document.getElementById('modal-username').value = username;
     document.getElementById('modal-password').value = '';
+    
+    const sel = document.getElementById('modal-role');
+    for(let i=0; i<sel.options.length; i++) {
+        if(sel.options[i].value === ruolo) { sel.selectedIndex = i; break; }
+    }
+
+    document.getElementById('user-modal-title').textContent = mode === 'add' ? 'Nuovo Utente' : 'Modifica Utente';
     document.getElementById('user-modal').style.display = 'flex';
 }
 
-function salvaNuovoUtente() {
-    const email = document.getElementById('modal-email').value.trim();
+function salvaUtente() {
+    if (currentRole.toLowerCase() !== 'administrator') return;
+
+    const mode = document.getElementById('modal-mode').value;
+    const id = document.getElementById('modal-user-id').value;
+    const username = document.getElementById('modal-username').value.trim();
     const password = document.getElementById('modal-password').value.trim();
+    const ruolo = document.getElementById('modal-role').value;
 
-    if(!email || !password) {
-        alert("Inserisci email e password valida!");
-        return;
+    if(!username) return alert("Inserisci username o email!");
+
+    let emailFormat = username.includes('@') ? username : username + "@wonderlad.org";
+
+    if (mode === 'add') {
+        if(!password || password.length < 6) return alert("Inserisci una password di almeno 6 caratteri!");
+        
+        const secondaryApp = firebase.initializeApp(firebaseConfig, "SecondaryAuth");
+        secondaryApp.auth().createUserWithEmailAndPassword(emailFormat, password)
+        .then(() => {
+            db.collection("utenti").add({ username: emailFormat, ruolo: ruolo }).then(() => {
+                aggiungiLogAPI("UTENTE", currentUserEmail, `Creato utente ${emailFormat} con ruolo ${ruolo}`);
+                secondaryApp.delete();
+                chiudiModale('user-modal');
+            });
+        }).catch(err => {
+            alert("Errore: " + err.message);
+            secondaryApp.delete();
+        });
+    } else {
+        db.collection("utenti").doc(id).update({ ruolo: ruolo }).then(() => {
+            aggiungiLogAPI("UTENTE", currentUserEmail, `Aggiornato ruolo utente ${emailFormat} a ${ruolo}`);
+            chiudiModale('user-modal');
+        });
     }
-
-    const secondaryApp = firebase.initializeApp(firebaseConfig, "Secondary");
-    secondaryApp.auth().createUserWithEmailAndPassword(email, password)
-    .then(() => {
-        alert(`Utente ${email} creato con successo!`);
-        aggiungiLogAPI("UTENTE", currentUserEmail, `Creato nuovo account operatore: ${email}`);
-        secondaryApp.delete();
-        chiudiModale('user-modal');
-        caricaUtentiStaff();
-    })
-    .catch(error => {
-        alert("Errore durante la creazione: " + error.message);
-        secondaryApp.delete();
-    });
 }
 
-function notificaInfoUtente(email) {
-    alert(`L'utente ${email} è registrato su Firebase Auth. La gestione avanzata o la rimozione possono essere effettuate direttamente dalla Console Firebase.`);
+function eliminaUtente(id, username) {
+    if (currentRole.toLowerCase() !== 'administrator') return;
+    if (confirm(`Vuoi rimuovere il profilo di ${username}?`)) {
+        db.collection("utenti").doc(id).delete().then(() => {
+            aggiungiLogAPI("UTENTE", currentUserEmail, `Eliminato profilo utente ${username}`);
+        });
+    }
 }
 
 function switchView(viewName, btnElement) {
+    if ((viewName === 'utenti' || viewName === 'log') && currentRole.toLowerCase() !== 'administrator') {
+        alert("Accesso non autorizzato. Sezione riservata agli Administrator.");
+        return;
+    }
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
     document.getElementById('view-' + viewName).classList.add('active');
@@ -303,7 +366,10 @@ function popolaTabellaLog(logs) {
         }
 
         const catVal = l.categoria || 'INSERIMENTO';
-        const badgeClass = catVal.toLowerCase().includes('login') ? 'log-login' : (catVal.toLowerCase().includes('modifica') ? 'log-modifica' : (catVal.toLowerCase().includes('utente') ? 'log-utente' : 'log-inserimento'));
+        let badgeClass = 'log-inserimento';
+        if (catVal.toLowerCase().includes('login')) badgeClass = 'log-login';
+        else if (catVal.toLowerCase().includes('modifica')) badgeClass = 'log-modifica';
+        else if (catVal.toLowerCase().includes('utente')) badgeClass = 'log-utente';
 
         const tr = document.createElement('tr');
         tr.setAttribute('data-cat', String(catVal).toUpperCase());
@@ -359,12 +425,18 @@ function apriModaleOrdine(docId, panettoni, pandori, status, metodo = "-") {
 }
 
 function apriModaleStock(tipo) {
+    if (currentRole.toLowerCase() !== 'administrator') {
+        alert("Operazione non consentita per il ruolo Manager.");
+        return;
+    }
     document.getElementById('input-tot-pan').value = impostazioniGlobali["Totale Panettoni"] || 0;
     document.getElementById('input-tot-pand').value = impostazioniGlobali["Totale Pandori"] || 0;
     document.getElementById('stock-modal').style.display = 'flex';
 }
 
 function salvaStock() {
+    if (currentRole.toLowerCase() !== 'administrator') return;
+
     const totPan = parseInt(document.getElementById('input-tot-pan').value) || 0;
     const totPand = parseInt(document.getElementById('input-tot-pand').value) || 0;
 
