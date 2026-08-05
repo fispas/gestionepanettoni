@@ -3,16 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione WonderLAD - Dashboard Modulare</title>
+    <title>Gestione WonderLAD</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;750&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
-    <!-- GridStack per Drag and Drop dei Widget -->
-    <link href="https://cdn.jsdelivr.net/npm/gridstack@9.2.0/dist/gridstack.min.css" rel="stylesheet"/>
-    <script src="https://cdn.jsdelivr.net/npm/gridstack@9.2.0/dist/gridstack-all.js"></script>
-
     <!-- SDK Firebase Compat -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -46,7 +42,7 @@
             padding: 0.8rem 1.2rem; 
             font-family: 'Quicksand', sans-serif;
             font-weight: 750; 
-            font-size: 1.2rem; 
+            font-size: 1.1rem; 
             position: sticky; 
             top: 0; 
             z-index: 100; 
@@ -57,8 +53,8 @@
             align-items: center;
         }
 
-        .header-brand { display: flex; align-items: center; gap: 12px; }
-        .header img { height: 34px; width: auto; }
+        .header-brand { display: flex; align-items: center; gap: 10px; }
+        .header img { height: 32px; width: auto; }
 
         .btn-logout {
             background-color: #fff0f0;
@@ -69,11 +65,10 @@
             font-size: 0.8rem;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.2s;
             font-family: 'Quicksand', sans-serif;
         }
 
-        .container { padding: 1.2rem 1rem; max-width: 1100px; margin: 0 auto; display: none; } 
+        .container { padding: 1rem; max-width: 900px; margin: 0 auto; display: none; } 
         
         #login-overlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
@@ -81,140 +76,99 @@
             display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; 
         }
         .login-box { 
-            background: var(--card-bg); padding: 2.5rem 2rem; border-radius: 24px; 
+            background: var(--card-bg); padding: 2rem; border-radius: 24px; 
             box-shadow: 0 10px 30px rgba(91,142,114,0.08); text-align: center; 
-            border: 2px solid var(--border-color); width: 90%; max-width: 360px; box-sizing: border-box; 
+            border: 2px solid var(--border-color); width: 90%; max-width: 350px; box-sizing: border-box; 
         }
         .login-box h2 { font-family: 'Quicksand', sans-serif; color: var(--primary); margin-top: 0; }
-        .login-box input { 
-            padding: 0.9rem 1rem; margin-bottom: 1rem; width: 100%; box-sizing: border-box; 
-            border: 2px solid var(--border-color); border-radius: 12px; font-family: 'Nunito'; font-size: 1rem; background-color: #fbfdfe; 
+        .login-box input, .login-box select { 
+            padding: 0.8rem 1rem; margin-bottom: 0.9rem; width: 100%; box-sizing: border-box; 
+            border: 2px solid var(--border-color); border-radius: 12px; font-family: 'Nunito'; font-size: 0.95rem; background-color: #fbfdfe; 
         }
-        .login-box button { background-color: var(--primary); color: white; border: none; padding: 1rem; width: 100%; border-radius: 12px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+        .login-box button { background-color: var(--primary); color: white; border: none; padding: 0.9rem; width: 100%; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; }
 
         .view { display: none; animation: fadeIn 0.3s; }
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* HEADER DASHBOARD E WIDGET MODULARI */
-        .dash-action-bar {
+        .dash-selector-bar {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.2rem;
-            gap: 10px;
-            flex-wrap: wrap;
+            background: #edf3f0;
+            padding: 4px;
+            border-radius: 14px;
+            margin-bottom: 1rem;
+            gap: 4px;
+            border: 1px solid var(--border-color);
         }
-
-        .btn-add-widget {
-            background-color: var(--accent-light);
-            color: var(--primary-dark);
-            border: 2px dashed var(--primary);
-            padding: 0.6rem 1.2rem;
-            border-radius: 12px;
-            font-family: 'Quicksand', sans-serif;
-            font-weight: 750;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-        }
-        .btn-add-widget:hover { background-color: #dcece4; }
-
-        .grid-stack-item-content {
-            background: var(--card-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 20px;
-            padding: 1rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            overflow: hidden;
-        }
-
-        .widget-title {
-            font-family: 'Quicksand', sans-serif;
-            font-weight: 750;
-            font-size: 0.95rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
-
-        .widget-remove-btn {
-            background: transparent;
+        .dash-tab-btn {
+            flex: 1;
+            padding: 0.6rem;
             border: none;
-            color: #d9534f;
+            border-radius: 10px;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 750;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            background: transparent;
             cursor: pointer;
-            font-size: 1rem;
-            opacity: 0.6;
+            text-align: center;
         }
-        .widget-remove-btn:hover { opacity: 1; }
+        .dash-tab-btn.active {
+            background: var(--card-bg);
+            color: var(--primary-dark);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
 
-        .kpi-main-val { font-size: 2.1rem; font-weight: 800; color: var(--primary-dark); }
-        .kpi-sub-val { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+        .stock-section { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 1.2rem; }
+        .stock-card { background: var(--card-bg); padding: 1rem; border-radius: 18px; border: 2px solid var(--border-color); }
+        .stock-header { display: flex; justify-content: space-between; align-items: center; }
+        .stock-title { font-family: 'Quicksand', sans-serif; font-weight: 750; font-size: 0.95rem; }
+        .stock-main-val { font-size: 1.8rem; font-weight: 800; color: var(--primary-dark); }
+        .stock-sub-val { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+        .progress-bar-bg { background: #eef4f1; border-radius: 8px; height: 8px; width: 100%; overflow: hidden; margin: 0.5rem 0; }
+        .progress-bar-fill { background: linear-gradient(90deg, var(--accent-soft), var(--primary)); height: 100%; border-radius: 8px; }
 
-        .progress-bar-bg { background: #eef4f1; border-radius: 10px; height: 10px; width: 100%; overflow: hidden; margin: 0.5rem 0; }
-        .progress-bar-fill { background: linear-gradient(90deg, var(--accent-soft), var(--primary)); height: 100%; border-radius: 10px; }
+        .flow-grid { display: grid; grid-template-columns: repeat( auto-fit, minmax(100px, 1fr) ); gap: 0.6rem; margin-bottom: 1.2rem; }
+        .flow-card { background: var(--card-bg); padding: 0.8rem 0.4rem; border-radius: 14px; border: 2px solid var(--border-color); text-align: center; cursor: pointer; }
+        .flow-card-title { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; font-family: 'Quicksand', sans-serif; }
+        .flow-card-count { font-size: 1.4rem; font-weight: 800; }
+        .flow-card-sub { font-size: 0.68rem; color: var(--text-muted); font-weight: 700; border-top: 1px dashed var(--border-color); padding-top: 3px; margin-top: 2px; }
 
-        .fin-breakdown { display: flex; justify-content: space-between; border-top: 1px dashed var(--border-color); padding-top: 8px; margin-top: 8px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
-
-        /* CONTROLLI TABELLA ORDINI */
-        .controls-panel { background: var(--card-bg); padding: 1.2rem; border-radius: 18px; border: 2px solid var(--border-color); margin-bottom: 1rem; display: flex; flex-direction: column; gap: 10px; }
-        .search-input { width: 100%; padding: 0.8rem 1rem; border: 2px solid var(--border-color); border-radius: 12px; font-family: 'Nunito'; font-size: 0.95rem; background-color: #fbfdfe; }
-        .filter-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 5px; }
-        .chip { background: #f0f4f1; border: none; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+        .controls-panel { background: var(--card-bg); padding: 1rem; border-radius: 16px; border: 2px solid var(--border-color); margin-bottom: 1rem; display: flex; flex-direction: column; gap: 8px; }
+        .search-input { width: 100%; padding: 0.7rem 0.9rem; border: 2px solid var(--border-color); border-radius: 12px; font-family: 'Nunito'; font-size: 0.9rem; background-color: #fbfdfe; }
+        .filter-chips { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 4px; }
+        .chip { background: #f0f4f1; border: none; padding: 5px 12px; border-radius: 18px; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
         .chip.active { background: var(--primary); color: white; }
 
-        .table-responsive { width: 100%; background: transparent; margin-bottom: 1rem; }
-        table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 18px; overflow: hidden; border: 1px solid var(--border-color); }
-        th, td { padding: 0.9rem; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
+        .table-responsive { width: 100%; overflow-x: auto; margin-bottom: 1rem; }
+        table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 16px; overflow: hidden; border: 1px solid var(--border-color); }
+        th, td { padding: 0.75rem 0.6rem; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
         th { background-color: #f0f4f1; color: var(--text-main); font-weight: 800; font-family: 'Quicksand', sans-serif; white-space: nowrap; }
 
-        .badge-status { padding: 5px 10px; border-radius: 8px; font-size: 0.78rem; font-weight: 800; display: inline-block; font-family: 'Quicksand', sans-serif; }
-        .status-prenotato { background-color: #e8f4f8; color: #2b6cb0; }
-        .status-prenotato-da-pagare { background-color: #fce8e6; color: #c53030; }
-        .status-prenotato-pagare { background-color: #e8f5e9; color: #276749; }
-        .status-in-preparazione { background-color: #fff8e1; color: #b7791f; }
-        .status-da-consegnare { background-color: #f3e5f5; color: #6b46c1; }
-        .status-consegnato { background-color: #edf7ed; color: #2e7d32; }
-        .status-annullato { background-color: #f1f3f5; color: #718096; }
-
-        .btn-action { background-color: var(--primary); color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
-        .btn-edit { background-color: #e2e8f0; color: var(--text-main); border: none; padding: 0.4rem 0.7rem; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
-        .btn-quick-status { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; padding: 0.4rem 0.6rem; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-right: 4px; }
+        .btn-action { background-color: var(--primary); color: white; border: none; padding: 0.6rem 1rem; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
+        .btn-edit { background-color: #e2e8f0; color: var(--text-main); border: none; padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.75rem; }
+        .btn-quick-status { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; padding: 0.35rem 0.5rem; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.75rem; margin-right: 3px; }
 
         .bottom-nav { 
             position: fixed; bottom: 0; left: 0; width: 100%; 
             background: #ffffff; display: flex; justify-content: space-around; 
-            padding: 0.8rem 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.04); 
+            padding: 0.6rem 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.04); 
             z-index: 1000; border-top: 2px solid var(--border-color);
         }
         .nav-item { 
             background: none; border: none; font-family: 'Quicksand', sans-serif; 
-            font-size: 0.85rem; font-weight: 750; color: var(--text-muted); 
-            cursor: pointer; display: flex; flex-direction: column; align-items: center; 
-            gap: 4px; 
+            font-size: 0.8rem; font-weight: 750; color: var(--text-muted); 
+            cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px;
         }
         .nav-item.active { color: var(--primary); }
-        .nav-icon { font-size: 1.4rem; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 3000; }
-        .modal-content { background: var(--card-bg); padding: 2rem; border-radius: 24px; width: 90%; max-width: 420px; box-sizing: border-box; border: 2px solid var(--border-color); }
+        .modal-content { background: var(--card-bg); padding: 1.5rem; border-radius: 20px; width: 90%; max-width: 380px; box-sizing: border-box; border: 2px solid var(--border-color); }
         .modal-content h3 { font-family: 'Quicksand', sans-serif; color: var(--primary); margin-top: 0; }
-        .modal-content input, .modal-content select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 2px solid var(--border-color); border-radius: 12px; box-sizing: border-box; font-family: 'Nunito'; }
-        .modal-actions { display: flex; justify-content: space-between; gap: 1rem; }
-        .btn-save { background-color: var(--primary); color: white; border: none; padding: 0.8rem; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; }
-        .btn-cancel { background-color: #fce8e6; color: #c53030; border: 1px solid #f5c6cb; padding: 0.8rem; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; }
-
-        .widget-opt-list { display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto; margin-bottom: 1rem; }
-        .widget-opt-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--bg-main); border-radius: 10px; border: 1px solid var(--border-color); }
+        .modal-content input, .modal-content select { width: 100%; padding: 0.8rem; margin-bottom: 0.9rem; border: 2px solid var(--border-color); border-radius: 10px; box-sizing: border-box; font-family: 'Nunito'; }
+        .modal-actions { display: flex; justify-content: space-between; gap: 0.8rem; }
+        .btn-save { background-color: var(--primary); color: white; border: none; padding: 0.8rem; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; }
+        .btn-cancel { background-color: #fce8e6; color: #c53030; border: 1px solid #f5c6cb; padding: 0.8rem; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -222,73 +176,138 @@
     <div id="login-overlay">
         <div class="login-box">
             <h2>WonderLAD</h2>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Accesso Area Riservata</p>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.2rem;">Accesso Area Riservata</p>
             <input type="text" id="username" placeholder="Email o Username">
             <input type="password" id="passcode" placeholder="Password (min. 6 caratteri)">
+            <select id="user-role-select">
+                <option value="Manager">Ruolo: Manager</option>
+                <option value="Administrator">Ruolo: Administrator</option>
+            </select>
             <button onclick="effettuaLogin()" id="btn-login">Accedi / Registrati</button>
-            <p id="login-err" style="color:#c53030; display:none; font-size:0.9rem; font-weight: bold; margin-top: 1rem;"></p>
+            <p id="login-err" style="color:#c53030; display:none; font-size:0.85rem; font-weight: bold; margin-top: 0.8rem;"></p>
         </div>
     </div>
 
     <div class="header">
         <div class="header-brand">
-            <img src="https://www.wonderlad.org/wp-content/uploads/2020/05/logo-wonderlad.png" alt="WonderLAD Logo" onerror="this.style.display='none'">
-            <span>Gestione Ordini <span id="user-badge" style="font-size: 0.75rem; font-weight: normal; opacity: 0.85; background: var(--accent-light); color: var(--primary-dark); padding: 3px 8px; border-radius: 6px;"></span></span>
+            <img src="https://www.wonderlad.org/wp-content/uploads/2020/05/logo-wonderlad.png" alt="WonderLAD" onerror="this.style.display='none'">
+            <span>Gestione <span id="user-badge" style="font-size: 0.7rem; background: var(--accent-light); color: var(--primary-dark); padding: 2px 6px; border-radius: 6px;"></span></span>
         </div>
         <button class="btn-logout" onclick="effettuaLogout()">🚪 Logout</button>
     </div>
 
     <div class="container" id="main-container">
-        <div id="loadingMsg" style="text-align:center; font-weight:bold; color:var(--primary); margin: 1rem 0;">Sincronizzazione dati in corso...</div>
+        <div id="loadingMsg" style="text-align:center; font-weight:bold; color:var(--primary); margin: 1rem 0;">Caricamento...</div>
 
-        <!-- Dashboard Modulare Drag and Drop -->
+        <!-- Dashboard -->
         <div id="view-dashboard" class="view active">
-            
-            <div class="dash-action-bar">
-                <button class="btn-add-widget" onclick="apriModaleWidget()">➕ Personalizza Dashboard</button>
-                <div style="display:flex; gap:8px;">
-                    <button class="btn-action" onclick="resetDashboardLayout()" style="background:#e2ece5; color:var(--text-main);">🔄 Reset Layout</button>
-                    <button class="btn-action" onclick="esportaPDF()">📄 PDF Report</button>
+            <div class="dash-selector-bar">
+                <button class="dash-tab-btn active" id="tabModeTutti" onclick="cambiaVistaDashboard('TUTTI', this)">📊 Globale</button>
+                <button class="dash-tab-btn" id="tabModePanettoni" onclick="cambiaVistaDashboard('PANETTONI', this)">🥮 Panettoni</button>
+                <button class="dash-tab-btn" id="tabModePandori" onclick="cambiaVistaDashboard('PANDORI', this)">🍞 Pandori</button>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.8rem;">
+                <h3 style="color: var(--text-main); font-size: 1rem; margin: 0; font-family: 'Quicksand', sans-serif;" id="dashMainHeaderTitle">Panoramica Generale</h3>
+                <button class="btn-action" onclick="esportaPDF()" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">📄 PDF</button>
+            </div>
+
+            <!-- Stock Boxes -->
+            <div class="stock-section">
+                <div class="stock-card">
+                    <div class="stock-header">
+                        <span class="stock-title">🥮 Panettoni</span>
+                        <button class="admin-only" onclick="apriModaleStock('Panettoni')" style="background:none; border:none; cursor:pointer; font-size:0.8rem;">✏️</button>
+                    </div>
+                    <div style="display:flex; align-items:baseline; gap:6px; margin: 2px 0;">
+                        <span class="stock-main-val" id="valPanettoni">0</span>
+                        <span class="stock-sub-val" id="lblTotPanettoni">su 0</span>
+                    </div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="barPanettoni" style="width: 0%;"></div></div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); font-weight:bold;" id="rimanenzePanettoni">Rimanenza: 0</div>
+                </div>
+
+                <div class="stock-card">
+                    <div class="stock-header">
+                        <span class="stock-title">🍞 Pandori</span>
+                        <button class="admin-only" onclick="apriModaleStock('Pandori')" style="background:none; border:none; cursor:pointer; font-size:0.8rem;">✏️</button>
+                    </div>
+                    <div style="display:flex; align-items:baseline; gap:6px; margin: 2px 0;">
+                        <span class="stock-main-val" id="valPandori">0</span>
+                        <span class="stock-sub-val" id="lblTotPandori">su 0</span>
+                    </div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="barPandori" style="width: 0%;"></div></div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); font-weight:bold;" id="rimanenzePandori">Rimanenza: 0</div>
                 </div>
             </div>
 
-            <!-- Griglia Drag and Drop GridStack -->
-            <div class="grid-stack"></div>
+            <!-- Status Flow Grid -->
+            <div style="font-family: 'Quicksand', sans-serif; font-size: 0.8rem; font-weight: 750; color: var(--text-muted); margin-bottom: 0.4rem; text-transform: uppercase;">📦 Flusso Logistico</div>
+            <div class="flow-grid">
+                <div class="flow-card" onclick="navigaVersoFiltro('Prenotato')">
+                    <div class="flow-card-title" style="color:#2b6cb0;">Prenotati</div>
+                    <div class="flow-card-count" id="countPrenotato" style="color:#2b6cb0;">0</div>
+                    <div class="flow-card-sub" id="subPrenotato">🥮 0 | 🍞 0</div>
+                </div>
+                <div class="flow-card" onclick="navigaVersoFiltro('In Preparazione')">
+                    <div class="flow-card-title" style="color:#b7791f;">In Prep.</div>
+                    <div class="flow-card-count" id="countInPreparazione" style="color:#b7791f;">0</div>
+                    <div class="flow-card-sub" id="subInPrep">🥮 0 | 🍞 0</div>
+                </div>
+                <div class="flow-card" onclick="navigaVersoFiltro('Da Consegnare')">
+                    <div class="flow-card-title" style="color:#6b46c1;">Da Conseg.</div>
+                    <div class="flow-card-count" id="countDaConsegnare" style="color:#6b46c1;">0</div>
+                    <div class="flow-card-sub" id="subDaConseg">🥮 0 | 🍞 0</div>
+                </div>
+                <div class="flow-card" onclick="navigaVersoFiltro('Consegnato')">
+                    <div class="flow-card-title" style="color:#2e7d32;">Consegnati</div>
+                    <div class="flow-card-count" id="countConsegnati" style="color:#2e7d32;">0</div>
+                    <div class="flow-card-sub" id="subConsegnati">🥮 0 | 🍞 0</div>
+                </div>
+            </div>
 
+            <div style="font-family: 'Quicksand', sans-serif; font-size: 0.8rem; font-weight: 750; color: var(--text-muted); margin-bottom: 0.4rem; text-transform: uppercase;">💶 Flusso Incassi</div>
+            <div class="flow-grid">
+                <div class="flow-card" onclick="navigaVersoFiltro('Prenotato - Da Pagare')">
+                    <div class="flow-card-title" style="color:#c53030;">Da Pagare</div>
+                    <div class="flow-card-count" id="countDaPagare" style="color:#c53030;">0</div>
+                    <div class="flow-card-sub" id="subDaPagare">🥮 0 | 🍞 0</div>
+                </div>
+                <div class="flow-card" onclick="navigaVersoFiltro('Prenotato - Pagato')">
+                    <div class="flow-card-title" style="color:#276749;">Pagati</div>
+                    <div class="flow-card-count" id="countPagati" style="color:#276749;">0</div>
+                    <div class="flow-card-sub" id="subPagati">🥮 0 | 🍞 0</div>
+                </div>
+            </div>
+
+            <div style="background: var(--card-bg); padding: 1rem; border-radius: 18px; border: 2px solid var(--border-color); height: 180px; margin-bottom: 1.2rem;">
+                <canvas id="graficoVendite"></canvas>
+            </div>
         </div>
 
-        <!-- Lista Ordini -->
+        <!-- Ordini -->
         <div id="view-ordini" class="view">
             <div class="controls-panel">
-                <input type="text" id="searchOrdini" class="search-input" placeholder="🔍 Cerca per nome, cognome o telefono..." onkeyup="filtraOrdini()">
+                <input type="text" id="searchOrdini" class="search-input" placeholder="🔍 Cerca nome o tel..." onkeyup="filtraOrdini()">
                 <div class="filter-chips">
                     <button class="chip active" onclick="setFiltroStato('Tutti', this)">Tutti</button>
                     <button class="chip" onclick="setFiltroStato('Prenotato', this)">Prenotati</button>
                     <button class="chip" onclick="setFiltroStato('Prenotato - Da Pagare', this)">Da Pagare</button>
                     <button class="chip" onclick="setFiltroStato('Prenotato - Pagato', this)">Pagati</button>
-                    <button class="chip" onclick="setFiltroStato('In Preparazione', this)">In Preparazione</button>
-                    <button class="chip" onclick="setFiltroStato('Da Consegnare', this)">Da Consegnare</button>
+                    <button class="chip" onclick="setFiltroStato('In Preparazione', this)">In Prep.</button>
+                    <button class="chip" onclick="setFiltroStato('Da Consegnare', this)">Da Conseg.</button>
                     <button class="chip" onclick="setFiltroStato('Consegnato', this)">Consegnati</button>
-                    <button class="chip" onclick="setFiltroStato('Annullato', this)">Annullati</button>
                 </div>
             </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.8rem;">
                 <h3 style="margin: 0; color: var(--text-main); font-family: 'Quicksand', sans-serif;">Lista Ordini</h3>
-                <button class="btn-action" onclick="esportaExcel()">📥 Export Excel</button>
+                <button class="btn-action" onclick="esportaExcel()" style="padding:0.4rem 0.8rem; font-size:0.75rem;">📥 Excel</button>
             </div>
             <div class="table-responsive">
                 <table>
                     <thead>
                         <tr>
-                            <th>Data</th>
-                            <th>Nome</th>
-                            <th>Cognome</th>
-                            <th>Telefono</th>
-                            <th>Panettoni</th>
-                            <th>Pandori</th>
-                            <th>Stato</th>
-                            <th>Pagamento</th>
-                            <th>Azioni</th>
+                            <th>Data</th><th>Nome</th><th>Tel</th><th>Pan</th><th>Pand</th><th>Stato</th><th>Pagamento</th><th>Azioni</th>
                         </tr>
                     </thead>
                     <tbody id="corpoTabella"></tbody>
@@ -296,50 +315,36 @@
             </div>
         </div>
 
-        <!-- Registro Log -->
-        <div id="view-log" class="view">
+        <!-- Log (Solo Administrator) -->
+        <div id="view-log" class="view admin-only">
             <div class="controls-panel">
                 <input type="text" id="searchLog" class="search-input" placeholder="🔍 Cerca nei log..." onkeyup="filtraLog()">
             </div>
             <div class="table-responsive">
                 <table>
-                    <thead>
-                        <tr><th>Data/Ora</th><th>Categoria</th><th>Utente</th><th>Dettaglio Attività</th></tr>
-                    </thead>
+                    <thead><tr><th>Data</th><th>Cat</th><th>Utente</th><th>Dettaglio</th></tr></thead>
                     <tbody id="corpoLog"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- Bottom Navigation -->
+    <!-- Bottom Nav -->
     <nav class="bottom-nav">
-        <button class="nav-item active" onclick="switchView('dashboard', this)"><span class="nav-icon">📊</span>Dashboard</button>
-        <button class="nav-item" onclick="switchView('ordini', this)"><span class="nav-icon">📋</span>Ordini</button>
-        <button class="nav-item" onclick="switchView('log', this)"><span class="nav-icon">📜</span>Log</button>
+        <button class="nav-item active" onclick="switchView('dashboard', this)"><span>📊</span>Dashboard</button>
+        <button class="nav-item" onclick="switchView('ordini', this)"><span>📋</span>Ordini</button>
+        <button class="nav-item admin-only" id="btnNavLog" onclick="switchView('log', this)"><span>📜</span>Log</button>
     </nav>
 
-    <!-- Modale Aggiungi/Rimuovi Widget -->
-    <div id="widget-modal" class="modal">
-        <div class="modal-content">
-            <h3>Gestisci Widget Dashboard</h3>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">Aggiungi o rimuovi elementi visibili nella tua dashboard:</p>
-            <div class="widget-opt-list" id="widgetOptionsList"></div>
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="chiudiModale('widget-modal')">Chiudi</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modale Modifica Ordine -->
+    <!-- Modali -->
     <div id="edit-modal" class="modal">
         <div class="modal-content">
             <h3>Modifica Ordine</h3>
-            <label style="font-weight: bold; font-size: 0.85rem; color: var(--text-muted);">Panettoni (€15/pz)</label>
+            <label style="font-size: 0.8rem; font-weight: bold;">Panettoni</label>
             <input type="number" id="edit-pan" min="0">
-            <label style="font-weight: bold; font-size: 0.85rem; color: var(--text-muted);">Pandori (€15/pz)</label>
+            <label style="font-size: 0.8rem; font-weight: bold;">Pandori</label>
             <input type="number" id="edit-pan-dori" min="0">
-            <label style="font-weight: bold; font-size: 0.85rem; color: var(--text-muted);">Status</label>
+            <label style="font-size: 0.8rem; font-weight: bold;">Stato</label>
             <select id="edit-status">
                 <option value="Prenotato">Prenotato</option>
                 <option value="Prenotato - Da Pagare">Prenotato - Da Pagare</option>
@@ -349,7 +354,7 @@
                 <option value="Consegnato">Consegnato</option>
                 <option value="Annullato">Annullato</option>
             </select>
-            <label style="font-weight: bold; font-size: 0.85rem; color: var(--text-muted);">Metodo Pagamento</label>
+            <label style="font-size: 0.8rem; font-weight: bold;">Metodo Pagamento</label>
             <select id="edit-metodo-pagamento">
                 <option value="-">Non specificato</option>
                 <option value="Cash">Cash / Contanti</option>
@@ -364,11 +369,9 @@
         </div>
     </div>
 
-    <!-- Modale Saldo Rapido -->
     <div id="pay-modal" class="modal">
         <div class="modal-content">
-            <h3>Registra Saldo Ordine</h3>
-            <p style="font-size:0.85rem; color:var(--text-muted);">Seleziona il metodo di pagamento utilizzato dal cliente:</p>
+            <h3>Registra Saldo</h3>
             <select id="pay-method-select">
                 <option value="Cash">💶 Cash / Contanti</option>
                 <option value="Bonifico">🏦 Bonifico</option>
@@ -377,29 +380,29 @@
             <input type="hidden" id="pay-doc-id">
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="chiudiModale('pay-modal')">Annulla</button>
-                <button class="btn-save" onclick="confermaSaldoRapido()">Conferma Saldo</button>
+                <button class="btn-save" onclick="confermaSaldoRapido()">Conferma</button>
             </div>
         </div>
     </div>
 
-    <!-- Modale Stock -->
     <div id="stock-modal" class="modal">
         <div class="modal-content">
             <h3>Modifica Stock</h3>
-            <label style="font-weight: bold; font-size: 0.85rem; color: var(--text-muted);">Totale Panettoni Disponibili</label>
+            <label style="font-size: 0.8rem; font-weight: bold;">Totale Panettoni</label>
             <input type="number" id="input-tot-pan" min="0">
-            <label style="font-weight: bold; font-size: 0.85rem; color: var(--text-muted);">Totale Pandori Disponibili</label>
+            <label style="font-size: 0.8rem; font-weight: bold;">Totale Pandori</label>
             <input type="number" id="input-tot-pand" min="0">
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="chiudiModale('stock-modal')">Annulla</button>
-                <button class="btn-save" onclick="salvaStock()">Aggiorna Stock</button>
+                <button class="btn-save" onclick="salvaStock()">Salva</button>
             </div>
         </div>
     </div>
 
-    <script>
-        const PREZZO_UNITA = 15; // Prezzo fisso per dolce (€15)
+    <!-- Script della Dashboard Esterna -->
+    <script src="dashboard.js"></script>
 
+    <script>
         const firebaseConfig = {
             apiKey: "AIzaSyAjwLhDJkxtriCjGygPMPgk4Fjc_d_rtDs",
             authDomain: "wonderlad-ordini.firebaseapp.com",
@@ -414,33 +417,30 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        let gridStack = null;
         let datiGlobali = [];
         let logsGlobali = [];
         let impostazioniGlobali = { "Totale Panettoni": 500, "Totale Pandori": 500 };
-        let currentUserEmail = "";
+        let currentUserEmail = ""; 
+        let currentRole = "Manager";
         let filtroStatoAttuale = "Tutti";
-
-        // CATATOLOGO WIDGET DISPONIBILI
-        const CATALOGO_WIDGETS = [
-            { id: 'w_incassato', title: '💶 Incassato Totale', w: 6, h: 2 },
-            { id: 'w_da_incassare', title: '⏳ Da Incassare', w: 6, h: 2 },
-            { id: 'w_stock_panettoni', title: '🥮 Stock Panettoni', w: 6, h: 2 },
-            { id: 'w_stock_pandori', title: '🍞 Stock Pandori', w: 6, h: 2 },
-            { id: 'w_funnel_logistico', title: '📦 Stato Consegne', w: 12, h: 2 },
-            { id: 'w_grafico', title: '📊 Andamento Vendite', w: 12, h: 3 }
-        ];
-
-        let activeWidgets = ['w_incassato', 'w_da_incassare', 'w_stock_panettoni', 'w_stock_pandori', 'w_funnel_logistico'];
 
         auth.onAuthStateChanged(user => {
             if (user) {
                 currentUserEmail = user.email;
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('main-container').style.display = 'block';
-                document.getElementById('user-badge').textContent = `(${currentUserEmail.split('@')[0]})`;
+
+                // Lettura Ruolo da Firestore o LocalStorage
+                currentRole = localStorage.getItem('wonderlad_role_' + currentUserEmail) || "Manager";
                 
-                inizializzaGridStack();
+                document.getElementById('user-badge').textContent = `(${currentUserEmail.split('@')[0]} - ${currentRole})`;
+
+                // Applica permessi ruoli
+                const isAdmin = currentRole.toLowerCase() === 'administrator';
+                document.querySelectorAll('.admin-only').forEach(el => {
+                    el.style.display = isAdmin ? '' : 'none';
+                });
+
                 avviaAscoltoInTempoReale();
             } else {
                 document.getElementById('login-overlay').style.display = 'flex';
@@ -451,13 +451,21 @@
         function effettuaLogin() {
             const user = document.getElementById('username').value.trim();
             const pass = document.getElementById('passcode').value;
-            if(!user || !pass) return alert("Inserisci username e password!");
+            const ruoloSel = document.getElementById('user-role-select').value;
+
+            if(!user || !pass) return alert("Compila tutti i campi!");
 
             let emailFormat = user.includes('@') ? user : user + "@wonderlad.org";
 
             auth.signInWithEmailAndPassword(emailFormat, pass)
+            .then(() => {
+                localStorage.setItem('wonderlad_role_' + emailFormat, ruoloSel);
+            })
             .catch(() => {
                 auth.createUserWithEmailAndPassword(emailFormat, pass)
+                .then(() => {
+                    localStorage.setItem('wonderlad_role_' + emailFormat, ruoloSel);
+                })
                 .catch(err => alert("Errore: " + err.message));
             });
         }
@@ -466,124 +474,19 @@
             if (confirm("Vuoi davvero uscire?")) auth.signOut().then(() => location.reload());
         }
 
-        /* GRIDSTACK INIZIALIZZAZIONE & LAYOUT SAVER */
-        function inizializzaGridStack() {
-            if(gridStack) return;
-
-            gridStack = GridStack.init({
-                cellHeight: 85,
-                margin: 6,
-                animate: true,
-                resizable: { handles: 'e,se,s,w' }
-            });
-
-            // Carica preferenze salvate in locale
-            const savedLayout = localStorage.getItem('wonderlad_widget_layout_' + currentUserEmail);
-            if(savedLayout) {
-                activeWidgets = JSON.parse(savedLayout);
-            }
-
-            renderGridWidgets();
-
-            gridStack.on('change', () => {
-                salvaLayoutPreferito();
-            });
-        }
-
-        function salvaLayoutPreferito() {
-            const items = gridStack.getGridItems();
-            const layoutIds = items.map(el => el.getAttribute('gs-id'));
-            localStorage.setItem('wonderlad_widget_layout_' + currentUserEmail, JSON.stringify(layoutIds));
-        }
-
-        function renderGridWidgets() {
-            gridStack.removeAll();
-
-            activeWidgets.forEach(wId => {
-                const wDef = CATALOGO_WIDGETS.find(w => w.id === wId);
-                if(wDef) {
-                    const htmlContent = creaContenutoWidget(wDef);
-                    gridStack.addWidget({
-                        id: wDef.id,
-                        w: wDef.w,
-                        h: wDef.h,
-                        content: htmlContent
-                    });
-                }
-            });
-
-            aggiornaDatiWidget();
-        }
-
-        function creaContenutoWidget(wDef) {
-            return `
-                <div class="grid-stack-item-content">
-                    <div class="widget-title">
-                        <span>${wDef.title}</span>
-                        <button class="widget-remove-btn" onclick="rimuoviWidget('${wDef.id}')">✕</button>
-                    </div>
-                    <div id="body_${wDef.id}">Caricamento...</div>
-                </div>
-            `;
-        }
-
-        function rimuoviWidget(wId) {
-            activeWidgets = activeWidgets.filter(id => id !== wId);
-            salvaLayoutPreferito();
-            renderGridWidgets();
-        }
-
-        function apriModaleWidget() {
-            const listContainer = document.getElementById('widgetOptionsList');
-            listContainer.innerHTML = '';
-
-            CATALOGO_WIDGETS.forEach(w => {
-                const isPresente = activeWidgets.includes(w.id);
-                const item = document.createElement('div');
-                item.className = 'widget-opt-item';
-                item.innerHTML = `
-                    <span style="font-weight:bold; font-size:0.9rem;">${w.title}</span>
-                    <button class="btn-edit" style="background:${isPresente ? '#fce8e6' : '#e8f5e9'}; color:${isPresente ? '#c53030' : '#2e7d32'};" 
-                        onclick="toggleWidgetOption('${w.id}')">
-                        ${isPresente ? 'Rimuovi' : '➕ Aggiungi'}
-                    </button>
-                `;
-                listContainer.appendChild(item);
-            });
-
-            document.getElementById('widget-modal').style.display = 'flex';
-        }
-
-        function toggleWidgetOption(wId) {
-            if(activeWidgets.includes(wId)) {
-                activeWidgets = activeWidgets.filter(id => id !== wId);
-            } else {
-                activeWidgets.push(wId);
-            }
-            salvaLayoutPreferito();
-            renderGridWidgets();
-            apriModaleWidget();
-        }
-
-        function resetDashboardLayout() {
-            activeWidgets = ['w_incassato', 'w_da_incassare', 'w_stock_panettoni', 'w_stock_pandori', 'w_funnel_logistico'];
-            salvaLayoutPreferito();
-            renderGridWidgets();
-        }
-
-        /* ASCOLTO FIREBASE IN TEMPO REALE */
         function avviaAscoltoInTempoReale() {
+            document.getElementById('loadingMsg').style.display = 'block';
+
             db.collection("impostazioni").doc("stock").onSnapshot(doc => {
                 if (doc.exists) impostazioniGlobali = doc.data();
-                aggiornaDatiWidget();
+                calcolaStatistiche(datiGlobali, impostazioniGlobali);
             });
 
             db.collection("ordini").orderBy("timestamp", "desc").onSnapshot(snapshot => {
                 datiGlobali = [];
                 snapshot.forEach(doc => datiGlobali.push({ id: doc.id, ...doc.data() }));
-
                 popolaTabellaOrdini(datiGlobali);
-                aggiornaDatiWidget();
+                calcolaStatistiche(datiGlobali, impostazioniGlobali);
                 document.getElementById('loadingMsg').style.display = 'none';
             });
 
@@ -594,116 +497,16 @@
             });
         }
 
-        /* CALCOLO DATI WIDGET */
-        function aggiornaDatiWidget() {
-            let totPanettoni = 0, totPandori = 0;
-            let incassatoEuro = 0, daIncassareEuro = 0;
-            let cashEuro = 0, posEuro = 0, bonificoEuro = 0;
-
-            let st = { prenotato: 0, preparazione: 0, da_consegnare: 0, consegnato: 0, annullato: 0 };
-
-            datiGlobali.forEach(o => {
-                const pan = parseInt(o.panettoni) || 0;
-                const pand = parseInt(o.pandori) || 0;
-                const importoDoc = (pan + pand) * PREZZO_UNITA;
-
-                totPanettoni += pan;
-                totPandori += pand;
-
-                const status = (o.status || "").toLowerCase();
-                const metodo = (o.metodoPagamento || "").toLowerCase();
-
-                if(status.includes('pagato') || status.includes('consegnato')) {
-                    incassatoEuro += importoDoc;
-                    if(metodo.includes('cash')) cashEuro += importoDoc;
-                    else if(metodo.includes('pos')) posEuro += importoDoc;
-                    else if(metodo.includes('bonifico')) bonificoEuro += importoDoc;
-                } else if(!status.includes('annullato')) {
-                    daIncassareEuro += importoDoc;
-                }
-
-                if(status === 'prenotato') st.prenotato++;
-                if(status.includes('preparazione')) st.preparazione++;
-                if(status.includes('da consegnare')) st.da_consegnare++;
-                if(status.includes('consegnato')) st.consegnato++;
-                if(status.includes('annullato')) st.annullato++;
-            });
-
-            // Update DOM dei singoli widget se presenti
-            if(document.getElementById('body_w_incassato')) {
-                document.getElementById('body_w_incassato').innerHTML = `
-                    <div class="kpi-main-val">€ ${incassatoEuro.toLocaleString('it-IT')}</div>
-                    <div class="fin-breakdown">
-                        <span>💶 Cash: €${cashEuro}</span>
-                        <span>💳 POS: €${posEuro}</span>
-                        <span>🏦 Bonifico: €${bonificoEuro}</span>
-                    </div>
-                `;
+        function switchView(vName, btn) {
+            if (vName === 'log' && currentRole.toLowerCase() !== 'administrator') {
+                return alert("Accesso negato. Sezione riservata agli Administrator.");
             }
-
-            if(document.getElementById('body_w_da_incassare')) {
-                document.getElementById('body_w_da_incassare').innerHTML = `
-                    <div class="kpi-main-val" style="color:#c53030;">€ ${daIncassareEuro.toLocaleString('it-IT')}</div>
-                    <div class="kpi-sub-val">Valore stimato ordini in sospeso</div>
-                `;
-            }
-
-            let stockPan = parseInt(impostazioniGlobali["Totale Panettoni"]) || 500;
-            if(document.getElementById('body_w_stock_panettoni')) {
-                const percPan = Math.min(100, Math.round((totPanettoni / stockPan) * 100));
-                document.getElementById('body_w_stock_panettoni').innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
-                        <span class="kpi-main-val">${totPanettoni}</span>
-                        <span class="kpi-sub-val">su ${stockPan} pz (${percPan}%)</span>
-                    </div>
-                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${percPan}%;"></div></div>
-                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-muted); font-weight:bold;">
-                        <span>Restano: ${stockPan - totPanettoni} pz</span>
-                        <a href="#" onclick="apriModaleStock('Panettoni')" style="color:var(--primary);">Modifica Stock</a>
-                    </div>
-                `;
-            }
-
-            let stockPand = parseInt(impostazioniGlobali["Totale Pandori"]) || 500;
-            if(document.getElementById('body_w_stock_pandori')) {
-                const percPand = Math.min(100, Math.round((totPandori / stockPand) * 100));
-                document.getElementById('body_w_stock_pandori').innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
-                        <span class="kpi-main-val">${totPandori}</span>
-                        <span class="kpi-sub-val">su ${stockPand} pz (${percPand}%)</span>
-                    </div>
-                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${percPand}%;"></div></div>
-                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-muted); font-weight:bold;">
-                        <span>Restano: ${stockPand - totPandori} pz</span>
-                        <a href="#" onclick="apriModaleStock('Pandori')" style="color:var(--primary);">Modifica Stock</a>
-                    </div>
-                `;
-            }
-
-            if(document.getElementById('body_w_funnel_logistico')) {
-                document.getElementById('body_w_funnel_logistico').innerHTML = `
-                    <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:6px; text-align:center;">
-                        <div style="background:#e8f4f8; padding:8px; border-radius:12px;" onclick="switchView('ordini')"><div style="font-size:0.7rem; font-weight:bold; color:#2b6cb0;">PRENOTATI</div><div style="font-size:1.2rem; font-weight:800; color:#2b6cb0;">${st.prenotato}</div></div>
-                        <div style="background:#fff8e1; padding:8px; border-radius:12px;" onclick="switchView('ordini')"><div style="font-size:0.7rem; font-weight:bold; color:#b7791f;">IN PREP.</div><div style="font-size:1.2rem; font-weight:800; color:#b7791f;">${st.preparazione}</div></div>
-                        <div style="background:#f3e5f5; padding:8px; border-radius:12px;" onclick="switchView('ordini')"><div style="font-size:0.7rem; font-weight:bold; color:#6b46c1;">DA CONSEG.</div><div style="font-size:1.2rem; font-weight:800; color:#6b46c1;">${st.da_consegnare}</div></div>
-                        <div style="background:#edf7ed; padding:8px; border-radius:12px;" onclick="switchView('ordini')"><div style="font-size:0.7rem; font-weight:bold; color:#2e7d32;">CONSEGNATI</div><div style="font-size:1.2rem; font-weight:800; color:#2e7d32;">${st.consegnato}</div></div>
-                        <div style="background:#f1f3f5; padding:8px; border-radius:12px;" onclick="switchView('ordini')"><div style="font-size:0.7rem; font-weight:bold; color:#718096;">ANNULLATI</div><div style="font-size:1.2rem; font-weight:800; color:#718096;">${st.annullato}</div></div>
-                    </div>
-                `;
-            }
-
-            if(document.getElementById('body_w_grafico')) {
-                document.getElementById('body_w_grafico').innerHTML = `<canvas id="canvasChart" style="max-height:160px;"></canvas>`;
-                const ctx = document.getElementById('canvasChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: { labels: ['Panettoni', 'Pandori'], datasets: [{ data: [totPanettoni, totPandori], backgroundColor: ['#5b8e72', '#94bdad'], borderRadius: 8 }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-                });
-            }
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            document.getElementById('view-' + vName).classList.add('active');
+            if(btn) btn.classList.add('active');
         }
 
-        /* TABELLA E OPERAZIONI */
         function popolaTabellaOrdini(dati) {
             const tbody = document.getElementById('corpoTabella');
             tbody.innerHTML = '';
@@ -711,12 +514,11 @@
                 let dStr = '-';
                 if(o.timestamp && o.timestamp.toDate) {
                     const d = o.timestamp.toDate();
-                    dStr = d.toLocaleDateString('it-IT') + ' ' + d.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'});
+                    dStr = d.toLocaleDateString('it-IT');
                 }
 
                 const cleanTel = String(o.telefono || '').replace(/\D/g, '');
-                const msgWa = encodeURIComponent(`Ciao ${o.nome || ''}, ti contattiamo da WonderLAD per la tua prenotazione.`);
-                const telHtml = cleanTel ? `<a href="https://wa.me/39${cleanTel}?text=${msgWa}" target="_blank" style="color:#2e7d32; font-weight:bold; text-decoration:none;">📱 ${o.telefono}</a>` : '-';
+                const telHtml = cleanTel ? `<a href="https://wa.me/39${cleanTel}" target="_blank" style="color:#2e7d32; text-decoration:none; font-weight:bold;">📱 ${o.telefono}</a>` : '-';
 
                 const tr = document.createElement('tr');
                 tr.setAttribute('data-nome', (o.nome + " " + o.cognome + " " + o.telefono).toLowerCase());
@@ -724,17 +526,16 @@
 
                 let nextBtn = '';
                 if((o.status || '').includes('Da Pagare')) {
-                    nextBtn = `<button class="btn-quick-status" onclick="apriModaleSaldoRapido('${o.id}')">✅ Pagato</button>`;
+                    nextBtn = `<button class="btn-quick-status" onclick="apriModaleSaldoRapido('${o.id}')">💶 Pagato</button>`;
                 }
 
                 tr.innerHTML = `
                     <td>${dStr}</td>
-                    <td><strong>${o.nome || '-'}</strong></td>
-                    <td><strong>${o.cognome || '-'}</strong></td>
+                    <td><strong>${o.nome || ''} ${o.cognome || ''}</strong></td>
                     <td>${telHtml}</td>
                     <td>${o.panettoni || 0}</td>
                     <td>${o.pandori || 0}</td>
-                    <td><span class="badge-status status-prenotato">${o.status || 'Prenotato'}</span></td>
+                    <td><span style="font-weight:bold; font-size:0.75rem;">${o.status || 'Prenotato'}</span></td>
                     <td>${o.metodoPagamento || '-'}</td>
                     <td>${nextBtn}<button class="btn-edit" onclick="apriModaleOrdine('${o.id}', ${o.panettoni || 0}, ${o.pandori || 0}, '${o.status || 'Prenotato'}', '${o.metodoPagamento || "-"}')">✏️ Edit</button></td>
                 `;
@@ -755,6 +556,10 @@
             chiudiModale('pay-modal');
         }
 
+        function cambiaStatoRapido(docId, nuovoStato, metodo) {
+            db.collection("ordini").doc(docId).update({ status: nuovoStato, metodoPagamento: metodo });
+        }
+
         function filtraOrdini() {
             const query = document.getElementById('searchOrdini').value.toLowerCase();
             const rows = document.querySelectorAll('#corpoTabella tr');
@@ -769,7 +574,7 @@
 
         function setFiltroStato(st, btn) {
             filtroStatoAttuale = st;
-            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('#view-ordini .chip').forEach(c => c.classList.remove('active'));
             btn.classList.add('active');
             filtraOrdini();
         }
@@ -787,13 +592,6 @@
                 tr.innerHTML = `<td>${dStr}</td><td><strong>${l.categoria || 'LOG'}</strong></td><td>${l.utente || '-'}</td><td>${l.dettaglio || '-'}</td>`;
                 tbody.appendChild(tr);
             });
-        }
-
-        function switchView(vName, btn) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-            document.getElementById('view-' + vName).classList.add('active');
-            if(btn) btn.classList.add('active');
         }
 
         function apriModaleOrdine(id, pan, pand, st, met) {
@@ -817,6 +615,7 @@
         }
 
         function apriModaleStock() {
+            if(currentRole.toLowerCase() !== 'administrator') return alert("Operazione riservata agli Administrator.");
             document.getElementById('input-tot-pan').value = impostazioniGlobali["Totale Panettoni"] || 500;
             document.getElementById('input-tot-pand').value = impostazioniGlobali["Totale Pandori"] || 500;
             document.getElementById('stock-modal').style.display = 'flex';
@@ -838,10 +637,6 @@
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Ordini");
             XLSX.writeFile(wb, "Ordini_WonderLAD.xlsx");
-        }
-
-        function esportaPDF() {
-            window.print();
         }
     </script>
 </body>
