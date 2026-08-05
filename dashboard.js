@@ -7,9 +7,11 @@ function cambiaVistaDashboard(modo, btnElem) {
     if(btnElem) btnElem.classList.add('active');
     
     const headerLbl = document.getElementById('dashMainHeaderTitle');
-    if(modo === 'PANETTONI') headerLbl.textContent = 'Focus Panettoni';
-    else if(modo === 'PANDORI') headerLbl.textContent = 'Focus Pandori';
-    else headerLbl.textContent = 'Panoramica Generale';
+    if(headerLbl) {
+        if(modo === 'PANETTONI') headerLbl.textContent = 'Focus Panettoni';
+        else if(modo === 'PANDORI') headerLbl.textContent = 'Focus Pandori';
+        else headerLbl.textContent = 'Panoramica Generale';
+    }
 
     calcolaStatistiche(datiGlobali, impostazioniGlobali);
 }
@@ -33,6 +35,10 @@ function navigaVersoFiltro(stato) {
 function calcolaStatistiche(dati, impostazioni) {
     let totPanettoni = 0; 
     let totPandori = 0;
+    const PREZZO_UNITA = 15;
+
+    let incassatoTotale = 0;
+    let daIncassareTotale = 0;
     
     let ordiniDaIncassareList = [];
     let ordiniDaPreparareList = [];
@@ -48,16 +54,17 @@ function calcolaStatistiche(dati, impostazioni) {
     };
 
     let metodiPagamentoStats = {
-        'Cash': { count: 0, pan: 0, pand: 0 },
-        'Bonifico': { count: 0, pan: 0, pand: 0 },
-        'POS': { count: 0, pan: 0, pand: 0 },
-        'Altro': { count: 0, pan: 0, pand: 0 }
+        'Cash': { count: 0, pan: 0, pand: 0, euro: 0 },
+        'Bonifico': { count: 0, pan: 0, pand: 0, euro: 0 },
+        'POS': { count: 0, pan: 0, pand: 0, euro: 0 },
+        'Altro': { count: 0, pan: 0, pand: 0, euro: 0 }
     };
 
     dati.forEach(ordine => {
         if(!ordine.nome && !ordine.cognome) return;
         const pan = parseInt(ordine.panettoni) || 0;
         const pand = parseInt(ordine.pandori) || 0;
+        const importoOrdine = (pan + pand) * PREZZO_UNITA;
 
         let corrispondeFocus = true;
         if (filtroProdottoDashboard === 'PANETTONI' && pan <= 0) corrispondeFocus = false;
@@ -75,9 +82,15 @@ function calcolaStatistiche(dati, impostazioni) {
             else if (metodo.toLowerCase().includes('bonifico')) chiaveMetodo = 'Bonifico';
             else if (metodo.toLowerCase().includes('pos') || metodo.toLowerCase().includes('carta')) chiaveMetodo = 'POS';
 
-            metodiPagamentoStats[chiaveMetodo].count++;
-            metodiPagamentoStats[chiaveMetodo].pan += pan;
-            metodiPagamentoStats[chiaveMetodo].pand += pand;
+            if (status.includes('pagato') || status.includes('consegnato')) {
+                incassatoTotale += importoOrdine;
+                metodiPagamentoStats[chiaveMetodo].count++;
+                metodiPagamentoStats[chiaveMetodo].pan += pan;
+                metodiPagamentoStats[chiaveMetodo].pand += pand;
+                metodiPagamentoStats[chiaveMetodo].euro += importoOrdine;
+            } else if (!status.includes('annullato')) {
+                daIncassareTotale += importoOrdine;
+            }
 
             const sommaStato = (key) => {
                 stats[key].count++;
@@ -96,15 +109,15 @@ function calcolaStatistiche(dati, impostazioni) {
             if(status.includes('da pagare') && !status.includes('consegnato') && !status.includes('annullato')) {
                 ordiniDaIncassareList.push(ordine);
             } 
-            if(status.includes('preparazione') || status.includes('prenotato') || status.includes('da pagare')) {
+            if(status.includes('preparazione') || status.includes('prenotato')) {
                 ordiniDaPreparareList.push(ordine);
             }
         }
     });
 
     const impostaBoxFlow = (idCount, idSub, key) => {
-        document.getElementById(idCount).textContent = stats[key].count;
-        document.getElementById(idSub).textContent = `🥮 ${stats[key].pan} | 🍞 ${stats[key].pand}`;
+        if(document.getElementById(idCount)) document.getElementById(idCount).textContent = stats[key].count;
+        if(document.getElementById(idSub)) document.getElementById(idSub).textContent = `🥮 ${stats[key].pan} | 🍞 ${stats[key].pand}`;
     };
 
     impostaBoxFlow('countPrenotato', 'subPrenotato', 'prenotato');
@@ -129,10 +142,42 @@ function calcolaStatistiche(dati, impostazioni) {
     updateStockUI('valPanettoni', 'lblTotPanettoni', 'rimanenzePanettoni', 'barPanettoni', totPanettoni, stockInizialePanettoni);
     updateStockUI('valPandori', 'lblTotPandori', 'rimanenzePandori', 'barPandori', totPandori, stockInizialePandori);
 
+    renderizzaKpiFinanziari('areaKpiFinanziari', incassatoTotale, daIncassareTotale);
     renderizzaAreaCommandCenter('areaDaIncassare', ordiniDaIncassareList, 'incasso', '🔴 Priorità Finanziaria: Da Incassare', 'Prenotato - Da Pagare');
     renderizzaBoxMetodiPagamento('areaMetodiPagamento', metodiPagamentoStats);
     renderizzaAreaCommandCenter('areaDaPreparare', ordiniDaPreparareList, 'preparazione', '🟡 Priorità Logistica: Da Preparare', 'In Preparazione');
-    aggiornaGrafico(totPanettoni, totPandori);
+    
+    if(document.getElementById('graficoVendite')) {
+        aggiornaGrafico(totPanettoni, totPandori);
+    }
+}
+
+function renderizzaKpiFinanziari(containerId, incassato, daIncassare) {
+    let container = document.getElementById(containerId);
+    if (!container) {
+        container = document.createElement('div');
+        container.id = containerId;
+        container.style.marginBottom = "1.2rem";
+        const dashboardView = document.getElementById('view-dashboard');
+        if(dashboardView) {
+            const selectorBar = dashboardView.querySelector('.dash-selector-bar');
+            if(selectorBar) selectorBar.after(container);
+            else dashboardView.prepend(container);
+        }
+    }
+
+    container.innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem;">
+            <div style="background: var(--card-bg); padding: 1rem; border-radius: 16px; border: 2px solid var(--border-color); text-align: center;">
+                <div style="font-size: 0.75rem; font-weight: 800; color: #2e7d32; font-family: 'Quicksand', sans-serif;">💶 INCASSATO TOTALE</div>
+                <div style="font-size: 1.5rem; font-weight: 800; color: #2e7d32; margin-top: 2px;">€ ${incassato.toLocaleString('it-IT')}</div>
+            </div>
+            <div style="background: var(--card-bg); padding: 1rem; border-radius: 16px; border: 2px solid var(--border-color); text-align: center;">
+                <div style="font-size: 0.75rem; font-weight: 800; color: #c53030; font-family: 'Quicksand', sans-serif;">⏳ DA INCASSARE</div>
+                <div style="font-size: 1.5rem; font-weight: 800; color: #c53030; margin-top: 2px;">€ ${daIncassare.toLocaleString('it-IT')}</div>
+            </div>
+        </div>
+    `;
 }
 
 function renderizzaBoxMetodiPagamento(containerId, metodiStats) {
@@ -150,17 +195,17 @@ function renderizzaBoxMetodiPagamento(containerId, metodiStats) {
     }
 
     container.innerHTML = `
-        <div style="font-family: 'Quicksand', sans-serif; font-size: 0.95rem; font-weight: 750; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">
-            💳 Dettaglio Metodi di Pagamento Impostati
+        <div style="font-family: 'Quicksand', sans-serif; font-size: 0.85rem; font-weight: 750; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">
+            💳 Metodi Incasso Registrati
         </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.8rem;">
-            ${['Cash', 'Bonifico', 'POS', 'Altro'].map(m => `
-                <div onclick="navigaVersoFiltro('Tutti')" style="background: var(--card-bg); padding: 0.9rem; border-radius: 14px; border: 2px solid var(--border-color); text-align: center; cursor: pointer; transition: transform 0.15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                    <div style="font-size: 0.75rem; font-weight: 800; color: ${m==='Cash'?'#2e7d32':m==='Bonifico'?'#2b6cb0':m==='POS'?'#6b46c1':'var(--text-muted)'}; font-family: 'Quicksand', sans-serif;">
-                        ${m==='Cash'?'💶 CASH':m==='Bonifico'?'🏦 BONIFICO':m==='POS'?'💳 POS':'❓ NON SPEC.'}
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem;">
+            ${['Cash', 'Bonifico', 'POS'].map(m => `
+                <div onclick="navigaVersoFiltro('Tutti')" style="background: var(--card-bg); padding: 0.7rem 0.4rem; border-radius: 14px; border: 2px solid var(--border-color); text-align: center; cursor: pointer;">
+                    <div style="font-size: 0.7rem; font-weight: 800; color: ${m==='Cash'?'#2e7d32':m==='Bonifico'?'#2b6cb0':'#6b46c1'}; font-family: 'Quicksand', sans-serif;">
+                        ${m==='Cash'?'💶 CASH':m==='Bonifico'?'🏦 BONIFICO':'💳 POS'}
                     </div>
-                    <div style="font-size: 1.4rem; font-weight: 800; margin: 4px 0;">${metodiStats[m].count}</div>
-                    <div style="font-size: 0.7rem; color: var(--text-muted); border-top: 1px dashed var(--border-color); padding-top: 4px;">🥮 ${metodiStats[m].pan} | 🍞 ${metodiStats[m].pand}</div>
+                    <div style="font-size: 1.1rem; font-weight: 800; margin: 2px 0;">€${metodiStats[m].euro}</div>
+                    <div style="font-size: 0.65rem; color: var(--text-muted); border-top: 1px dashed var(--border-color); padding-top: 3px;">${metodiStats[m].count} ordini</div>
                 </div>
             `).join('')}
         </div>
@@ -181,28 +226,28 @@ function renderizzaAreaCommandCenter(containerId, listaOrdini, tipoArea, titoloS
 
     if (listaOrdini.length === 0) {
         container.innerHTML = `
-            <div onclick="navigaVersoFiltro('${statoFiltroTarget}')" style="font-family: 'Quicksand', sans-serif; font-size: 0.95rem; font-weight: 750; color: ${coloreBordo}; margin-bottom: 0.5rem; text-transform: uppercase; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+            <div onclick="navigaVersoFiltro('${statoFiltroTarget}')" style="font-family: 'Quicksand', sans-serif; font-size: 0.85rem; font-weight: 750; color: ${coloreBordo}; margin-bottom: 0.4rem; text-transform: uppercase; cursor: pointer; display: flex; justify-content: space-between;">
                 <span>${titoloSezione} (0)</span>
-                <span style="font-size: 0.75rem; font-weight: normal; color: var(--text-muted);">🔍 Filtra</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">🔍 Vedi</span>
             </div>
             <div style="background: var(--card-bg); padding: 0.8rem; border-radius: 14px; border: 2px solid var(--border-color); text-align: center; color: var(--text-muted); font-size: 0.85rem;">
-                ✅ Nessun elemento critico.
+                ✅ Nessun ordine in attesa.
             </div>
         `;
         return;
     }
 
     let righeHTML = '';
-    listaOrdini.slice(0, 4).forEach(o => {
+    listaOrdini.slice(0, 3).forEach(o => {
         let azioneRapida = tipoArea === 'incasso' 
             ? `<button class="btn-quick-status" onclick="event.stopPropagation(); apriModaleSaldoRapido('${o.id}')">💶 Incassa</button>`
             : `<button class="btn-quick-status" onclick="event.stopPropagation(); cambiaStatoRapido('${o.id}', 'Da Consegnare', '${o.metodoPagamento || "-"}')">📦 Pronto</button>`;
 
         righeHTML += `
-            <div onclick="navigaVersoFiltro('${statoFiltroTarget}')" style="display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 0.6rem 0.9rem; border-radius: 12px; margin-bottom: 6px; border: 1px solid var(--border-color); cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='#f0f4f1'" onmouseout="this.style.background='#fff'">
+            <div onclick="navigaVersoFiltro('${statoFiltroTarget}')" style="display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 0.6rem 0.8rem; border-radius: 12px; margin-bottom: 6px; border: 1px solid var(--border-color); cursor: pointer;">
                 <div>
-                    <strong>${o.nome} ${o.cognome}</strong> 
-                    <span style="font-size: 0.8rem; color: var(--text-muted); margin-left: 6px;">(🥮 ${o.panettoni || 0} | 🍞 ${o.pandori || 0})</span>
+                    <strong style="font-size:0.9rem;">${o.nome} ${o.cognome}</strong> 
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">🥮 ${o.panettoni || 0} | 🍞 ${o.pandori || 0}</div>
                 </div>
                 <div>${azioneRapida}</div>
             </div>
@@ -210,24 +255,25 @@ function renderizzaAreaCommandCenter(containerId, listaOrdini, tipoArea, titoloS
     });
 
     container.innerHTML = `
-        <div onclick="navigaVersoFiltro('${statoFiltroTarget}')" style="font-family: 'Quicksand', sans-serif; font-size: 0.95rem; font-weight: 750; color: ${coloreBordo}; margin-bottom: 0.5rem; text-transform: uppercase; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+        <div onclick="navigaVersoFiltro('${statoFiltroTarget}')" style="font-family: 'Quicksand', sans-serif; font-size: 0.85rem; font-weight: 750; color: ${coloreBordo}; margin-bottom: 0.4rem; text-transform: uppercase; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
             <span>${titoloSezione} (${listaOrdini.length})</span>
-            <span style="font-size: 0.75rem; font-weight: normal; color: var(--text-muted);">🔍 Vedi tutti nel filtro ➡️</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Vedi tutti ➡️</span>
         </div>
-        <div style="background: var(--card-bg); padding: 0.8rem; border-radius: 16px; border: 2px solid var(--border-color);">
+        <div style="background: var(--card-bg); padding: 0.6rem; border-radius: 16px; border: 2px solid var(--border-color);">
             ${righeHTML}
-            ${listaOrdini.length > 4 ? `<div onclick="event.stopPropagation(); navigaVersoFiltro('${statoFiltroTarget}')" style="text-align: center; font-size: 0.8rem; color: var(--primary); font-weight: bold; margin-top: 6px; cursor: pointer;">Visualizza tutti gli altri ${listaOrdini.length - 4} ordini ➡️</div>` : ''}
         </div>
     `;
 }
 
 function aggiornaGrafico(panettoni, pandori) {
-    const ctx = document.getElementById('graficoVendite').getContext('2d');
+    const canvas = document.getElementById('graficoVendite');
+    if(!canvas) return;
+    const ctx = canvas.getContext('2d');
     if(chartInstance) chartInstance.destroy();
     chartInstance = new Chart(ctx, {
         type: 'bar',
-        data: { labels: ['Panettoni', 'Pandori'], datasets: [{ label: 'Prenotazioni Totali', data: [panettoni, pandori], backgroundColor: ['#5b8e72', '#94bdad'], borderRadius: 10 }] },
-        options: { responsive: true, plugins: { legend: { display: false }, title: { display: true, text: 'Confronto Prenotazioni Dolci', font: { family: 'Quicksand', size: 15 } } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        data: { labels: ['Panettoni', 'Pandori'], datasets: [{ label: 'Prenotazioni', data: [panettoni, pandori], backgroundColor: ['#5b8e72', '#94bdad'], borderRadius: 10 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
     });
 }
 
@@ -238,23 +284,6 @@ function esportaPDF() {
     containerPDF.style.padding = '15px';
     containerPDF.style.fontFamily = 'Nunito, sans-serif';
     containerPDF.style.backgroundColor = '#ffffff';
-    containerPDF.style.color = '#24352c';
-
-    const chartCanvas = document.getElementById('graficoVendite');
-    const chartImageSrc = chartCanvas ? chartCanvas.toDataURL('image/png') : '';
-
-    let page1 = `
-        <div style="page-break-after: always; break-after: page;">
-            <div style="text-align: center; border-bottom: 2px solid #5b8e72; padding-bottom: 12px; margin-bottom: 20px;">
-                <h2 style="color: #5b8e72; margin: 0; font-family: Quicksand, sans-serif; font-size: 22px;">WonderLAD Onlus</h2>
-                <p style="font-size: 13px; color: #62756d; margin: 4px 0 0 0;">Report Generale e Statistiche - ${new Date().toLocaleDateString('it-IT')}</p>
-            </div>
-            <h3 style="color: #5b8e72; font-family: Quicksand, sans-serif; margin-bottom: 10px; font-size: 16px;">Andamento Grafico</h3>
-            <div style="text-align: center;">
-                ${chartImageSrc ? `<img src="${chartImageSrc}" style="max-width: 100%; height: auto; max-height: 220px;" />` : ''}
-            </div>
-        </div>
-    `;
 
     let rowsTableHTML = '';
     datiGlobali.forEach((o, i) => {
@@ -276,36 +305,32 @@ function esportaPDF() {
         `;
     });
 
-    let page2 = `
-        <div>
-            <div style="text-align: center; border-bottom: 2px solid #5b8e72; padding-bottom: 10px; margin-bottom: 15px;">
-                <h3 style="color: #5b8e72; margin: 0; font-family: Quicksand, sans-serif; font-size: 18px;">Elenco Completo Ordini Registrati</h3>
-            </div>
-            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
-                <thead>
-                    <tr style="background: #5b8e72; color: white;">
-                        <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Data</th>
-                        <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Cliente</th>
-                        <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Telefono</th>
-                        <th style="padding: 7px; border: 1px solid #3a6250; text-align: center;">Pan</th>
-                        <th style="padding: 7px; border: 1px solid #3a6250; text-align: center;">Pand</th>
-                        <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Stato</th>
-                        <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Pagamento</th>
-                    </tr>
-                </thead>
-                <tbody>${rowsTableHTML}</tbody>
-            </table>
+    containerPDF.innerHTML = `
+        <div style="text-align: center; border-bottom: 2px solid #5b8e72; padding-bottom: 10px; margin-bottom: 15px;">
+            <h3 style="color: #5b8e72; margin: 0; font-family: Quicksand, sans-serif; font-size: 18px;">Elenco Completo Ordini WonderLAD</h3>
         </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+            <thead>
+                <tr style="background: #5b8e72; color: white;">
+                    <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Data</th>
+                    <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Cliente</th>
+                    <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Telefono</th>
+                    <th style="padding: 7px; border: 1px solid #3a6250; text-align: center;">Pan</th>
+                    <th style="padding: 7px; border: 1px solid #3a6250; text-align: center;">Pand</th>
+                    <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Stato</th>
+                    <th style="padding: 7px; border: 1px solid #3a6250; text-align: left;">Pagamento</th>
+                </tr>
+            </thead>
+            <tbody>${rowsTableHTML}</tbody>
+        </table>
     `;
 
-    containerPDF.innerHTML = page1 + page2;
     const opt = {
-        margin:       10,
-        filename:     `Report_WonderLAD_${new Date().toISOString().slice(0,10)}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:    { mode: ['css', 'legacy'] }
+        margin: 10,
+        filename: `Report_WonderLAD_${new Date().toISOString().slice(0,10)}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     html2pdf().from(containerPDF).set(opt).save();
 }
