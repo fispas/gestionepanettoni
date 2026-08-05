@@ -3,18 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione WonderLAD</title>
+    <title>Gestione WonderLAD - Dashboard Modulare</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;750&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="gestionestyle.css">
-    
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
+    <!-- GridStack per Drag and Drop dei Widget -->
+    <link href="https://cdn.jsdelivr.net/npm/gridstack@9.2.0/dist/gridstack.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/gridstack@9.2.0/dist/gridstack-all.js"></script>
+
     <!-- SDK Firebase Compat -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --primary: #5b8e72;
+            --primary-dark: #3a6250;
+            --accent-soft: #94bdad;
+            --accent-light: #eaf4f0;
+            --bg-main: #f8faf7;
+            --card-bg: #ffffff;
+            --text-main: #24352c;
+            --text-muted: #62756d;
+            --border-color: #e1eae5;
+        }
+
+        body { 
+            font-family: 'Nunito', sans-serif; 
+            background-color: var(--bg-main); 
+            color: var(--text-main); 
+            margin: 0; 
+            padding: 0; 
+            padding-bottom: 90px; 
+        }
+
+        .header { 
+            background-color: #ffffff; 
+            color: var(--text-main); 
+            padding: 0.8rem 1.2rem; 
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 750; 
+            font-size: 1.2rem; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            border-bottom: 2px solid var(--border-color);
+            box-shadow: 0 4px 15px rgba(91, 142, 114, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-brand { display: flex; align-items: center; gap: 12px; }
+        .header img { height: 34px; width: auto; }
+
+        .btn-logout {
+            background-color: #fff0f0;
+            color: #d9534f;
+            border: 1px solid #f5c6cb;
+            padding: 0.4rem 0.8rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        .container { padding: 1.2rem 1rem; max-width: 1100px; margin: 0 auto; display: none; } 
+        
+        #login-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: var(--bg-main); 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; 
+        }
+        .login-box { 
+            background: var(--card-bg); padding: 2.5rem 2rem; border-radius: 24px; 
+            box-shadow: 0 10px 30px rgba(91,142,114,0.08); text-align: center; 
+            border: 2px solid var(--border-color); width: 90%; max-width: 360px; box-sizing: border-box; 
+        }
+        .login-box h2 { font-family: 'Quicksand', sans-serif; color: var(--primary); margin-top: 0; }
+        .login-box input { 
+            padding: 0.9rem 1rem; margin-bottom: 1rem; width: 100%; box-sizing: border-box; 
+            border: 2px solid var(--border-color); border-radius: 12px; font-family: 'Nunito'; font-size: 1rem; background-color: #fbfdfe; 
+        }
+        .login-box button { background-color: var(--primary); color: white; border: none; padding: 1rem; width: 100%; border-radius: 12px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+
+        .view { display: none; animation: fadeIn 0.3s; }
+        .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* HEADER DASHBOARD E WIDGET MODULARI */
+        .dash-action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-add-widget {
+            background-color: var(--accent-light);
+            color: var(--primary-dark);
+            border: 2px dashed var(--primary);
+            padding: 0.6rem 1.2rem;
+            border-radius: 12px;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 750;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .btn-add-widget:hover { background-color: #dcece4; }
+
+        .grid-stack-item-content {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            padding: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+        }
+
+        .widget-title {
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 750;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .widget-remove-btn {
+            background: transparent;
+            border: none;
+            color: #d9534f;
+            cursor: pointer;
+            font-size: 1rem;
+            opacity: 0.6;
+        }
+        .widget-remove-btn:hover { opacity: 1; }
+
+        .kpi-main-val { font-size: 2.1rem; font-weight: 800; color: var(--primary-dark); }
+        .kpi-sub-val { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+
+        .progress-bar-bg { background: #eef4f1; border-radius: 10px; height: 10px; width: 100%; overflow: hidden; margin: 0.5rem 0; }
+        .progress-bar-fill { background: linear-gradient(90deg, var(--accent-soft), var(--primary)); height: 100%; border-radius: 10px; }
+
+        .fin-breakdown { display: flex; justify-content: space-between; border-top: 1px dashed var(--border-color); padding-top: 8px; margin-top: 8px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
+
+        /* CONTROLLI TABELLA ORDINI */
+        .controls-panel { background: var(--card-bg); padding: 1.2rem; border-radius: 18px; border: 2px solid var(--border-color); margin-bottom: 1rem; display: flex; flex-direction: column; gap: 10px; }
+        .search-input { width: 100%; padding: 0.8rem 1rem; border: 2px solid var(--border-color); border-radius: 12px; font-family: 'Nunito'; font-size: 0.95rem; background-color: #fbfdfe; }
+        .filter-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 5px; }
+        .chip { background: #f0f4f1; border: none; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+        .chip.active { background: var(--primary); color: white; }
+
+        .table-responsive { width: 100%; background: transparent; margin-bottom: 1rem; }
+        table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 18px; overflow: hidden; border: 1px solid var(--border-color); }
+        th, td { padding: 0.9rem; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
+        th { background-color: #f0f4f1; color: var(--text-main); font-weight: 800; font-family: 'Quicksand', sans-serif; white-space: nowrap; }
+
+        .badge-status { padding: 5px 10px; border-radius: 8px; font-size: 0.78rem; font-weight: 800; display: inline-block; font-family: 'Quicksand', sans-serif; }
+        .status-prenotato { background-color: #e8f4f8; color: #2b6cb0; }
+        .status-prenotato-da-pagare { background-color: #fce8e6; color: #c53030; }
+        .status-prenotato-pagare { background-color: #e8f5e9; color: #276749; }
+        .status-in-preparazione { background-color: #fff8e1; color: #b7791f; }
+        .status-da-consegnare { background-color: #f3e5f5; color: #6b46c1; }
+        .status-consegnato { background-color: #edf7ed; color: #2e7d32; }
+        .status-annullato { background-color: #f1f3f5; color: #718096; }
+
+        .btn-action { background-color: var(--primary); color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
+        .btn-edit { background-color: #e2e8f0; color: var(--text-main); border: none; padding: 0.4rem 0.7rem; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
+        .btn-quick-status { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; padding: 0.4rem 0.6rem; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-right: 4px; }
+
+        .bottom-nav { 
+            position: fixed; bottom: 0; left: 0; width: 100%; 
+            background: #ffffff; display: flex; justify-content: space-around; 
+            padding: 0.8rem 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.04); 
+            z-index: 1000; border-top: 2px solid var(--border-color);
+        }
+        .nav-item { 
+            background: none; border: none; font-family: 'Quicksand', sans-serif; 
+            font-size: 0.85rem; font-weight: 750; color: var(--text-muted); 
+            cursor: pointer; display: flex; flex-direction: column; align-items: center; 
+            gap: 4px; 
+        }
+        .nav-item.active { color: var(--primary); }
+        .nav-icon { font-size: 1.4rem; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 3000; }
+        .modal-content { background: var(--card-bg); padding: 2rem; border-radius: 24px; width: 90%; max-width: 420px; box-sizing: border-box; border: 2px solid var(--border-color); }
+        .modal-content h3 { font-family: 'Quicksand', sans-serif; color: var(--primary); margin-top: 0; }
+        .modal-content input, .modal-content select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 2px solid var(--border-color); border-radius: 12px; box-sizing: border-box; font-family: 'Nunito'; }
+        .modal-actions { display: flex; justify-content: space-between; gap: 1rem; }
+        .btn-save { background-color: var(--primary); color: white; border: none; padding: 0.8rem; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; }
+        .btn-cancel { background-color: #fce8e6; color: #c53030; border: 1px solid #f5c6cb; padding: 0.8rem; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; }
+
+        .widget-opt-list { display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto; margin-bottom: 1rem; }
+        .widget-opt-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--bg-main); border-radius: 10px; border: 1px solid var(--border-color); }
+    </style>
 </head>
 <body>
 
@@ -22,8 +223,8 @@
         <div class="login-box">
             <h2>WonderLAD</h2>
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Accesso Area Riservata</p>
-            <input type="text" id="username" placeholder="Email o Username (es. admin)">
-            <input type="password" id="passcode" placeholder="Password (minimo 6 caratteri)">
+            <input type="text" id="username" placeholder="Email o Username">
+            <input type="password" id="passcode" placeholder="Password (min. 6 caratteri)">
             <button onclick="effettuaLogin()" id="btn-login">Accedi / Registrati</button>
             <p id="login-err" style="color:#c53030; display:none; font-size:0.9rem; font-weight: bold; margin-top: 1rem;"></p>
         </div>
@@ -38,118 +239,25 @@
     </div>
 
     <div class="container" id="main-container">
-        <div id="loadingMsg">Sincronizzazione dati in corso...</div>
+        <div id="loadingMsg" style="text-align:center; font-weight:bold; color:var(--primary); margin: 1rem 0;">Sincronizzazione dati in corso...</div>
 
-        <!-- Dashboard -->
+        <!-- Dashboard Modulare Drag and Drop -->
         <div id="view-dashboard" class="view active">
             
-            <div class="dash-selector-bar">
-                <button class="dash-tab-btn active" id="tabModeTutti" onclick="cambiaVistaDashboard('TUTTI', this)">📊 Vista Globale</button>
-                <button class="dash-tab-btn" id="tabModePanettoni" onclick="cambiaVistaDashboard('PANETTONI', this)">🥮 Panettoni</button>
-                <button class="dash-tab-btn" id="tabModePandori" onclick="cambiaVistaDashboard('PANDORI', this)">🍞 Pandori</button>
+            <div class="dash-action-bar">
+                <button class="btn-add-widget" onclick="apriModaleWidget()">➕ Personalizza Dashboard</button>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-action" onclick="resetDashboardLayout()" style="background:#e2ece5; color:var(--text-main);">🔄 Reset Layout</button>
+                    <button class="btn-action" onclick="esportaPDF()">📄 PDF Report</button>
+                </div>
             </div>
 
-            <div class="dashboard-header-actions" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                <h3 style="color: var(--text-main); font-size: 1.1rem; margin: 0; font-family: 'Quicksand', sans-serif;" id="dashMainHeaderTitle">Panoramica Generale</h3>
-                <button class="btn-action" onclick="esportaPDF()">📄 Scarica Report PDF</button>
-            </div>
+            <!-- Griglia Drag and Drop GridStack -->
+            <div class="grid-stack"></div>
 
-            <div id="pdfContent" style="padding: 5px; background: transparent;">
-                <div id="alertContainer"></div>
-
-                <div class="stock-section">
-                    <div class="stock-card" onclick="cambiaVistaDashboard('PANETTONI', document.getElementById('tabModePanettoni'))">
-                        <div class="stock-header">
-                            <span class="stock-title">🥮 Panettoni</span>
-                            <button class="stock-edit-btn" onclick="event.stopPropagation(); apriModaleStock('Panettoni')">✏️ Modifica Stock</button>
-                        </div>
-                        <div class="stock-numbers">
-                            <span class="stock-main-val" id="valPanettoni">0</span>
-                            <span class="stock-sub-val" id="lblTotPanettoni">prenotati su 0</span>
-                        </div>
-                        <div class="progress-bar-bg">
-                            <div class="progress-bar-fill" id="barPanettoni" style="width: 0%;"></div>
-                        </div>
-                        <div class="stock-footer-actions">
-                            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:700;" id="rimanenzePanettoni">Rimanenza: 0</span>
-                        </div>
-                    </div>
-
-                    <div class="stock-card" onclick="cambiaVistaDashboard('PANDORI', document.getElementById('tabModePandori'))">
-                        <div class="stock-header">
-                            <span class="stock-title">🍞 Pandori</span>
-                            <button class="stock-edit-btn" onclick="event.stopPropagation(); apriModaleStock('Pandori')">✏️ Modifica Stock</button>
-                        </div>
-                        <div class="stock-numbers">
-                            <span class="stock-main-val" id="valPandori">0</span>
-                            <span class="stock-sub-val" id="lblTotPandori">prenotati su 0</span>
-                        </div>
-                        <div class="progress-bar-bg">
-                            <div class="progress-bar-fill" id="barPandori" style="width: 0%;"></div>
-                        </div>
-                        <div class="stock-footer-actions">
-                            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:700;" id="rimanenzePandori">Rimanenza: 0</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="dash-section-title">📦 Flusso Logistico & Consegne</div>
-                <div class="flow-grid">
-                    <div class="flow-card card-st-prenotato" onclick="navigaVersoFiltro('Prenotato')">
-                        <div class="flow-card-title">Prenotati</div>
-                        <div class="flow-card-count" id="countPrenotato">0</div>
-                        <div class="flow-card-sub" id="subPrenotato">🥮 0 | 🍞 0</div>
-                    </div>
-
-                    <div class="flow-card card-st-prep" onclick="navigaVersoFiltro('In Preparazione')">
-                        <div class="flow-card-title">In Prep.</div>
-                        <div class="flow-card-count" id="countInPreparazione">0</div>
-                        <div class="flow-card-sub" id="subInPrep">🥮 0 | 🍞 0</div>
-                    </div>
-
-                    <div class="flow-card card-st-consegna" onclick="navigaVersoFiltro('Da Consegnare')">
-                        <div class="flow-card-title">Da Conseg.</div>
-                        <div class="flow-card-count" id="countDaConsegnare">0</div>
-                        <div class="flow-card-sub" id="subDaConseg">🥮 0 | 🍞 0</div>
-                    </div>
-
-                    <div class="flow-card card-st-consegnato" onclick="navigaVersoFiltro('Consegnato')">
-                        <div class="flow-card-title">Consegnati</div>
-                        <div class="flow-card-count" id="countConsegnati">0</div>
-                        <div class="flow-card-sub" id="subConsegnati">🥮 0 | 🍞 0</div>
-                    </div>
-
-                    <div class="flow-card card-st-annullato" onclick="navigaVersoFiltro('Annullato')">
-                        <div class="flow-card-title">Annullati</div>
-                        <div class="flow-card-count" id="countAnnullati">0</div>
-                        <div class="flow-card-sub" id="subAnnullati">🥮 0 | 🍞 0</div>
-                    </div>
-                </div>
-
-                <div class="dash-section-title">💶 Stato Incassi & Saldi</div>
-                <div class="flow-grid">
-                    <div class="flow-card card-st-dapagare" onclick="navigaVersoFiltro('Prenotato - Da Pagare')">
-                        <div class="flow-card-title">Da Pagare</div>
-                        <div class="flow-card-count" id="countDaPagare">0</div>
-                        <div class="flow-card-sub" id="subDaPagare">🥮 0 | 🍞 0</div>
-                    </div>
-
-                    <div class="flow-card card-st-pagato" onclick="navigaVersoFiltro('Prenotato - Pagato')">
-                        <div class="flow-card-title">Pagati</div>
-                        <div class="flow-card-count" id="countPagati">0</div>
-                        <div class="flow-card-sub" id="subPagati">🥮 0 | 🍞 0</div>
-                    </div>
-                </div>
-
-                <div class="chart-container"><canvas id="graficoVendite"></canvas></div>
-            </div>
-
-            <div id="contatoreOrdiniTest">Sessione caricata. Totale ordini simulati: 0</div>
-            <button class="seed-btn" onclick="popolaDatiTest()">🚀 Popola DB con Dati di Prova</button>
-            <button class="seed-btn" onclick="eseguiTestLettura()" style="margin-top: 10px; border-color: var(--primary);">🔄 Esegui Test Lettura Manuale</button>
         </div>
 
-        <!-- Ordini -->
+        <!-- Lista Ordini -->
         <div id="view-ordini" class="view">
             <div class="controls-panel">
                 <input type="text" id="searchOrdini" class="search-input" placeholder="🔍 Cerca per nome, cognome o telefono..." onkeyup="filtraOrdini()">
@@ -164,12 +272,12 @@
                     <button class="chip" onclick="setFiltroStato('Annullato', this)">Annullati</button>
                 </div>
             </div>
-            <div class="table-controls">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                 <h3 style="margin: 0; color: var(--text-main); font-family: 'Quicksand', sans-serif;">Lista Ordini</h3>
                 <button class="btn-action" onclick="esportaExcel()">📥 Export Excel</button>
             </div>
             <div class="table-responsive">
-                <table id="tabellaOrdini">
+                <table>
                     <thead>
                         <tr>
                             <th>Data</th>
@@ -185,58 +293,18 @@
                     </thead>
                     <tbody id="corpoTabella"></tbody>
                 </table>
-                <div id="contatoreOrdini" style="margin-top: 10px;">Righe caricate: 0</div>
             </div>
         </div>
 
-        <!-- Utenti (Riservato Admin) -->
-        <div id="view-utenti" class="view">
-            <div class="controls-panel">
-                <input type="text" id="searchUtenti" class="search-input" placeholder="🔍 Cerca utente per username o email..." onkeyup="filtraUtenti()">
-            </div>
-            <div class="table-controls">
-                <h3 style="margin: 0; color: var(--text-main); font-family: 'Quicksand', sans-serif;">Gestione Utenti Staff</h3>
-                <button class="btn-action" onclick="apriModaleUtente('add')">➕ Aggiungi Utente</button>
-            </div>
-            <div class="table-responsive">
-                <table id="tabellaUtenti">
-                    <thead>
-                        <tr>
-                            <th>Username / Email</th>
-                            <th>Ruolo</th>
-                            <th>Azioni</th>
-                        </tr>
-                    </thead>
-                    <tbody id="corpoUtenti"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Log / Attività (Riservato Admin) -->
+        <!-- Registro Log -->
         <div id="view-log" class="view">
             <div class="controls-panel">
                 <input type="text" id="searchLog" class="search-input" placeholder="🔍 Cerca nei log..." onkeyup="filtraLog()">
-                <div class="filter-chips" id="logFilterChips">
-                    <button class="chip active" onclick="setFiltroLogCat('Tutti', this)">Tutti</button>
-                    <button class="chip" onclick="setFiltroLogCat('INSERIMENTO', this)">Inserimento</button>
-                    <button class="chip" onclick="setFiltroLogCat('MODIFICA', this)">Modifica</button>
-                    <button class="chip" onclick="setFiltroLogCat('LOGIN', this)">Login</button>
-                    <button class="chip" onclick="setFiltroLogCat('STOCK', this)">Stock</button>
-                    <button class="chip" onclick="setFiltroLogCat('UTENTE', this)">Utente</button>
-                </div>
-            </div>
-            <div class="table-controls">
-                <h3 style="margin: 0; color: var(--text-main); font-family: 'Quicksand', sans-serif;">Registro Attività & Audit Log</h3>
             </div>
             <div class="table-responsive">
-                <table id="tabellaLog">
+                <table>
                     <thead>
-                        <tr>
-                            <th>Data/Ora</th>
-                            <th>Categoria</th>
-                            <th>Utente</th>
-                            <th>Dettaglio Attività</th>
-                        </tr>
+                        <tr><th>Data/Ora</th><th>Categoria</th><th>Utente</th><th>Dettaglio Attività</th></tr>
                     </thead>
                     <tbody id="corpoLog"></tbody>
                 </table>
@@ -244,21 +312,34 @@
         </div>
     </div>
 
-    <nav class="bottom-nav" id="bottomNav">
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
         <button class="nav-item active" onclick="switchView('dashboard', this)"><span class="nav-icon">📊</span>Dashboard</button>
         <button class="nav-item" onclick="switchView('ordini', this)"><span class="nav-icon">📋</span>Ordini</button>
-        <!-- I pulsanti Utenti e Log vengono iniettati dinamicamente in base al ruolo Administrator -->
+        <button class="nav-item" onclick="switchView('log', this)"><span class="nav-icon">📜</span>Log</button>
     </nav>
 
-    <!-- Modali -->
+    <!-- Modale Aggiungi/Rimuovi Widget -->
+    <div id="widget-modal" class="modal">
+        <div class="modal-content">
+            <h3>Gestisci Widget Dashboard</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">Aggiungi o rimuovi elementi visibili nella tua dashboard:</p>
+            <div class="widget-opt-list" id="widgetOptionsList"></div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="chiudiModale('widget-modal')">Chiudi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale Modifica Ordine -->
     <div id="edit-modal" class="modal">
         <div class="modal-content">
             <h3>Modifica Ordine</h3>
-            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Panettoni</label>
+            <label style="font-weight: bold; font-size: 0.85rem; color: var(--text-muted);">Panettoni (€15/pz)</label>
             <input type="number" id="edit-pan" min="0">
-            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Pandori</label>
+            <label style="font-weight: bold; font-size: 0.85rem; color: var(--text-muted);">Pandori (€15/pz)</label>
             <input type="number" id="edit-pan-dori" min="0">
-            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Status e Pagamento</label>
+            <label style="font-weight: bold; font-size: 0.85rem; color: var(--text-muted);">Status</label>
             <select id="edit-status">
                 <option value="Prenotato">Prenotato</option>
                 <option value="Prenotato - Da Pagare">Prenotato - Da Pagare</option>
@@ -268,7 +349,7 @@
                 <option value="Consegnato">Consegnato</option>
                 <option value="Annullato">Annullato</option>
             </select>
-            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Metodo di Pagamento</label>
+            <label style="font-weight: bold; font-size: 0.85rem; color: var(--text-muted);">Metodo Pagamento</label>
             <select id="edit-metodo-pagamento">
                 <option value="-">Non specificato</option>
                 <option value="Cash">Cash / Contanti</option>
@@ -283,10 +364,11 @@
         </div>
     </div>
 
+    <!-- Modale Saldo Rapido -->
     <div id="pay-modal" class="modal">
         <div class="modal-content">
             <h3>Registra Saldo Ordine</h3>
-            <p style="font-size:0.88rem; color:var(--text-muted);">Seleziona il metodo di pagamento utilizzato dal cliente:</p>
+            <p style="font-size:0.85rem; color:var(--text-muted);">Seleziona il metodo di pagamento utilizzato dal cliente:</p>
             <select id="pay-method-select">
                 <option value="Cash">💶 Cash / Contanti</option>
                 <option value="Bonifico">🏦 Bonifico</option>
@@ -300,12 +382,13 @@
         </div>
     </div>
 
+    <!-- Modale Stock -->
     <div id="stock-modal" class="modal">
         <div class="modal-content">
             <h3>Modifica Stock</h3>
-            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Totale Panettoni</label>
+            <label style="font-weight: bold; font-size: 0.85rem; color: var(--text-muted);">Totale Panettoni Disponibili</label>
             <input type="number" id="input-tot-pan" min="0">
-            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Totale Pandori</label>
+            <label style="font-weight: bold; font-size: 0.85rem; color: var(--text-muted);">Totale Pandori Disponibili</label>
             <input type="number" id="input-tot-pand" min="0">
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="chiudiModale('stock-modal')">Annulla</button>
@@ -314,29 +397,452 @@
         </div>
     </div>
 
-    <div id="user-modal" class="modal">
-        <div class="modal-content">
-            <h3 id="user-modal-title">Nuovo Utente Staff</h3>
-            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Email / Username</label>
-            <input type="text" id="modal-username" placeholder="es. admin o admin@wonderlad.org">
-            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Password (min. 6 caratteri)</label>
-            <input type="password" id="modal-password" placeholder="••••••••">
-            <label style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Ruolo</label>
-            <select id="modal-role">
-                <option value="Manager">Manager</option>
-                <option value="Administrator">Administrator</option>
-            </select>
-            <input type="hidden" id="modal-mode" value="add">
-            <input type="hidden" id="modal-user-id">
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="chiudiModale('user-modal')">Annulla</button>
-                <button class="btn-save" onclick="salvaUtente()">Salva</button>
-            </div>
-        </div>
-    </div>
+    <script>
+        const PREZZO_UNITA = 15; // Prezzo fisso per dolce (€15)
 
-    <script src="api.js"></script>
-    <script src="dashboard.js"></script>
-    <script src="ordini-utenti.js"></script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjwLhDJkxtriCjGygPMPgk4Fjc_d_rtDs",
+            authDomain: "wonderlad-ordini.firebaseapp.com",
+            projectId: "wonderlad-ordini",
+            storageBucket: "wonderlad-ordini.firebasestorage.app",
+            messagingSenderId: "1016384282148",
+            appId: "1:1016384282148:web:8e8c16e889baed9d09c2b1",
+            measurementId: "G-065ZY1K7JX"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        let gridStack = null;
+        let datiGlobali = [];
+        let logsGlobali = [];
+        let impostazioniGlobali = { "Totale Panettoni": 500, "Totale Pandori": 500 };
+        let currentUserEmail = "";
+        let filtroStatoAttuale = "Tutti";
+
+        // CATATOLOGO WIDGET DISPONIBILI
+        const CATALOGO_WIDGETS = [
+            { id: 'w_incassato', title: '💶 Incassato Totale', w: 6, h: 2 },
+            { id: 'w_da_incassare', title: '⏳ Da Incassare', w: 6, h: 2 },
+            { id: 'w_stock_panettoni', title: '🥮 Stock Panettoni', w: 6, h: 2 },
+            { id: 'w_stock_pandori', title: '🍞 Stock Pandori', w: 6, h: 2 },
+            { id: 'w_funnel_logistico', title: '📦 Stato Consegne', w: 12, h: 2 },
+            { id: 'w_grafico', title: '📊 Andamento Vendite', w: 12, h: 3 }
+        ];
+
+        let activeWidgets = ['w_incassato', 'w_da_incassare', 'w_stock_panettoni', 'w_stock_pandori', 'w_funnel_logistico'];
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUserEmail = user.email;
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('main-container').style.display = 'block';
+                document.getElementById('user-badge').textContent = `(${currentUserEmail.split('@')[0]})`;
+                
+                inizializzaGridStack();
+                avviaAscoltoInTempoReale();
+            } else {
+                document.getElementById('login-overlay').style.display = 'flex';
+                document.getElementById('main-container').style.display = 'none';
+            }
+        });
+
+        function effettuaLogin() {
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('passcode').value;
+            if(!user || !pass) return alert("Inserisci username e password!");
+
+            let emailFormat = user.includes('@') ? user : user + "@wonderlad.org";
+
+            auth.signInWithEmailAndPassword(emailFormat, pass)
+            .catch(() => {
+                auth.createUserWithEmailAndPassword(emailFormat, pass)
+                .catch(err => alert("Errore: " + err.message));
+            });
+        }
+
+        function effettuaLogout() {
+            if (confirm("Vuoi davvero uscire?")) auth.signOut().then(() => location.reload());
+        }
+
+        /* GRIDSTACK INIZIALIZZAZIONE & LAYOUT SAVER */
+        function inizializzaGridStack() {
+            if(gridStack) return;
+
+            gridStack = GridStack.init({
+                cellHeight: 85,
+                margin: 6,
+                animate: true,
+                resizable: { handles: 'e,se,s,w' }
+            });
+
+            // Carica preferenze salvate in locale
+            const savedLayout = localStorage.getItem('wonderlad_widget_layout_' + currentUserEmail);
+            if(savedLayout) {
+                activeWidgets = JSON.parse(savedLayout);
+            }
+
+            renderGridWidgets();
+
+            gridStack.on('change', () => {
+                salvaLayoutPreferito();
+            });
+        }
+
+        function salvaLayoutPreferito() {
+            const items = gridStack.getGridItems();
+            const layoutIds = items.map(el => el.getAttribute('gs-id'));
+            localStorage.setItem('wonderlad_widget_layout_' + currentUserEmail, JSON.stringify(layoutIds));
+        }
+
+        function renderGridWidgets() {
+            gridStack.removeAll();
+
+            activeWidgets.forEach(wId => {
+                const wDef = CATALOGO_WIDGETS.find(w => w.id === wId);
+                if(wDef) {
+                    const htmlContent = creaContenutoWidget(wDef);
+                    gridStack.addWidget({
+                        id: wDef.id,
+                        w: wDef.w,
+                        h: wDef.h,
+                        content: htmlContent
+                    });
+                }
+            });
+
+            aggiornaDatiWidget();
+        }
+
+        function creaContenutoWidget(wDef) {
+            return `
+                <div class="grid-stack-item-content">
+                    <div class="widget-title">
+                        <span>${wDef.title}</span>
+                        <button class="widget-remove-btn" onclick="rimuoviWidget('${wDef.id}')">✕</button>
+                    </div>
+                    <div id="body_${wDef.id}">Caricamento...</div>
+                </div>
+            `;
+        }
+
+        function rimuoviWidget(wId) {
+            activeWidgets = activeWidgets.filter(id => id !== wId);
+            salvaLayoutPreferito();
+            renderGridWidgets();
+        }
+
+        function apriModaleWidget() {
+            const listContainer = document.getElementById('widgetOptionsList');
+            listContainer.innerHTML = '';
+
+            CATALOGO_WIDGETS.forEach(w => {
+                const isPresente = activeWidgets.includes(w.id);
+                const item = document.createElement('div');
+                item.className = 'widget-opt-item';
+                item.innerHTML = `
+                    <span style="font-weight:bold; font-size:0.9rem;">${w.title}</span>
+                    <button class="btn-edit" style="background:${isPresente ? '#fce8e6' : '#e8f5e9'}; color:${isPresente ? '#c53030' : '#2e7d32'};" 
+                        onclick="toggleWidgetOption('${w.id}')">
+                        ${isPresente ? 'Rimuovi' : '➕ Aggiungi'}
+                    </button>
+                `;
+                listContainer.appendChild(item);
+            });
+
+            document.getElementById('widget-modal').style.display = 'flex';
+        }
+
+        function toggleWidgetOption(wId) {
+            if(activeWidgets.includes(wId)) {
+                activeWidgets = activeWidgets.filter(id => id !== wId);
+            } else {
+                activeWidgets.push(wId);
+            }
+            salvaLayoutPreferito();
+            renderGridWidgets();
+            apriModaleWidget();
+        }
+
+        function resetDashboardLayout() {
+            activeWidgets = ['w_incassato', 'w_da_incassare', 'w_stock_panettoni', 'w_stock_pandori', 'w_funnel_logistico'];
+            salvaLayoutPreferito();
+            renderGridWidgets();
+        }
+
+        /* ASCOLTO FIREBASE IN TEMPO REALE */
+        function avviaAscoltoInTempoReale() {
+            db.collection("impostazioni").doc("stock").onSnapshot(doc => {
+                if (doc.exists) impostazioniGlobali = doc.data();
+                aggiornaDatiWidget();
+            });
+
+            db.collection("ordini").orderBy("timestamp", "desc").onSnapshot(snapshot => {
+                datiGlobali = [];
+                snapshot.forEach(doc => datiGlobali.push({ id: doc.id, ...doc.data() }));
+
+                popolaTabellaOrdini(datiGlobali);
+                aggiornaDatiWidget();
+                document.getElementById('loadingMsg').style.display = 'none';
+            });
+
+            db.collection("logs").orderBy("timestamp", "desc").limit(50).onSnapshot(snapshot => {
+                logsGlobali = [];
+                snapshot.forEach(doc => logsGlobali.push({ id: doc.id, ...doc.data() }));
+                popolaTabellaLog(logsGlobali);
+            });
+        }
+
+        /* CALCOLO DATI WIDGET */
+        function aggiornaDatiWidget() {
+            let totPanettoni = 0, totPandori = 0;
+            let incassatoEuro = 0, daIncassareEuro = 0;
+            let cashEuro = 0, posEuro = 0, bonificoEuro = 0;
+
+            let st = { prenotato: 0, preparazione: 0, da_consegnare: 0, consegnato: 0, annullato: 0 };
+
+            datiGlobali.forEach(o => {
+                const pan = parseInt(o.panettoni) || 0;
+                const pand = parseInt(o.pandori) || 0;
+                const importoDoc = (pan + pand) * PREZZO_UNITA;
+
+                totPanettoni += pan;
+                totPandori += pand;
+
+                const status = (o.status || "").toLowerCase();
+                const metodo = (o.metodoPagamento || "").toLowerCase();
+
+                if(status.includes('pagato') || status.includes('consegnato')) {
+                    incassatoEuro += importoDoc;
+                    if(metodo.includes('cash')) cashEuro += importoDoc;
+                    else if(metodo.includes('pos')) posEuro += importoDoc;
+                    else if(metodo.includes('bonifico')) bonificoEuro += importoDoc;
+                } else if(!status.includes('annullato')) {
+                    daIncassareEuro += importoDoc;
+                }
+
+                if(status === 'prenotato') st.prenotato++;
+                if(status.includes('preparazione')) st.preparazione++;
+                if(status.includes('da consegnare')) st.da_consegnare++;
+                if(status.includes('consegnato')) st.consegnato++;
+                if(status.includes('annullato')) st.annullato++;
+            });
+
+            // Update DOM dei singoli widget se presenti
+            if(document.getElementById('body_w_incassato')) {
+                document.getElementById('body_w_incassato').innerHTML = `
+                    <div class="kpi-main-val">€ ${incassatoEuro.toLocaleString('it-IT')}</div>
+                    <div class="fin-breakdown">
+                        <span>💶 Cash: €${cashEuro}</span>
+                        <span>💳 POS: €${posEuro}</span>
+                        <span>🏦 Bonifico: €${bonificoEuro}</span>
+                    </div>
+                `;
+            }
+
+            if(document.getElementById('body_w_da_incassare')) {
+                document.getElementById('body_w_da_incassare').innerHTML = `
+                    <div class="kpi-main-val" style="color:#c53030;">€ ${daIncassareEuro.toLocaleString('it-IT')}</div>
+                    <div class="kpi-sub-val">Valore stimato ordini in sospeso</div>
+                `;
+            }
+
+            let stockPan = parseInt(impostazioniGlobali["Totale Panettoni"]) || 500;
+            if(document.getElementById('body_w_stock_panettoni')) {
+                const percPan = Math.min(100, Math.round((totPanettoni / stockPan) * 100));
+                document.getElementById('body_w_stock_panettoni').innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                        <span class="kpi-main-val">${totPanettoni}</span>
+                        <span class="kpi-sub-val">su ${stockPan} pz (${percPan}%)</span>
+                    </div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${percPan}%;"></div></div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-muted); font-weight:bold;">
+                        <span>Restano: ${stockPan - totPanettoni} pz</span>
+                        <a href="#" onclick="apriModaleStock('Panettoni')" style="color:var(--primary);">Modifica Stock</a>
+                    </div>
+                `;
+            }
+
+            let stockPand = parseInt(impostazioniGlobali["Totale Pandori"]) || 500;
+            if(document.getElementById('body_w_stock_pandori')) {
+                const percPand = Math.min(100, Math.round((totPandori / stockPand) * 100));
+                document.getElementById('body_w_stock_pandori').innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                        <span class="kpi-main-val">${totPandori}</span>
+                        <span class="kpi-sub-val">su ${stockPand} pz (${percPand}%)</span>
+                    </div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${percPand}%;"></div></div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-muted); font-weight:bold;">
+                        <span>Restano: ${stockPand - totPandori} pz</span>
+                        <a href="#" onclick="apriModaleStock('Pandori')" style="color:var(--primary);">Modifica Stock</a>
+                    </div>
+                `;
+            }
+
+            if(document.getElementById('body_w_funnel_logistico')) {
+                document.getElementById('body_w_funnel_logistico').innerHTML = `
+                    <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:6px; text-align:center;">
+                        <div style="background:#e8f4f8; padding:8px; border-radius:12px;" onclick="switchView('ordini')"><div style="font-size:0.7rem; font-weight:bold; color:#2b6cb0;">PRENOTATI</div><div style="font-size:1.2rem; font-weight:800; color:#2b6cb0;">${st.prenotato}</div></div>
+                        <div style="background:#fff8e1; padding:8px; border-radius:12px;" onclick="switchView('ordini')"><div style="font-size:0.7rem; font-weight:bold; color:#b7791f;">IN PREP.</div><div style="font-size:1.2rem; font-weight:800; color:#b7791f;">${st.preparazione}</div></div>
+                        <div style="background:#f3e5f5; padding:8px; border-radius:12px;" onclick="switchView('ordini')"><div style="font-size:0.7rem; font-weight:bold; color:#6b46c1;">DA CONSEG.</div><div style="font-size:1.2rem; font-weight:800; color:#6b46c1;">${st.da_consegnare}</div></div>
+                        <div style="background:#edf7ed; padding:8px; border-radius:12px;" onclick="switchView('ordini')"><div style="font-size:0.7rem; font-weight:bold; color:#2e7d32;">CONSEGNATI</div><div style="font-size:1.2rem; font-weight:800; color:#2e7d32;">${st.consegnato}</div></div>
+                        <div style="background:#f1f3f5; padding:8px; border-radius:12px;" onclick="switchView('ordini')"><div style="font-size:0.7rem; font-weight:bold; color:#718096;">ANNULLATI</div><div style="font-size:1.2rem; font-weight:800; color:#718096;">${st.annullato}</div></div>
+                    </div>
+                `;
+            }
+
+            if(document.getElementById('body_w_grafico')) {
+                document.getElementById('body_w_grafico').innerHTML = `<canvas id="canvasChart" style="max-height:160px;"></canvas>`;
+                const ctx = document.getElementById('canvasChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: { labels: ['Panettoni', 'Pandori'], datasets: [{ data: [totPanettoni, totPandori], backgroundColor: ['#5b8e72', '#94bdad'], borderRadius: 8 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+            }
+        }
+
+        /* TABELLA E OPERAZIONI */
+        function popolaTabellaOrdini(dati) {
+            const tbody = document.getElementById('corpoTabella');
+            tbody.innerHTML = '';
+            dati.forEach(o => {
+                let dStr = '-';
+                if(o.timestamp && o.timestamp.toDate) {
+                    const d = o.timestamp.toDate();
+                    dStr = d.toLocaleDateString('it-IT') + ' ' + d.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'});
+                }
+
+                const cleanTel = String(o.telefono || '').replace(/\D/g, '');
+                const msgWa = encodeURIComponent(`Ciao ${o.nome || ''}, ti contattiamo da WonderLAD per la tua prenotazione.`);
+                const telHtml = cleanTel ? `<a href="https://wa.me/39${cleanTel}?text=${msgWa}" target="_blank" style="color:#2e7d32; font-weight:bold; text-decoration:none;">📱 ${o.telefono}</a>` : '-';
+
+                const tr = document.createElement('tr');
+                tr.setAttribute('data-nome', (o.nome + " " + o.cognome + " " + o.telefono).toLowerCase());
+                tr.setAttribute('data-stato', o.status || "");
+
+                let nextBtn = '';
+                if((o.status || '').includes('Da Pagare')) {
+                    nextBtn = `<button class="btn-quick-status" onclick="apriModaleSaldoRapido('${o.id}')">✅ Pagato</button>`;
+                }
+
+                tr.innerHTML = `
+                    <td>${dStr}</td>
+                    <td><strong>${o.nome || '-'}</strong></td>
+                    <td><strong>${o.cognome || '-'}</strong></td>
+                    <td>${telHtml}</td>
+                    <td>${o.panettoni || 0}</td>
+                    <td>${o.pandori || 0}</td>
+                    <td><span class="badge-status status-prenotato">${o.status || 'Prenotato'}</span></td>
+                    <td>${o.metodoPagamento || '-'}</td>
+                    <td>${nextBtn}<button class="btn-edit" onclick="apriModaleOrdine('${o.id}', ${o.panettoni || 0}, ${o.pandori || 0}, '${o.status || 'Prenotato'}', '${o.metodoPagamento || "-"}')">✏️ Edit</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+            filtraOrdini();
+        }
+
+        function apriModaleSaldoRapido(docId) {
+            document.getElementById('pay-doc-id').value = docId;
+            document.getElementById('pay-modal').style.display = 'flex';
+        }
+
+        function confermaSaldoRapido() {
+            const docId = document.getElementById('pay-doc-id').value;
+            const metodo = document.getElementById('pay-method-select').value;
+            db.collection("ordini").doc(docId).update({ status: 'Prenotato - Pagato', metodoPagamento: metodo });
+            chiudiModale('pay-modal');
+        }
+
+        function filtraOrdini() {
+            const query = document.getElementById('searchOrdini').value.toLowerCase();
+            const rows = document.querySelectorAll('#corpoTabella tr');
+            rows.forEach(tr => {
+                const testo = tr.getAttribute('data-nome') || "";
+                const stato = tr.getAttribute('data-stato') || "";
+                const matchTesto = testo.includes(query);
+                const matchFiltro = (filtroStatoAttuale === 'Tutti' || stato.toLowerCase() === filtroStatoAttuale.toLowerCase());
+                tr.style.display = (matchTesto && matchFiltro) ? '' : 'none';
+            });
+        }
+
+        function setFiltroStato(st, btn) {
+            filtroStatoAttuale = st;
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            filtraOrdini();
+        }
+
+        function popolaTabellaLog(logs) {
+            const tbody = document.getElementById('corpoLog');
+            tbody.innerHTML = '';
+            logs.forEach(l => {
+                let dStr = '-';
+                if(l.timestamp && l.timestamp.toDate) {
+                    const d = l.timestamp.toDate();
+                    dStr = d.toLocaleDateString('it-IT') + ' ' + d.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'});
+                }
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${dStr}</td><td><strong>${l.categoria || 'LOG'}</strong></td><td>${l.utente || '-'}</td><td>${l.dettaglio || '-'}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function switchView(vName, btn) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            document.getElementById('view-' + vName).classList.add('active');
+            if(btn) btn.classList.add('active');
+        }
+
+        function apriModaleOrdine(id, pan, pand, st, met) {
+            document.getElementById('edit-doc-id').value = id;
+            document.getElementById('edit-pan').value = pan;
+            document.getElementById('edit-pan-dori').value = pand;
+            document.getElementById('edit-status').value = st;
+            document.getElementById('edit-metodo-pagamento').value = met;
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        function salvaModificaOrdine() {
+            const id = document.getElementById('edit-doc-id').value;
+            db.collection("ordini").doc(id).update({
+                panettoni: parseInt(document.getElementById('edit-pan').value) || 0,
+                pandori: parseInt(document.getElementById('edit-pan-dori').value) || 0,
+                status: document.getElementById('edit-status').value,
+                metodoPagamento: document.getElementById('edit-metodo-pagamento').value
+            });
+            chiudiModale('edit-modal');
+        }
+
+        function apriModaleStock() {
+            document.getElementById('input-tot-pan').value = impostazioniGlobali["Totale Panettoni"] || 500;
+            document.getElementById('input-tot-pand').value = impostazioniGlobali["Totale Pandori"] || 500;
+            document.getElementById('stock-modal').style.display = 'flex';
+        }
+
+        function salvaStock() {
+            db.collection("impostazioni").doc("stock").set({
+                "Totale Panettoni": parseInt(document.getElementById('input-tot-pan').value) || 0,
+                "Totale Pandori": parseInt(document.getElementById('input-tot-pand').value) || 0
+            });
+            chiudiModale('stock-modal');
+        }
+
+        function chiudiModale(mId) { document.getElementById(mId).style.display = 'none'; }
+
+        function esportaExcel() {
+            if(datiGlobali.length === 0) return alert("Nessun dato!");
+            const ws = XLSX.utils.json_to_sheet(datiGlobali);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Ordini");
+            XLSX.writeFile(wb, "Ordini_WonderLAD.xlsx");
+        }
+
+        function esportaPDF() {
+            window.print();
+        }
+    </script>
 </body>
 </html>
