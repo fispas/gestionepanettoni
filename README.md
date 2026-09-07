@@ -13,11 +13,14 @@ PWA statica su GitHub Pages + Firestore. Due pagine:
 | `index.html` | form pubblico, autonomo |
 | `gestione.html` | solo markup del pannello |
 | `gestionestyle.css` | stile del pannello |
-| `dashboard.js` | dashboard componibile a widget, export PDF |
+| `dashboard.js` | dashboard componibile a widget, riordinabili per trascinamento |
+| `report.js` | riepilogo PDF su singola pagina A4 |
 | `app.js` | auth, ruoli, ordini, staff, log, export Excel |
 | `firestore.rules` | autorizzazioni lato server |
 
 **Da eliminare dal repo:** `api.js` e `ordini-utenti.js`. Erano una seconda versione dell'app mai caricata da nessuna pagina; la loro logica è confluita in `app.js`.
+
+Ordine di caricamento in `gestione.html`, non modificarlo: `firebase-init.js`, `dashboard.js`, `app.js`, `report.js`. `report.js` deve venire dopo `dashboard.js` perché ne sostituisce l'export PDF.
 
 ## Ruoli
 
@@ -107,7 +110,7 @@ Sostituisci i file nel repo, elimina `api.js` e `ordini-utenti.js`, commit su `m
 - Schema degli ordini chiuso e validato nelle rules: campi fissi, telefono `^[0-9]{8,15}$`, massimo 50 pezzi per prodotto, stato iniziale imposto, timestamp = ora server.
 
 **Correzioni**
-- `esportaPDF()` esiste (prima il bottone chiamava una funzione inesistente).
+- Il PDF non è più uno screenshot della dashboard: `report.js` impagina un A4 a dimensione fissa, sempre di una sola pagina e uguale per tutti.
 - Gli ordini annullati non consumano più stock e non entrano negli incassi.
 - Ogni ordine cade in un solo stato logistico e in un solo stato di pagamento: niente doppi conteggi.
 - Prezzi separati per panettone e pandoro, letti da `impostazioni/stock`. Prima erano `const PREZZO_UNITA = 15` nel codice.
