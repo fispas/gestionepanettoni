@@ -43,6 +43,7 @@
     let ultimiDati = [];
     let ultimaConfig = null;
     let pronto = false;
+    let uidCaricato = null;
 
     /* ======================================================
        CATALOGO
@@ -116,6 +117,9 @@
     }
 
     function caricaLayout() {
+        const u0 = utente();
+        uidCaricato = (u0 && u0.uid) ? u0.uid : null;
+
         let locale = null;
         try { locale = JSON.parse(localStorage.getItem(chiaveLocale())); } catch (e) { /* niente */ }
         layout = normalizza(Array.isArray(locale) && locale.length ? locale : PREDEFINITO);
@@ -216,7 +220,7 @@
         modal.id = 'widget-modal';
         modal.className = 'modal';
         modal.innerHTML = `
-            <div class="modal-content modal-largo">
+            <div class="modal-content">
                 <h3>Aggiungi un widget</h3>
                 <p class="catalogo-titolo">Indicatori — un numero singolo</p>
                 <div class="catalogo-lista" id="catalogoMetriche"></div>
@@ -400,6 +404,7 @@
 
     function abilitaTrascinamento(card) {
         const avvia = (ev) => {
+            if (trascinamento) return;
             if (ev.button === 1 || ev.button === 2) return;
             if (ev.target.closest('.widget-azioni')) return;
 
@@ -453,8 +458,10 @@
             document.body.classList.remove('sto-trascinando');
             if (!eraPartito) return;
 
+            card.classList.add('appena-spostato');
+
             // Il "+" torna sempre in fondo.
-            const piu = trascinamento_piu();
+            const piu = bottonePiu();
             if (piu) card.parentNode.appendChild(piu);
 
             riordinaDaDOM();
@@ -474,7 +481,7 @@
         }, true);
     }
 
-    function trascinamento_piu() {
+    function bottonePiu() {
         const grid = document.getElementById('dashGrid');
         return grid ? grid.querySelector('.widget-aggiungi') : null;
     }
@@ -492,6 +499,7 @@
        ====================================================== */
 
     function render() {
+        if (trascinamento) return;   // mai ridisegnare durante un trascinamento
         if (!costruisciStruttura()) return;
 
         const grid = document.getElementById('dashGrid');
@@ -834,7 +842,12 @@
     function calcolaStatistiche(dati, config) {
         ultimiDati = Array.isArray(dati) ? dati : [];
         if (config) ultimaConfig = config;
-        if (!pronto) { pronto = true; caricaLayout(); return; }
+
+        // Al login (o al cambio utente) si ricaricano le preferenze di chi entra.
+        const u = utente();
+        const uid = (u && u.uid) ? u.uid : null;
+        if (!pronto || uid !== uidCaricato) { pronto = true; caricaLayout(); return; }
+
         render();
     }
 
@@ -882,7 +895,6 @@
 .widget.size-l { grid-column:span 6; }
 .widget.in-trascinamento { opacity:.55; border-style:dashed; border-color:var(--primary); box-shadow:0 8px 24px rgba(91,142,114,.18); }
 body.sto-trascinando { user-select:none; cursor:grabbing; }
-body.sto-trascinando .widget { transition:transform .12s ease; }
 .widget-maniglia { position:absolute; top:.5rem; left:.7rem; color:#c3d3ca; font-size:1rem; line-height:1; cursor:grab; opacity:0; transition:opacity .15s; touch-action:none; padding:2px 4px; }
 .widget:hover .widget-maniglia { opacity:1; }
 .widget.in-trascinamento .widget-maniglia { cursor:grabbing; opacity:1; }

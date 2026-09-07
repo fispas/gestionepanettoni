@@ -45,40 +45,8 @@
     <div class="container" id="main-container">
         <div id="loadingMsg">Caricamento…</div>
 
-        <!-- ============ DASHBOARD ============ -->
-        <div id="view-dashboard" class="view active">
-
-            <div class="dash-toolbar">
-                <div class="dash-selector-bar" id="dashFiltroProdotto">
-                    <button class="dash-tab-btn active" onclick="impostaFiltroProdotto('TUTTI', this)">Tutti</button>
-                    <button class="dash-tab-btn" onclick="impostaFiltroProdotto('PANETTONI', this)">🥮 Panettoni</button>
-                    <button class="dash-tab-btn" onclick="impostaFiltroProdotto('PANDORI', this)">🍞 Pandori</button>
-                </div>
-                <div class="dash-toolbar-right">
-                    <label for="dashPeriodo" class="sr-only">Periodo</label>
-                    <select id="dashPeriodo" class="dash-select" onchange="impostaFiltroPeriodo(this.value)">
-                        <option value="tutto">Tutto lo storico</option>
-                        <option value="7">Ultimi 7 giorni</option>
-                        <option value="30">Ultimi 30 giorni</option>
-                        <option value="mese">Mese corrente</option>
-                    </select>
-                    <button class="btn-pdf-header" id="btnPersonalizza" onclick="toggleModificaLayout()">⚙️ Personalizza</button>
-                    <button class="btn-pdf-header" onclick="esportaPDF()">📄 PDF</button>
-                </div>
-            </div>
-
-            <div class="dash-etichetta" id="dashEtichettaFiltri"></div>
-
-            <div class="alert-box" id="alertScorte" style="display:none;"></div>
-
-            <div class="barra-aggiunta" id="barraAggiunta" style="display:none;">
-                <button class="btn-action" onclick="apriCatalogoWidget()">➕ Aggiungi widget</button>
-                <button class="btn-edit" onclick="ripristinaLayout()">↺ Ripristina predefinita</button>
-                <span class="barra-aggiunta-hint">Usa ◀ ▶ per spostare, il tasto S/M/L per la larghezza.</span>
-            </div>
-
-            <div class="dash-grid" id="dashGrid"></div>
-        </div>
+        <!-- Dashboard: contenuto generato da dashboard.js -->
+        <div id="view-dashboard" class="view active"></div>
 
         <!-- ============ ORDINI ============ -->
         <div id="view-ordini" class="view">
@@ -266,17 +234,6 @@
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="chiudiModale('user-modal')">Annulla</button>
                 <button class="btn-save" onclick="salvaNuovoUtente()">Crea utente</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="widget-modal" class="modal">
-        <div class="modal-content modal-largo">
-            <h3>Aggiungi un widget</h3>
-            <div class="catalogo-lista" id="catalogoLista"></div>
-            <div id="catalogoScelta" style="display:none;"></div>
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="chiudiModale('widget-modal')">Chiudi</button>
             </div>
         </div>
     </div>
