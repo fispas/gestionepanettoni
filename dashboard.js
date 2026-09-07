@@ -201,7 +201,7 @@
             render();
         });
 
-        vista.querySelector('#btnPdf').addEventListener('click', esportaPDF);
+        vista.querySelector('#btnPdf').addEventListener('click', () => window.esportaPDF());
 
         vista.dataset.costruita = '1';
         return true;
@@ -865,6 +865,7 @@
 
     window.calcolaStatistiche = calcolaStatistiche;
     window.esportaPDF = esportaPDF;
+    window.aggregatoDashboard = function () { return { dati: aggrega(), filtri: filtri }; };
     window.apriCatalogoWidget = apriCatalogo;
     window.cambiaVistaDashboard = function (m) { filtri.prodotto = m; render(); };
     window.impostaFiltroProdotto = function (v) { filtri.prodotto = v; render(); };
