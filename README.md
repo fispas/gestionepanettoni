@@ -13,7 +13,7 @@ PWA statica su GitHub Pages + Firestore. Due pagine:
 | `index.html` | form pubblico, autonomo |
 | `gestione.html` | solo markup del pannello |
 | `gestionestyle.css` | stile del pannello |
-| `dashboard.js` | KPI, flussi, stock, grafico, export PDF |
+| `dashboard.js` | dashboard componibile a widget, export PDF |
 | `app.js` | auth, ruoli, ordini, staff, log, export Excel |
 | `firestore.rules` | autorizzazioni lato server |
 
@@ -79,15 +79,19 @@ Console → Firestore → Regole, incolla `firestore.rules`, pubblica. Poi verif
 - write su `impostazioni/stock` da un Manager → **negato**
 - read su `logs` da un Manager → **negato**
 
-### 4. Chiudi la registrazione pubblica
+### 4. Nessuna azione per la dashboard
+
+I layout personali finiscono in `preferenze/{uid}`, creata al volo al primo salvataggio. Le rules la coprono gia'.
+
+### 5. Chiudi la registrazione pubblica
 
 Authentication → Impostazioni → Azioni utente → disattiva la creazione di account. Gli account li crea l'Administrator dal pannello.
 
-### 5. Restringi la API key
+### 6. Restringi la API key
 
 Google Cloud Console → Credenziali → la chiave del browser → limita per referrer HTTP a `fispas.github.io/gestionepanettoni/*`. Poi attiva App Check con reCAPTCHA v3 su Firestore: è l'unica difesa vera contro lo spam sul form pubblico, che resta scrivibile senza autenticazione per necessità.
 
-### 6. Deploy
+### 7. Deploy
 
 Sostituisci i file nel repo, elimina `api.js` e `ordini-utenti.js`, commit su `main`. GitHub Pages pubblica in un paio di minuti.
 
@@ -109,6 +113,12 @@ Sostituisci i file nel repo, elimina `api.js` e `ordini-utenti.js`, commit su `m
 - Prezzi separati per panettone e pandoro, letti da `impostazioni/stock`. Prima erano `const PREZZO_UNITA = 15` nel codice.
 - `onSnapshot` sugli ordini limitato a 500 documenti.
 - Il campo `Importo` è calcolato nell'export Excel, con date leggibili.
+
+**Dashboard**
+- Griglia di widget componibile: aggiungi, rimuovi, riordina, cambia larghezza (S/M/L).
+- Layout salvato per utente in `preferenze/{uid}`, con fallback su `localStorage`.
+- Filtri globali: prodotto (tutti / panettoni / pandori) e periodo (storico / 7 giorni / 30 giorni / mese corrente).
+- Widget disponibili: indicatore singolo (10 metriche fra cui ticket medio, clienti unici, % consegnato), stock, flusso logistico cliccabile, ordini per stato, pezzi per prodotto, incassi per metodo, andamento giornaliero (ordini/pezzi/incasso), migliori clienti, ultimi ordini.
 
 **Funzionalità**
 - Codice prenotazione a 6 caratteri mostrato al cliente e ricercabile nel pannello.

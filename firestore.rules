@@ -1,0 +1,135 @@
+rules_version = '2';
+
+// WonderLAD - Gestione Dolci Solidali
+// Ruoli: Administrator (tutto) | Manager (vede e modifica solo gli ordini)
+// Il ruolo vive in /utenti/{uid}.ruolo e NON e' scrivibile dall'utente stesso.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- helper ----------
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function profilo() {
+      return get(/databases/$(database)/documents/utenti/$(request.auth.uid)).data;
+    }
+
+    // Staff = utente autenticato CON una scheda in /utenti. Un account Auth
+    // senza scheda non puo' fare nulla: niente auto-promozione.
+    function isStaff() {
+      return isAuth()
+        && exists(/databases/$(database)/documents/utenti/$(request.auth.uid));
+    }
+
+    function isAdmin() {
+      return isStaff() && profilo().ruolo == 'Administrator';
+    }
+
+    function statiValidi() {
+      return ['Prenotato', 'Prenotato - Da Pagare', 'Prenotato - Pagato',
+              'In Preparazione', 'Da Consegnare', 'Consegnato', 'Annullato'];
+    }
+
+    function metodiValidi() {
+      return ['-', 'Cash', 'Bonifico', 'POS'];
+    }
+
+    // ---------- ordini ----------
+    // create pubblico ma con schema chiuso e quantita' limitate.
+    match /ordini/{ordineId} {
+
+      function campiOrdine() {
+        return ['nome', 'cognome', 'telefono', 'panettoni', 'pandori',
+                'note', 'codice', 'status', 'metodoPagamento', 'origine', 'timestamp'];
+      }
+
+      function datiClienteValidi(d) {
+        return d.nome is string && d.nome.size() > 0 && d.nome.size() <= 60
+          && d.cognome is string && d.cognome.size() > 0 && d.cognome.size() <= 60
+          && d.telefono is string && d.telefono.matches('^[0-9]{8,15}$')
+          && d.panettoni is int && d.panettoni >= 0 && d.panettoni <= 50
+          && d.pandori is int && d.pandori >= 0 && d.pandori <= 50
+          && (d.panettoni + d.pandori) >= 1
+          && (d.panettoni + d.pandori) <= 100
+          && d.note is string && d.note.size() <= 300
+          && d.codice is string && d.codice.size() == 6;
+      }
+
+      allow create: if request.resource.data.keys().hasOnly(campiOrdine())
+        && request.resource.data.keys().hasAll(campiOrdine())
+        && datiClienteValidi(request.resource.data)
+        && request.resource.data.status == 'Prenotato - Da Pagare'
+        && request.resource.data.metodoPagamento == '-'
+        && request.resource.data.origine == 'web'
+        && request.resource.data.timestamp == request.time;
+
+      allow read: if isStaff();
+
+      // Il Manager puo' modificare gli ordini ma non riscrivere data e origine.
+      allow update: if isStaff()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['nome', 'cognome', 'telefono', 'panettoni', 'pandori',
+                       'note', 'status', 'metodoPagamento'])
+        && request.resource.data.panettoni is int
+        && request.resource.data.panettoni >= 0 && request.resource.data.panettoni <= 200
+        && request.resource.data.pandori is int
+        && request.resource.data.pandori >= 0 && request.resource.data.pandori <= 200
+        && request.resource.data.status in statiValidi()
+        && request.resource.data.metodoPagamento in metodiValidi();
+
+      // Cancellare un ordine e' definitivo: solo Administrator.
+      // Per annullare si usa lo stato "Annullato".
+      allow delete: if isAdmin();
+    }
+
+    // ---------- impostazioni (stock + prezzi) ----------
+    // Lettura pubblica: index.html mostra prezzi e disponibilita'.
+    // Contiene solo numeri, nessun dato personale.
+    match /impostazioni/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ---------- utenti (ruoli) ----------
+    // Nessuno puo' scrivere il proprio ruolo. Il primo Administrator si crea
+    // a mano dalla console Firebase (la console non passa dalle rules).
+    match /utenti/{uid} {
+      allow get: if isAuth() && (request.auth.uid == uid || isAdmin());
+      allow list: if isAdmin();
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['email', 'ruolo', 'creato'])
+        && request.resource.data.ruolo in ['Administrator', 'Manager'];
+      allow delete: if isAdmin() && request.auth.uid != uid;
+    }
+
+    // ---------- logs ----------
+    // Append-only, scritti solo dallo staff, letti solo dagli Administrator.
+    match /logs/{logId} {
+      allow create: if isStaff()
+        && request.resource.data.keys().hasOnly(['timestamp', 'categoria', 'utente', 'dettaglio'])
+        && request.resource.data.utente == request.auth.token.email
+        && request.resource.data.dettaglio is string
+        && request.resource.data.dettaglio.size() <= 500
+        && request.resource.data.timestamp == request.time;
+      allow read: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // ---------- preferenze personali (layout dashboard) ----------
+    // Ognuno legge e scrive solo le proprie. Nessun dato sensibile.
+    match /preferenze/{uid} {
+      allow read, delete: if isAuth() && request.auth.uid == uid;
+      allow create, update: if isAuth() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['dashboard', 'aggiornato'])
+        && request.resource.data.dashboard is list
+        && request.resource.data.dashboard.size() <= 24;
+    }
+
+    // Tutto il resto e' chiuso.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

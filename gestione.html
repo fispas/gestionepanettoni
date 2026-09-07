@@ -47,104 +47,37 @@
 
         <!-- ============ DASHBOARD ============ -->
         <div id="view-dashboard" class="view active">
-            <div class="dash-selector-bar">
-                <button class="dash-tab-btn active" onclick="cambiaVistaDashboard('TUTTI', this)">📊 Globale</button>
-                <button class="dash-tab-btn" onclick="cambiaVistaDashboard('PANETTONI', this)">🥮 Panettoni</button>
-                <button class="dash-tab-btn" onclick="cambiaVistaDashboard('PANDORI', this)">🍞 Pandori</button>
+
+            <div class="dash-toolbar">
+                <div class="dash-selector-bar" id="dashFiltroProdotto">
+                    <button class="dash-tab-btn active" onclick="impostaFiltroProdotto('TUTTI', this)">Tutti</button>
+                    <button class="dash-tab-btn" onclick="impostaFiltroProdotto('PANETTONI', this)">🥮 Panettoni</button>
+                    <button class="dash-tab-btn" onclick="impostaFiltroProdotto('PANDORI', this)">🍞 Pandori</button>
+                </div>
+                <div class="dash-toolbar-right">
+                    <label for="dashPeriodo" class="sr-only">Periodo</label>
+                    <select id="dashPeriodo" class="dash-select" onchange="impostaFiltroPeriodo(this.value)">
+                        <option value="tutto">Tutto lo storico</option>
+                        <option value="7">Ultimi 7 giorni</option>
+                        <option value="30">Ultimi 30 giorni</option>
+                        <option value="mese">Mese corrente</option>
+                    </select>
+                    <button class="btn-pdf-header" id="btnPersonalizza" onclick="toggleModificaLayout()">⚙️ Personalizza</button>
+                    <button class="btn-pdf-header" onclick="esportaPDF()">📄 PDF</button>
+                </div>
             </div>
+
+            <div class="dash-etichetta" id="dashEtichettaFiltri"></div>
 
             <div class="alert-box" id="alertScorte" style="display:none;"></div>
 
-            <div class="kpi-grid">
-                <div class="kpi-card kpi-incassato">
-                    <div class="kpi-label">Incassato</div>
-                    <div class="kpi-value" id="lblIncassatoTotale">€ 0</div>
-                </div>
-                <div class="kpi-card kpi-daincassare">
-                    <div class="kpi-label">Da incassare</div>
-                    <div class="kpi-value" id="lblDaIncassareTotale">€ 0</div>
-                </div>
+            <div class="barra-aggiunta" id="barraAggiunta" style="display:none;">
+                <button class="btn-action" onclick="apriCatalogoWidget()">➕ Aggiungi widget</button>
+                <button class="btn-edit" onclick="ripristinaLayout()">↺ Ripristina predefinita</button>
+                <span class="barra-aggiunta-hint">Usa ◀ ▶ per spostare, il tasto S/M/L per la larghezza.</span>
             </div>
 
-            <div class="table-controls">
-                <h3 class="dash-section-title" id="dashMainHeaderTitle" style="margin:0;">Panoramica generale</h3>
-                <button class="btn-pdf-header" onclick="esportaPDF()">📄 Esporta PDF</button>
-            </div>
-
-            <div class="stock-section">
-                <div class="stock-card" id="cardStockPanettoni">
-                    <div class="stock-header">
-                        <span class="stock-title">🥮 Panettoni</span>
-                        <button class="stock-edit-btn admin-only" onclick="apriModaleStock()">Modifica</button>
-                    </div>
-                    <div class="stock-numbers">
-                        <span class="stock-main-val" id="valPanettoni">0</span>
-                        <span class="stock-sub-val" id="lblTotPanettoni">prenotati su 0</span>
-                    </div>
-                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="barPanettoni" style="width:0%"></div></div>
-                    <div class="stock-sub-val" id="rimanenzePanettoni">Rimanenza: 0 pz</div>
-                </div>
-
-                <div class="stock-card" id="cardStockPandori">
-                    <div class="stock-header">
-                        <span class="stock-title">🍞 Pandori</span>
-                        <button class="stock-edit-btn admin-only" onclick="apriModaleStock()">Modifica</button>
-                    </div>
-                    <div class="stock-numbers">
-                        <span class="stock-main-val" id="valPandori">0</span>
-                        <span class="stock-sub-val" id="lblTotPandori">prenotati su 0</span>
-                    </div>
-                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="barPandori" style="width:0%"></div></div>
-                    <div class="stock-sub-val" id="rimanenzePandori">Rimanenza: 0 pz</div>
-                </div>
-            </div>
-
-            <div class="dash-section-title">Flusso logistico</div>
-            <div class="flow-grid">
-                <div class="flow-card card-st-prenotato" onclick="navigaVersoFiltro('Prenotato - Da Pagare')">
-                    <div class="flow-card-title">Prenotati</div>
-                    <div class="flow-card-count" id="countPrenotato">0</div>
-                    <div class="flow-card-sub" id="subPrenotato">🥮 0 | 🍞 0</div>
-                </div>
-                <div class="flow-card card-st-prep" onclick="navigaVersoFiltro('In Preparazione')">
-                    <div class="flow-card-title">In preparazione</div>
-                    <div class="flow-card-count" id="countInPreparazione">0</div>
-                    <div class="flow-card-sub" id="subInPrep">🥮 0 | 🍞 0</div>
-                </div>
-                <div class="flow-card card-st-consegna" onclick="navigaVersoFiltro('Da Consegnare')">
-                    <div class="flow-card-title">Da consegnare</div>
-                    <div class="flow-card-count" id="countDaConsegnare">0</div>
-                    <div class="flow-card-sub" id="subDaConseg">🥮 0 | 🍞 0</div>
-                </div>
-                <div class="flow-card card-st-consegnato" onclick="navigaVersoFiltro('Consegnato')">
-                    <div class="flow-card-title">Consegnati</div>
-                    <div class="flow-card-count" id="countConsegnati">0</div>
-                    <div class="flow-card-sub" id="subConsegnati">🥮 0 | 🍞 0</div>
-                </div>
-                <div class="flow-card card-st-annullato" onclick="navigaVersoFiltro('Annullato')">
-                    <div class="flow-card-title">Annullati</div>
-                    <div class="flow-card-count" id="countAnnullati">0</div>
-                    <div class="flow-card-sub" id="subAnnullati">🥮 0 | 🍞 0</div>
-                </div>
-            </div>
-
-            <div class="dash-section-title">Incassi</div>
-            <div class="flow-grid">
-                <div class="flow-card card-st-dapagare" onclick="navigaVersoFiltro('Prenotato - Da Pagare')">
-                    <div class="flow-card-title">Da pagare</div>
-                    <div class="flow-card-count" id="countDaPagare">0</div>
-                    <div class="flow-card-sub" id="subDaPagare">🥮 0 | 🍞 0</div>
-                </div>
-                <div class="flow-card card-st-pagato" onclick="navigaVersoFiltro('Prenotato - Pagato')">
-                    <div class="flow-card-title">Pagati</div>
-                    <div class="flow-card-count" id="countPagati">0</div>
-                    <div class="flow-card-sub" id="subPagati">🥮 0 | 🍞 0</div>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <canvas id="graficoVendite"></canvas>
-            </div>
+            <div class="dash-grid" id="dashGrid"></div>
         </div>
 
         <!-- ============ ORDINI ============ -->
@@ -333,6 +266,17 @@
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="chiudiModale('user-modal')">Annulla</button>
                 <button class="btn-save" onclick="salvaNuovoUtente()">Crea utente</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="widget-modal" class="modal">
+        <div class="modal-content modal-largo">
+            <h3>Aggiungi un widget</h3>
+            <div class="catalogo-lista" id="catalogoLista"></div>
+            <div id="catalogoScelta" style="display:none;"></div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="chiudiModale('widget-modal')">Chiudi</button>
             </div>
         </div>
     </div>
