@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prenotazione Dolci Solidali - WonderLAD</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;750&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- SDK Firebase Compat -->
+
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
@@ -23,14 +22,13 @@
             --border-color: #e2ece9;
         }
 
-        body { 
-            font-family: 'Nunito', sans-serif; 
-            background-color: var(--bg-main); 
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-main);
             color: var(--text-main);
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 0;
             margin: 0;
             min-height: 100vh;
             box-sizing: border-box;
@@ -46,8 +44,8 @@
             border-bottom: 2px solid var(--border-color);
             box-shadow: 0 4px 15px rgba(107, 144, 128, 0.05);
             margin-bottom: 2rem;
+            box-sizing: border-box;
         }
-
         .header-bar img { max-height: 48px; width: auto; }
 
         .form-container {
@@ -59,265 +57,315 @@
             box-shadow: 0 10px 30px rgba(107, 144, 128, 0.08);
             border: 2px solid var(--border-color);
             box-sizing: border-box;
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary);
+            margin-top: 0;
+            font-weight: 750;
+            font-size: 1.8rem;
+            margin-bottom: 0.3rem;
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.95rem;
             margin-bottom: 2rem;
+            font-weight: 600;
         }
 
-        h2 { 
-            text-align: center; 
-            color: var(--primary); 
-            margin-top: 0; 
-            font-weight: 750; 
-            font-size: 1.8rem; 
-            margin-bottom: 0.3rem; 
-            font-family: 'Quicksand', sans-serif; 
-        }
-        
-        .subtitle { 
-            text-align: center; 
-            color: var(--text-muted); 
-            font-size: 0.95rem; 
-            margin-bottom: 2rem; 
-            font-weight: 600; 
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
         }
 
-        input[type="text"], input[type="tel"] { 
-            width: 100%; 
-            margin-bottom: 1.2rem; 
-            padding: 0.9rem 1rem; 
+        input[type="text"], input[type="tel"], textarea {
+            width: 100%;
+            margin-bottom: 1.1rem;
+            padding: 0.9rem 1rem;
             border: 2px solid var(--border-color);
-            border-radius: 14px; 
-            box-sizing: border-box; 
+            border-radius: 14px;
+            box-sizing: border-box;
             font-family: 'Nunito', sans-serif;
-            font-size: 1rem; 
-            transition: all 0.3s ease; 
-            background-color: #fbfdfe; 
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background-color: #fbfdfe;
             color: var(--text-main);
         }
+        textarea { resize: vertical; min-height: 70px; }
 
-        input:focus { 
-            outline: none; 
-            border-color: var(--primary); 
-            background-color: #ffffff; 
-            box-shadow: 0 0 0 4px rgba(107, 144, 128, 0.12); 
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(107, 144, 128, 0.12);
         }
 
-        .product-selector { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            background-color: var(--accent-light); 
-            border: 2px solid var(--border-color); 
-            border-radius: 16px; 
-            padding: 1rem; 
-            margin-bottom: 1.2rem; 
+        .product-selector {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--accent-light);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1rem;
+            margin-bottom: 1rem;
         }
-
         .product-name { font-weight: 750; font-size: 1.1rem; color: var(--primary-dark); font-family: 'Quicksand', sans-serif; }
+        .product-price { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
         .counter-group { display: flex; align-items: center; gap: 15px; }
 
-        .btn-counter { 
-            background-color: var(--primary); 
-            color: white; 
-            border: none; 
-            width: 38px; 
-            height: 38px; 
-            border-radius: 50%; 
-            font-size: 1.3rem; 
-            font-weight: bold; 
-            cursor: pointer; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            transition: background-color 0.2s, transform 0.1s; 
+        .btn-counter {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        .btn-counter:hover { background-color: var(--primary-dark); transform: scale(1.05); }
-        .btn-counter:active { transform: scale(0.95); }
-        .count-display { font-size: 1.2rem; font-weight: 800; width: 25px; text-align: center; color: var(--text-main); }
+        .btn-counter:hover { background-color: var(--primary-dark); }
+        .btn-counter:disabled { opacity: 0.35; cursor: not-allowed; }
+        .count-display { font-size: 1.2rem; font-weight: 800; width: 28px; text-align: center; }
 
-        button[type="submit"] { 
-            width: 100%; 
-            padding: 1.1rem; 
-            background-color: var(--primary); 
-            color: white; 
-            border: none; 
-            border-radius: 14px; 
-            font-size: 1.15rem; 
-            font-weight: 800; 
-            cursor: pointer; 
-            transition: background-color 0.3s, transform 0.1s; 
-            font-family: 'Quicksand', sans-serif; 
-            margin-top: 0.5rem; 
-            box-shadow: 0 4px 12px rgba(107, 144, 128, 0.25); 
+        .totale-riga {
+            display: flex; justify-content: space-between; align-items: baseline;
+            font-family: 'Quicksand', sans-serif; font-weight: 750;
+            padding: 0.8rem 0 1.2rem; font-size: 1.1rem; color: var(--primary-dark);
         }
-        button[type="submit"]:hover { 
-            background-color: var(--primary-dark); 
-            transform: translateY(-2px); 
-        }
+        .totale-riga strong { font-size: 1.5rem; }
 
-        #statusMsg { font-weight: bold; text-align: center; margin-bottom: 1rem; min-height: 1.5rem; font-size: 1.05rem; font-family: 'Quicksand', sans-serif; }
-        #contatoreOrdini { font-size: 0.85em; color: var(--text-muted); text-align: center; margin-bottom: 1.5rem; font-weight: 700; }
-        
-        .test-btn { 
-            background-color: transparent; 
-            color: var(--text-muted); 
-            border: 2px dashed var(--border-color); 
-            padding: 0.8rem; 
-            border-radius: 14px; 
-            cursor: pointer; 
-            font-family: 'Quicksand', sans-serif; 
-            font-weight: 700; 
-            width: 90%; 
-            max-width: 450px; 
-            box-sizing: border-box; 
-            margin-bottom: 2rem;
+        button[type="submit"] {
+            width: 100%;
+            padding: 1.1rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.15rem;
+            font-weight: 800;
+            cursor: pointer;
+            font-family: 'Quicksand', sans-serif;
+            box-shadow: 0 4px 12px rgba(107, 144, 128, 0.25);
+        }
+        button[type="submit"]:hover:enabled { background-color: var(--primary-dark); }
+        button[type="submit"]:disabled { background-color: var(--accent-soft); cursor: not-allowed; box-shadow: none; }
+
+        #statusMsg { font-weight: 700; text-align: center; margin-bottom: 1rem; font-family: 'Quicksand', sans-serif; }
+        #statusMsg.errore { color: #c53030; }
+        #statusMsg.ok { color: var(--primary); }
+
+        .conferma-box {
+            display: none;
+            text-align: center;
+            background: var(--accent-light);
+            border: 2px solid var(--accent-soft);
+            border-radius: 18px;
+            padding: 1.5rem;
+        }
+        .conferma-box .codice {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 2rem; font-weight: 800; letter-spacing: 3px;
+            color: var(--primary-dark); margin: 0.5rem 0;
+        }
+        .btn-secondario {
+            background: none; border: 2px solid var(--accent-soft); color: var(--primary-dark);
+            padding: 0.7rem 1.2rem; border-radius: 12px; font-weight: 700; cursor: pointer;
+            font-family: 'Quicksand', sans-serif; margin-top: 1rem;
         }
     </style>
 </head>
 <body>
 
     <div class="header-bar">
-        <img src="https://www.wonderlad.org/wp-content/uploads/2020/05/logo-wonderlad.png" alt="WonderLAD Logo" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'180\' height=\'40\' viewBox=\'0 0 180 40\'><text x=\'10\' y=\'28\' fill=\'%236b9080\' font-family=\'Quicksand\' font-size=\'22\' font-weight=\'bold\'>WonderLAD</text></svg>'">
+        <img src="https://www.wonderlad.org/wp-content/uploads/2020/05/logo-wonderlad.png" alt="WonderLAD" onerror="this.style.display='none'">
     </div>
 
     <div class="form-container">
-        <h2>Prenota i tuoi Dolci</h2>
-        <div class="subtitle">Sostieni i nostri progetti con dolcezza</div>
-        
-        <div id="statusMsg"></div>
-        <div id="contatoreOrdini">Ordini registrati in questa sessione: 0</div>
+        <h2>Prenota i tuoi dolci</h2>
+        <p class="subtitle">Sostieni i nostri progetti con dolcezza</p>
 
-        <form id="ordineForm">
-            <input type="text" id="nome" placeholder="Nome" required>
-            <input type="text" id="cognome" placeholder="Cognome" required>
-            
-            <input 
-                type="tel" 
-                id="telefono" 
-                placeholder="Numero di Telefono" 
-                inputmode="numeric" 
-                pattern="[0-9]+" 
-                oninput="this.value = this.value.replace(/[^0-9]/g, '')" 
-                required>
-            
+        <div id="statusMsg" role="status" aria-live="polite"></div>
+
+        <div class="conferma-box" id="confermaBox">
+            <div>Prenotazione registrata. Il tuo codice:</div>
+            <div class="codice" id="codiceConferma"></div>
+            <div style="font-size:0.9rem; color:var(--text-muted); font-weight:600;">
+                Conservalo: ti servirà al ritiro. Ti contatteremo al numero indicato.
+            </div>
+            <button type="button" class="btn-secondario" id="btnNuovoOrdine">Prenota altri dolci</button>
+        </div>
+
+        <form id="ordineForm" novalidate>
+            <label for="nome">Nome</label>
+            <input type="text" id="nome" maxlength="60" autocomplete="given-name" required>
+
+            <label for="cognome">Cognome</label>
+            <input type="text" id="cognome" maxlength="60" autocomplete="family-name" required>
+
+            <label for="telefono">Telefono</label>
+            <input type="tel" id="telefono" inputmode="numeric" maxlength="15"
+                   autocomplete="tel" placeholder="es. 3331234567" required>
+
             <div class="product-selector">
-                <span class="product-name">Panettoni</span>
+                <span>
+                    <span class="product-name">Panettoni</span>
+                    <span class="product-price" id="prezzoPanettoneLbl"></span>
+                </span>
                 <div class="counter-group">
-                    <button type="button" class="btn-counter" onclick="updateCount('panettoni', -1)">-</button>
+                    <button type="button" class="btn-counter" data-prodotto="panettoni" data-delta="-1" aria-label="Togli un panettone">−</button>
                     <span id="panettoni-display" class="count-display">0</span>
-                    <button type="button" class="btn-counter" onclick="updateCount('panettoni', 1)">+</button>
+                    <button type="button" class="btn-counter" data-prodotto="panettoni" data-delta="1" aria-label="Aggiungi un panettone">+</button>
                 </div>
             </div>
 
             <div class="product-selector">
-                <span class="product-name">Pandori</span>
+                <span>
+                    <span class="product-name">Pandori</span>
+                    <span class="product-price" id="prezzoPandoroLbl"></span>
+                </span>
                 <div class="counter-group">
-                    <button type="button" class="btn-counter" onclick="updateCount('pandori', -1)">-</button>
+                    <button type="button" class="btn-counter" data-prodotto="pandori" data-delta="-1" aria-label="Togli un pandoro">−</button>
                     <span id="pandori-display" class="count-display">0</span>
-                    <button type="button" class="btn-counter" onclick="updateCount('pandori', 1)">+</button>
+                    <button type="button" class="btn-counter" data-prodotto="pandori" data-delta="1" aria-label="Aggiungi un pandoro">+</button>
                 </div>
             </div>
 
-            <button type="submit">Conferma Prenotazione</button>
+            <label for="note">Note (facoltative)</label>
+            <textarea id="note" maxlength="300" placeholder="Es. ritiro il pomeriggio, consegna a…"></textarea>
+
+            <div class="totale-riga">
+                <span>Totale</span>
+                <strong id="totaleOrdine">€ 0</strong>
+            </div>
+
+            <button type="submit" id="btnInvia">Conferma prenotazione</button>
         </form>
     </div>
 
-    <button class="test-btn" onclick="eseguiTest()">⚙️ Esegui Test Inserimento Dati</button>
-
+    <script src="firebase-init.js"></script>
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAjwLhDJkxtriCjGygPMPgk4Fjc_d_rtDs",
-            authDomain: "wonderlad-ordini.firebaseapp.com",
-            projectId: "wonderlad-ordini",
-            storageBucket: "wonderlad-ordini.firebasestorage.app",
-            messagingSenderId: "1016384282148",
-            appId: "1:1016384282148:web:8e8c16e889baed9d09c2b1",
-            measurementId: "G-065ZY1K7JX"
-        };
+        const MAX_PEZZI_PRODOTTO = 50;
+        let config = { ...CONFIG_DEFAULT };
+        let conteggi = { panettoni: 0, pandori: 0 };
+        let invioInCorso = false;
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        const el = (id) => document.getElementById(id);
 
-        let counterOrdini = 0; 
-        let countPanettoni = 0; 
-        let countPandori = 0;
+        // ---- configurazione (prezzi / apertura prenotazioni) ----
+        CONFIG_REF.get()
+            .then(doc => { config = normalizzaConfig(doc.exists ? doc.data() : null); })
+            .catch(() => { config = { ...CONFIG_DEFAULT }; })
+            .finally(() => {
+                el('prezzoPanettoneLbl').textContent = `€ ${config.prezzoPanettone} cad.`;
+                el('prezzoPandoroLbl').textContent = `€ ${config.prezzoPandoro} cad.`;
+                if (!config.ordiniAperti) {
+                    el('ordineForm').style.display = 'none';
+                    mostraMessaggio("Le prenotazioni sono chiuse. Grazie del sostegno!", 'errore');
+                }
+                aggiornaTotale();
+            });
 
-        function updateCount(prodotto, valore) {
-            if (prodotto === 'panettoni') {
-                countPanettoni += valore;
-                if (countPanettoni < 0) countPanettoni = 0;
-                document.getElementById('panettoni-display').textContent = countPanettoni;
-            } else if (prodotto === 'pandori') {
-                countPandori += valore;
-                if (countPandori < 0) countPandori = 0;
-                document.getElementById('pandori-display').textContent = countPandori;
-            }
+        function mostraMessaggio(testo, classe) {
+            const m = el('statusMsg');
+            m.textContent = testo;
+            m.className = classe || '';
         }
 
-        function eseguiTest() {
-            document.getElementById('nome').value = "TestNome";
-            document.getElementById('cognome').value = "TestCognome";
-            document.getElementById('telefono').value = "3331234567";
-            countPanettoni = 2; 
-            countPandori = 1;
-            document.getElementById('panettoni-display').textContent = countPanettoni;
-            document.getElementById('pandori-display').textContent = countPandori;
-            document.getElementById('ordineForm').dispatchEvent(new Event('submit', { cancelable: true }));
+        function aggiornaTotale() {
+            const tot = conteggi.panettoni * config.prezzoPanettone + conteggi.pandori * config.prezzoPandoro;
+            el('totaleOrdine').textContent = `€ ${tot.toLocaleString('it-IT')}`;
         }
-        
-        document.getElementById('ordineForm').addEventListener('submit', function(e) {
+
+        document.querySelectorAll('.btn-counter').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const p = btn.dataset.prodotto;
+                const delta = parseInt(btn.dataset.delta, 10);
+                conteggi[p] = Math.max(0, Math.min(MAX_PEZZI_PRODOTTO, conteggi[p] + delta));
+                el(p + '-display').textContent = conteggi[p];
+                aggiornaTotale();
+            });
+        });
+
+        function generaCodice() {
+            const alfabeto = "ACDEFGHJKLMNPQRSTUVWXYZ23456789"; // niente caratteri ambigui
+            let out = "";
+            const buf = new Uint32Array(6);
+            crypto.getRandomValues(buf);
+            for (let i = 0; i < 6; i++) out += alfabeto[buf[i] % alfabeto.length];
+            return out;
+        }
+
+        el('btnNuovoOrdine').addEventListener('click', () => {
+            el('confermaBox').style.display = 'none';
+            el('ordineForm').style.display = 'block';
+            mostraMessaggio('', '');
+        });
+
+        el('ordineForm').addEventListener('submit', function (e) {
             e.preventDefault();
-            const msg = document.getElementById('statusMsg');
-            
-            if (countPanettoni === 0 && countPandori === 0) {
-                msg.textContent = "Seleziona almeno un Panettone o un Pandoro.";
-                msg.style.color = "#d9534f";
-                return;
-            }
+            if (invioInCorso) return;
 
-            const btn = this.querySelector('button[type="submit"]');
-            btn.disabled = true; 
-            btn.textContent = "Attendere..."; 
-            msg.textContent = "";
-            
-            const nomeVal = document.getElementById('nome').value;
-            const cognomeVal = document.getElementById('cognome').value;
-            const telefonoVal = document.getElementById('telefono').value;
+            const nome = el('nome').value.trim();
+            const cognome = el('cognome').value.trim();
+            const telefono = el('telefono').value.replace(/\D/g, '');
+            const note = el('note').value.trim();
+
+            if (!nome || !cognome) return mostraMessaggio("Inserisci nome e cognome.", 'errore');
+            if (!/^[0-9]{8,15}$/.test(telefono)) return mostraMessaggio("Inserisci un numero di telefono valido (solo cifre).", 'errore');
+            if (conteggi.panettoni + conteggi.pandori < 1) return mostraMessaggio("Seleziona almeno un panettone o un pandoro.", 'errore');
+
+            invioInCorso = true;
+            const btn = el('btnInvia');
+            btn.disabled = true;
+            btn.textContent = "Invio in corso…";
+            mostraMessaggio('', '');
+
+            const codice = generaCodice();
 
             db.collection("ordini").add({
-                nome: nomeVal,
-                cognome: cognomeVal,
-                telefono: telefonoVal,
-                panettoni: countPanettoni,
-                pandori: countPandori,
+                nome: nome,
+                cognome: cognome,
+                telefono: telefono,
+                panettoni: conteggi.panettoni,
+                pandori: conteggi.pandori,
+                note: note,
+                codice: codice,
                 status: "Prenotato - Da Pagare",
                 metodoPagamento: "-",
+                origine: "web",
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             })
-            .then((docRef) => {
-                db.collection("logs").add({
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    categoria: "INSERIMENTO",
-                    utente: "Cliente Web",
-                    dettaglio: `Nuovo ordine da ${nomeVal} ${cognomeVal} (${countPanettoni} Panettoni, ${countPandori} Pandori)`
-                });
+            .then(() => {
+                el('ordineForm').reset();
+                conteggi = { panettoni: 0, pandori: 0 };
+                el('panettoni-display').textContent = "0";
+                el('pandori-display').textContent = "0";
+                aggiornaTotale();
 
-                msg.textContent = "Prenotazione confermata con successo! 🎉"; 
-                msg.style.color = "#6b9080";
-                document.getElementById('ordineForm').reset();
-                countPanettoni = 0; 
-                countPandori = 0;
-                document.getElementById('panettoni-display').textContent = "0";
-                document.getElementById('pandori-display').textContent = "0";
-                counterOrdini++;
-                document.getElementById('contatoreOrdini').textContent = `Ordini registrati in questa sessione: ${counterOrdini}`;
+                el('codiceConferma').textContent = codice;
+                el('ordineForm').style.display = 'none';
+                el('confermaBox').style.display = 'block';
             })
-            .catch((error) => {
-                msg.textContent = "Si è verificato un errore. Riprova."; 
-                msg.style.color = "#d9534f";
+            .catch(() => {
+                mostraMessaggio("Non è stato possibile registrare la prenotazione. Riprova tra qualche istante.", 'errore');
             })
             .finally(() => {
-                btn.disabled = false; 
-                btn.textContent = "Conferma Prenotazione";
+                invioInCorso = false;
+                btn.disabled = false;
+                btn.textContent = "Conferma prenotazione";
             });
         });
     </script>

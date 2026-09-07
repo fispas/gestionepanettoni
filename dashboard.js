@@ -1,184 +1,184 @@
+// WonderLAD - dashboard: KPI, flussi, stock e grafico.
+
 let filtroProdottoDashboard = "TUTTI";
 let chartInstance = null;
 
 function cambiaVistaDashboard(modo, btnElem) {
     filtroProdottoDashboard = modo;
     document.querySelectorAll('.dash-tab-btn').forEach(b => b.classList.remove('active'));
-    if(btnElem) btnElem.classList.add('active');
-    
-    const headerLbl = document.getElementById('dashMainHeaderTitle');
-    if(headerLbl) {
-        if(modo === 'PANETTONI') headerLbl.textContent = 'Focus Panettoni';
-        else if(modo === 'PANDORI') headerLbl.textContent = 'Focus Pandori';
-        else headerLbl.textContent = 'Panoramica Generale';
-    }
+    if (btnElem) btnElem.classList.add('active');
 
-    calcolaStatistiche(datiGlobali, impostazioniGlobali);
+    const titolo = document.getElementById('dashMainHeaderTitle');
+    if (titolo) {
+        titolo.textContent = modo === 'PANETTONI' ? 'Solo panettoni'
+                           : modo === 'PANDORI' ? 'Solo pandori'
+                           : 'Panoramica generale';
+    }
+    calcolaStatistiche(datiGlobali, configGlobale);
 }
 
-function navigaVersoFiltro(stato) {
-    filtroStatoAttuale = stato;
-    document.querySelectorAll('#view-ordini .filter-chips .chip').forEach(c => {
-        if(c.textContent.toLowerCase() === stato.toLowerCase() || (stato === 'Prenotato' && c.textContent.toLowerCase() === 'prenotati')) {
-            c.classList.add('active');
-        } else {
-            c.classList.remove('active');
-        }
-    });
-    filtraOrdini();
-    const navButtons = document.querySelectorAll('.bottom-nav .nav-item');
-    navButtons.forEach(btn => {
-        if(btn.textContent.includes('Ordini')) switchView('ordini', btn);
-    });
+// Un ordine sta in un solo stato logistico e in un solo stato di pagamento.
+function bucketLogistico(status) {
+    const s = String(status || '').toLowerCase();
+    if (s.includes('annullato')) return 'annullato';
+    if (s.includes('consegnato')) return 'consegnato';
+    if (s.includes('da consegnare')) return 'da_consegnare';
+    if (s.includes('preparazione')) return 'preparazione';
+    return 'prenotato';
 }
 
-function calcolaStatistiche(dati, impostazioni) {
-    let totPanettoni = 0; 
-    let totPandori = 0;
-    const PREZZO_UNITA = 15;
+function bucketPagamento(status) {
+    const s = String(status || '').toLowerCase();
+    if (s.includes('annullato')) return null;
+    if (s.includes('pagato') || s.includes('consegnato')) return 'pagato';
+    return 'da_pagare';
+}
 
-    let incassatoTotale = 0;
-    let daIncassareTotale = 0;
+function calcolaStatistiche(dati, config) {
+    if (!config) config = CONFIG_DEFAULT;
 
-    let stats = {
-        'prenotato': { count: 0, pan: 0, pand: 0 },
-        'da_pagare': { count: 0, pan: 0, pand: 0 },
-        'pagato': { count: 0, pan: 0, pand: 0 },
-        'preparazione': { count: 0, pan: 0, pand: 0 },
-        'da_consegnare': { count: 0, pan: 0, pand: 0 },
-        'consegnato': { count: 0, pan: 0, pand: 0 },
-        'annullato': { count: 0, pan: 0, pand: 0 }
+    const vuoto = () => ({ count: 0, pan: 0, pand: 0 });
+    const stats = {
+        prenotato: vuoto(), preparazione: vuoto(), da_consegnare: vuoto(),
+        consegnato: vuoto(), annullato: vuoto(), da_pagare: vuoto(), pagato: vuoto()
     };
 
-    dati.forEach(ordine => {
-        if(!ordine.nome && !ordine.cognome) return;
-        
-        const pan = parseInt(ordine.panettoni) || 0;
-        const pand = parseInt(ordine.pandori) || 0;
+    let totPanettoni = 0, totPandori = 0;   // impegnati sullo stock (annullati esclusi)
+    let incassato = 0, daIncassare = 0;
 
-        // Determina quali quantitativi prendere in considerazione in base al Tab attivo
-        let panConsiderati = (filtroProdottoDashboard === 'PANDORI') ? 0 : pan;
-        let pandConsiderati = (filtroProdottoDashboard === 'PANETTONI') ? 0 : pand;
-        
-        let pezziFocusTotali = panConsiderati + pandConsiderati;
+    dati.forEach(o => {
+        const panTot = parseInt(o.panettoni) || 0;
+        const pandTot = parseInt(o.pandori) || 0;
 
-        // Se nel Tab "Panettoni" l'ordine non ha panettoni (o viceversa per Pandori), lo saltiamo
-        if (pezziFocusTotali <= 0) return;
+        // Il tab attivo decide quali pezzi contare.
+        const pan = (filtroProdottoDashboard === 'PANDORI') ? 0 : panTot;
+        const pand = (filtroProdottoDashboard === 'PANETTONI') ? 0 : pandTot;
+        if (pan + pand <= 0) return;
 
-        totPanettoni += panConsiderati;
-        totPandori += pandConsiderati;
+        const bLog = bucketLogistico(o.status);
+        const bPag = bucketPagamento(o.status);
 
-        const importoOrdineFocus = pezziFocusTotali * PREZZO_UNITA;
-        const status = (ordine.status || "").toLowerCase().trim();
+        stats[bLog].count++;
+        stats[bLog].pan += pan;
+        stats[bLog].pand += pand;
 
-        if (status.includes('pagato') || status.includes('consegnato')) {
-            incassatoTotale += importoOrdineFocus;
-        } else if (!status.includes('annullato')) {
-            daIncassareTotale += importoOrdineFocus;
+        if (bPag) {
+            stats[bPag].count++;
+            stats[bPag].pan += pan;
+            stats[bPag].pand += pand;
         }
 
-        const sommaStato = (key) => {
-            stats[key].count++;
-            stats[key].pan += panConsiderati;
-            stats[key].pand += pandConsiderati;
-        };
+        // Gli ordini annullati non impegnano stock e non entrano negli incassi.
+        if (bLog === 'annullato') return;
 
-        if(status === 'prenotato') sommaStato('prenotato');
-        if(status.includes('da pagare')) sommaStato('da_pagare');
-        if(status.includes('pagato')) sommaStato('pagato');
-        if(status.includes('preparazione')) sommaStato('preparazione');
-        if(status.includes('da consegnare')) sommaStato('da_consegnare');
-        if(status.includes('consegnato')) sommaStato('consegnato');
-        if(status.includes('annullato')) sommaStato('annullato');
+        totPanettoni += pan;
+        totPandori += pand;
+
+        const importo = pan * config.prezzoPanettone + pand * config.prezzoPandoro;
+        if (bPag === 'pagato') incassato += importo;
+        else daIncassare += importo;
     });
 
-    // Aggiornamento Box Incassi in €
-    if(document.getElementById('lblIncassatoTotale')) {
-        document.getElementById('lblIncassatoTotale').textContent = `€ ${incassatoTotale.toLocaleString('it-IT')}`;
-    }
-    if(document.getElementById('lblDaIncassareTotale')) {
-        document.getElementById('lblDaIncassareTotale').textContent = `€ ${daIncassareTotale.toLocaleString('it-IT')}`;
-    }
+    const euro = (n) => '€ ' + Number(n).toLocaleString('it-IT');
+    const setText = (id, testo) => { const n = document.getElementById(id); if (n) n.textContent = testo; };
 
-    // Aggiornamento Conteggi Flussi Logici
-    const impostaBoxFlow = (idCount, idSub, key) => {
-        if(document.getElementById(idCount)) document.getElementById(idCount).textContent = stats[key].count;
-        if(document.getElementById(idSub)) {
-            if (filtroProdottoDashboard === 'PANETTONI') {
-                document.getElementById(idSub).textContent = `🥮 ${stats[key].pan} pz`;
-            } else if (filtroProdottoDashboard === 'PANDORI') {
-                document.getElementById(idSub).textContent = `🍞 ${stats[key].pand} pz`;
-            } else {
-                document.getElementById(idSub).textContent = `🥮 ${stats[key].pan} | 🍞 ${stats[key].pand}`;
-            }
-        }
+    setText('lblIncassatoTotale', euro(incassato));
+    setText('lblDaIncassareTotale', euro(daIncassare));
+
+    const boxFlusso = (idCount, idSub, key) => {
+        setText(idCount, stats[key].count);
+        if (filtroProdottoDashboard === 'PANETTONI') setText(idSub, `🥮 ${stats[key].pan} pz`);
+        else if (filtroProdottoDashboard === 'PANDORI') setText(idSub, `🍞 ${stats[key].pand} pz`);
+        else setText(idSub, `🥮 ${stats[key].pan} | 🍞 ${stats[key].pand}`);
     };
 
-    impostaBoxFlow('countPrenotato', 'subPrenotato', 'prenotato');
-    impostaBoxFlow('countDaPagare', 'subDaPagare', 'da_pagare');
-    impostaBoxFlow('countPagati', 'subPagati', 'pagato');
-    impostaBoxFlow('countInPreparazione', 'subInPrep', 'preparazione');
-    impostaBoxFlow('countDaConsegnare', 'subDaConseg', 'da_consegnare');
-    impostaBoxFlow('countConsegnati', 'subConsegnati', 'consegnato');
-    impostaBoxFlow('countAnnullati', 'subAnnullati', 'annullato');
+    boxFlusso('countPrenotato', 'subPrenotato', 'prenotato');
+    boxFlusso('countInPreparazione', 'subInPrep', 'preparazione');
+    boxFlusso('countDaConsegnare', 'subDaConseg', 'da_consegnare');
+    boxFlusso('countConsegnati', 'subConsegnati', 'consegnato');
+    boxFlusso('countAnnullati', 'subAnnullati', 'annullato');
+    boxFlusso('countDaPagare', 'subDaPagare', 'da_pagare');
+    boxFlusso('countPagati', 'subPagati', 'pagato');
 
-    // Visibilità e calcolo Stock dinamico
-    let stockInizialePanettoni = parseInt(impostazioni["Totale Panettoni"]) || 500;
-    let stockInizialePandori = parseInt(impostazioni["Totale Pandori"]) || 500;
+    const cardPan = document.getElementById('cardStockPanettoni');
+    const cardPand = document.getElementById('cardStockPandori');
+    if (cardPan && cardPand) {
+        cardPan.style.display = (filtroProdottoDashboard === 'PANDORI') ? 'none' : '';
+        cardPand.style.display = (filtroProdottoDashboard === 'PANETTONI') ? 'none' : '';
+    }
 
-    const cardPanettoni = document.getElementById('cardStockPanettoni');
-    const cardPandori = document.getElementById('cardStockPandori');
+    aggiornaStock('valPanettoni', 'lblTotPanettoni', 'rimanenzePanettoni', 'barPanettoni',
+                  totPanettoni, config.totalePanettoni);
+    aggiornaStock('valPandori', 'lblTotPandori', 'rimanenzePandori', 'barPandori',
+                  totPandori, config.totalePandori);
 
-    if (cardPanettoni && cardPandori) {
-        if (filtroProdottoDashboard === 'PANETTONI') {
-            cardPanettoni.style.display = 'block';
-            cardPandori.style.display = 'none';
-        } else if (filtroProdottoDashboard === 'PANDORI') {
-            cardPanettoni.style.display = 'none';
-            cardPandori.style.display = 'block';
+    const alert = document.getElementById('alertScorte');
+    if (alert) {
+        const esauritoPan = config.totalePanettoni - totPanettoni <= 0;
+        const esauritoPand = config.totalePandori - totPandori <= 0;
+        if (esauritoPan || esauritoPand) {
+            alert.textContent = `⚠️ Scorte esaurite: ${[esauritoPan ? 'panettoni' : null, esauritoPand ? 'pandori' : null].filter(Boolean).join(' e ')}. Chiudi le prenotazioni o aumenta lo stock.`;
+            alert.style.display = 'flex';
         } else {
-            cardPanettoni.style.display = 'block';
-            cardPandori.style.display = 'block';
+            alert.style.display = 'none';
         }
     }
-
-    const updateStockUI = (valId, lblId, rimId, barId, totVal, stockInit) => {
-        if(document.getElementById(valId)) document.getElementById(valId).textContent = totVal;
-        if(document.getElementById(lblId)) document.getElementById(lblId).textContent = `prenotati su ${stockInit}`;
-        if(document.getElementById(rimId)) document.getElementById(rimId).textContent = `Rimanenza: ${stockInit - totVal} pz`;
-        const perc = stockInit > 0 ? Math.min(100, Math.round((totVal / stockInit) * 100)) : 0;
-        if(document.getElementById(barId)) document.getElementById(barId).style.width = perc + '%';
-    };
-
-    updateStockUI('valPanettoni', 'lblTotPanettoni', 'rimanenzePanettoni', 'barPanettoni', totPanettoni, stockInizialePanettoni);
-    updateStockUI('valPandori', 'lblTotPandori', 'rimanenzePandori', 'barPandori', totPandori, stockInizialePandori);
 
     aggiornaGrafico(totPanettoni, totPandori);
 }
 
+function aggiornaStock(valId, lblId, rimId, barId, impegnati, totale) {
+    const setText = (id, t) => { const n = document.getElementById(id); if (n) n.textContent = t; };
+    setText(valId, impegnati);
+    setText(lblId, `prenotati su ${totale}`);
+
+    const rimanenza = totale - impegnati;
+    setText(rimId, rimanenza >= 0 ? `Rimanenza: ${rimanenza} pz` : `Sovrapprenotato di ${Math.abs(rimanenza)} pz`);
+
+    const bar = document.getElementById(barId);
+    if (bar) {
+        const perc = totale > 0 ? Math.min(100, Math.round((impegnati / totale) * 100)) : 0;
+        bar.style.width = perc + '%';
+    }
+}
+
 function aggiornaGrafico(panettoni, pandori) {
     const canvas = document.getElementById('graficoVendite');
-    if(!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if(chartInstance) chartInstance.destroy();
-    
+    if (!canvas || typeof Chart === 'undefined') return;
+
     let labels = ['Panettoni', 'Pandori'];
     let data = [panettoni, pandori];
     let colors = ['#5b8e72', '#94bdad'];
 
-    if (filtroProdottoDashboard === 'PANETTONI') {
-        labels = ['Panettoni'];
-        data = [panettoni];
-        colors = ['#5b8e72'];
-    } else if (filtroProdottoDashboard === 'PANDORI') {
-        labels = ['Pandori'];
-        data = [pandori];
-        colors = ['#94bdad'];
-    }
+    if (filtroProdottoDashboard === 'PANETTONI') { labels = ['Panettoni']; data = [panettoni]; colors = ['#5b8e72']; }
+    else if (filtroProdottoDashboard === 'PANDORI') { labels = ['Pandori']; data = [pandori]; colors = ['#94bdad']; }
 
-    chartInstance = new Chart(ctx, {
+    if (chartInstance) chartInstance.destroy();
+    chartInstance = new Chart(canvas.getContext('2d'), {
         type: 'bar',
-        data: { labels: labels, datasets: [{ label: 'Prenotazioni', data: data, backgroundColor: colors, borderRadius: 10 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        data: { labels, datasets: [{ label: 'Pezzi prenotati', data, backgroundColor: colors, borderRadius: 10 }] },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+    });
+}
+
+function esportaPDF() {
+    const vista = document.getElementById('view-dashboard');
+    if (!vista || typeof html2pdf === 'undefined') return alert("Export PDF non disponibile.");
+
+    const data = new Date().toLocaleDateString('it-IT');
+    html2pdf().set({
+        margin: 10,
+        filename: `Dashboard_WonderLAD_${new Date().toISOString().slice(0, 10)}.pdf`,
+        image: { type: 'jpeg', quality: 0.95 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(vista).save().then(() => {
+        if (typeof scriviLog === 'function') scriviLog("EXPORT", `Dashboard esportata in PDF (${data})`);
     });
 }
