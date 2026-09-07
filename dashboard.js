@@ -1,12 +1,12 @@
 // WonderLAD - dashboard BI componibile.
-// File autosufficiente: costruisce da solo barra strumenti, griglia e catalogo.
-// Non dipende da elementi presenti in gestione.html ne' da funzioni di app.js.
+// File autosufficiente: ricostruisce sempre da zero vista, griglia e catalogo,
+// ignorando quello che trova nell'HTML. Riordino dei widget per trascinamento.
 
 (function () {
     'use strict';
 
     /* ======================================================
-       FALLBACK: tutto cio' che potrebbe non esistere
+       FALLBACK
        ====================================================== */
 
     const CFG_FALLBACK = {
@@ -23,12 +23,10 @@
         catch (e) { return null; }
     }
 
-    function sicuro(fn) {
-        try { return typeof fn === 'function'; } catch (e) { return false; }
-    }
+    const esisteFn = (f) => typeof f === 'function';
 
-    function h(testo) {
-        return String(testo == null ? '' : testo)
+    function h(t) {
+        return String(t == null ? '' : t)
             .replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
 
@@ -66,24 +64,22 @@
     };
 
     const CATALOGO = {
-        stock:          { nome: 'Stock',                 desc: 'Pezzi impegnati sul disponibile',   size: 'm' },
-        flusso:         { nome: 'Flusso logistico',      desc: 'Conteggi per stato, cliccabili',    size: 'l' },
-        barStati:       { nome: 'Ordini per stato',      desc: 'Grafico a barre',                   size: 'm' },
-        barProdotti:    { nome: 'Pezzi per prodotto',    desc: 'Panettoni contro pandori',          size: 'm' },
-        tortaPagamenti: { nome: 'Metodi di pagamento',   desc: 'Ripartizione degli incassi',        size: 'm' },
-        andamentoPezzi: { nome: 'Pezzi al giorno',       desc: 'Serie storica',                     size: 'l' },
-        andamentoOrdini:{ nome: 'Ordini al giorno',      desc: 'Serie storica',                     size: 'l' },
-        andamentoIncasso:{nome: 'Incasso al giorno',     desc: 'Serie storica',                     size: 'l' },
-        cumulato:       { nome: 'Pezzi cumulati',        desc: 'Quanto manca al traguardo',         size: 'l' },
-        classifica:     { nome: 'Migliori clienti',      desc: 'Chi ha prenotato di piu\u0027',     size: 'm' },
-        ultimiOrdini:   { nome: 'Ultimi ordini',         desc: 'Le prenotazioni piu\u0027 recenti', size: 'm' },
-        daFare:         { nome: 'Cose da fare',          desc: 'Ordini che aspettano un\u0027azione', size: 'm' },
-        tabellaStati:   { nome: 'Riepilogo per stato',   desc: 'Tabella con pezzi e importi',       size: 'm' }
+        stock:            { nome: 'Stock',               desc: 'Pezzi impegnati sul disponibile',   size: 'm' },
+        flusso:           { nome: 'Flusso logistico',    desc: 'Conteggi per stato, cliccabili',    size: 'l' },
+        barStati:         { nome: 'Ordini per stato',    desc: 'Grafico a barre',                   size: 'm' },
+        barProdotti:      { nome: 'Pezzi per prodotto',  desc: 'Panettoni contro pandori',          size: 'm' },
+        tortaPagamenti:   { nome: 'Metodi di pagamento', desc: 'Ripartizione degli incassi',        size: 'm' },
+        andamentoPezzi:   { nome: 'Pezzi al giorno',     desc: 'Serie storica',                     size: 'l' },
+        andamentoOrdini:  { nome: 'Ordini al giorno',    desc: 'Serie storica',                     size: 'l' },
+        andamentoIncasso: { nome: 'Incasso al giorno',   desc: 'Serie storica',                     size: 'l' },
+        cumulato:         { nome: 'Pezzi cumulati',      desc: 'Quanto manca al traguardo',         size: 'l' },
+        classifica:       { nome: 'Migliori clienti',    desc: 'Chi ha prenotato di piu\u0027',     size: 'm' },
+        ultimiOrdini:     { nome: 'Ultimi ordini',       desc: 'Le prenotazioni piu\u0027 recenti', size: 'm' },
+        daFare:           { nome: 'Cose da fare',        desc: 'Ordini che aspettano un\u0027azione', size: 'm' },
+        tabellaStati:     { nome: 'Riepilogo per stato', desc: 'Ordini, pezzi e importi',           size: 'm' }
     };
 
-    const SERIE_ANDAMENTO = {
-        andamentoPezzi: 'pezzi', andamentoOrdini: 'ordini', andamentoIncasso: 'incasso'
-    };
+    const SERIE = { andamentoPezzi: 'pezzi', andamentoOrdini: 'ordini', andamentoIncasso: 'incasso' };
 
     const PREDEFINITO = [
         { tipo: 'kpi', metrica: 'incassato', size: 's' },
@@ -106,7 +102,8 @@
     }
 
     function normalizza(arr) {
-        return (arr || []).filter(w => w && (w.tipo === 'kpi' ? METRICHE[w.metrica] : CATALOGO[w.tipo]))
+        return (arr || [])
+            .filter(w => w && (w.tipo === 'kpi' ? METRICHE[w.metrica] : CATALOGO[w.tipo]))
             .slice(0, 30)
             .map(w => ({
                 id: 'w' + Math.random().toString(36).slice(2, 9),
@@ -149,13 +146,13 @@
     }
 
     /* ======================================================
-       STRUTTURA DELLA PAGINA (creata qui, non nell'HTML)
+       STRUTTURA (ricostruita sempre, si ignora l'HTML)
        ====================================================== */
 
     function costruisciStruttura() {
         const vista = document.getElementById('view-dashboard');
         if (!vista) return false;
-        if (document.getElementById('dashGrid')) return true;
+        if (vista.dataset.costruita === '1') return true;
 
         vista.innerHTML = `
             <div class="dash-toolbar">
@@ -202,12 +199,18 @@
 
         vista.querySelector('#btnPdf').addEventListener('click', esportaPDF);
 
-        costruisciCatalogo();
+        vista.dataset.costruita = '1';
         return true;
     }
 
+    /* ======================================================
+       CATALOGO WIDGET
+       ====================================================== */
+
     function costruisciCatalogo() {
-        if (document.getElementById('widget-modal')) return;
+        // Se ne esiste gia' uno (anche quello vuoto lasciato nell'HTML) si butta.
+        const vecchio = document.getElementById('widget-modal');
+        if (vecchio) vecchio.remove();
 
         const modal = document.createElement('div');
         modal.id = 'widget-modal';
@@ -215,9 +218,9 @@
         modal.innerHTML = `
             <div class="modal-content modal-largo">
                 <h3>Aggiungi un widget</h3>
-                <p class="catalogo-titolo">Indicatori</p>
+                <p class="catalogo-titolo">Indicatori — un numero singolo</p>
                 <div class="catalogo-lista" id="catalogoMetriche"></div>
-                <p class="catalogo-titolo">Grafici e tabelle</p>
+                <p class="catalogo-titolo">Grafici, liste e tabelle</p>
                 <div class="catalogo-lista" id="catalogoBlocchi"></div>
                 <div class="modal-actions">
                     <button class="btn-cancel" id="btnChiudiCatalogo">Chiudi</button>
@@ -226,37 +229,46 @@
         document.body.appendChild(modal);
 
         const metriche = modal.querySelector('#catalogoMetriche');
-        Object.entries(METRICHE).forEach(([chiave, m]) => {
+        Object.keys(METRICHE).forEach(chiave => {
+            const m = METRICHE[chiave];
             const b = document.createElement('button');
+            b.type = 'button';
             b.className = 'catalogo-item';
-            b.innerHTML = `<strong>${h(m.titolo)}</strong><span>Numero singolo</span>`;
+            b.innerHTML = `<strong>${h(m.titolo)}</strong><span>Indicatore</span>`;
             b.addEventListener('click', () => aggiungi({ tipo: 'kpi', metrica: chiave, size: 's' }));
             metriche.appendChild(b);
         });
 
         const blocchi = modal.querySelector('#catalogoBlocchi');
-        Object.entries(CATALOGO).forEach(([tipo, def]) => {
+        Object.keys(CATALOGO).forEach(tipo => {
+            const def = CATALOGO[tipo];
             const b = document.createElement('button');
+            b.type = 'button';
             b.className = 'catalogo-item';
             b.innerHTML = `<strong>${h(def.nome)}</strong><span>${h(def.desc)}</span>`;
             b.addEventListener('click', () => aggiungi({ tipo: tipo, size: def.size }));
             blocchi.appendChild(b);
         });
 
-        modal.querySelector('#btnChiudiCatalogo').addEventListener('click', () => { modal.style.display = 'none'; });
-        modal.addEventListener('click', ev => { if (ev.target === modal) modal.style.display = 'none'; });
+        modal.querySelector('#btnChiudiCatalogo').addEventListener('click', chiudiCatalogo);
+        modal.addEventListener('click', ev => { if (ev.target === modal) chiudiCatalogo(); });
+        return modal;
     }
 
     function apriCatalogo() {
-        costruisciCatalogo();
-        document.getElementById('widget-modal').style.display = 'flex';
+        const modal = costruisciCatalogo();
+        modal.style.display = 'flex';
+    }
+
+    function chiudiCatalogo() {
+        const m = document.getElementById('widget-modal');
+        if (m) m.style.display = 'none';
     }
 
     function aggiungi(def) {
         layout.push(normalizza([def])[0]);
         salvaLayout();
-        const m = document.getElementById('widget-modal');
-        if (m) m.style.display = 'none';
+        chiudiCatalogo();
         render();
     }
 
@@ -364,9 +376,9 @@
             a.classifica[nome].importo += importo;
         });
 
-        const stockTot = (filtri.prodotto === 'PANETTONI' ? (parseInt(cfg.totalePanettoni) || 0)
-                        : filtri.prodotto === 'PANDORI' ? (parseInt(cfg.totalePandori) || 0)
-                        : (parseInt(cfg.totalePanettoni) || 0) + (parseInt(cfg.totalePandori) || 0));
+        const stockTot = filtri.prodotto === 'PANETTONI' ? (parseInt(cfg.totalePanettoni) || 0)
+                       : filtri.prodotto === 'PANDORI' ? (parseInt(cfg.totalePandori) || 0)
+                       : (parseInt(cfg.totalePanettoni) || 0) + (parseInt(cfg.totalePandori) || 0);
 
         a.ticketMedio = a.ordiniAttivi ? Math.round(a.valoreTotale / a.ordiniAttivi) : 0;
         a.pezziMedi = a.ordiniAttivi ? Math.round(a.pezziTotali / a.ordiniAttivi * 10) / 10 : 0;
@@ -381,16 +393,111 @@
     }
 
     /* ======================================================
+       TRASCINAMENTO
+       ====================================================== */
+
+    let trascinamento = null;
+
+    function abilitaTrascinamento(card) {
+        const avvia = (ev) => {
+            if (ev.button === 1 || ev.button === 2) return;
+            if (ev.target.closest('.widget-azioni')) return;
+
+            const grid = document.getElementById('dashGrid');
+            trascinamento = {
+                card: card, grid: grid,
+                x0: ev.clientX, y0: ev.clientY,
+                partito: false, pointerId: ev.pointerId
+            };
+            card.setPointerCapture(ev.pointerId);
+        };
+
+        // Da tutta la scheda col mouse, solo dalla maniglia col dito
+        // (altrimenti su telefono non si riesce piu' a scorrere la pagina).
+        card.addEventListener('pointerdown', (ev) => {
+            if (ev.pointerType === 'mouse') avvia(ev);
+        });
+        card.querySelector('.widget-maniglia').addEventListener('pointerdown', avvia);
+
+        card.addEventListener('pointermove', (ev) => {
+            if (!trascinamento || trascinamento.card !== card) return;
+
+            if (!trascinamento.partito) {
+                if (Math.abs(ev.clientX - trascinamento.x0) + Math.abs(ev.clientY - trascinamento.y0) < 8) return;
+                trascinamento.partito = true;
+                card.classList.add('in-trascinamento');
+                document.body.classList.add('sto-trascinando');
+            }
+            ev.preventDefault();
+
+            card.style.pointerEvents = 'none';
+            const sotto = document.elementFromPoint(ev.clientX, ev.clientY);
+            card.style.pointerEvents = '';
+
+            const bersaglio = sotto && sotto.closest ? sotto.closest('.widget') : null;
+            if (!bersaglio || bersaglio === card || bersaglio.parentNode !== trascinamento.grid) return;
+            if (bersaglio.classList.contains('widget-aggiungi')) return;
+
+            const r = bersaglio.getBoundingClientRect();
+            const dopo = (ev.clientX - r.left) > r.width / 2;
+            trascinamento.grid.insertBefore(card, dopo ? bersaglio.nextSibling : bersaglio);
+        });
+
+        const concludi = (ev) => {
+            if (!trascinamento || trascinamento.card !== card) return;
+            const eraPartito = trascinamento.partito;
+            try { card.releasePointerCapture(trascinamento.pointerId); } catch (e) { /* niente */ }
+            trascinamento = null;
+
+            card.classList.remove('in-trascinamento');
+            document.body.classList.remove('sto-trascinando');
+            if (!eraPartito) return;
+
+            // Il "+" torna sempre in fondo.
+            const piu = trascinamento_piu();
+            if (piu) card.parentNode.appendChild(piu);
+
+            riordinaDaDOM();
+            salvaLayout();
+            if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+        };
+
+        card.addEventListener('pointerup', concludi);
+        card.addEventListener('pointercancel', concludi);
+
+        // Dopo un trascinamento il click sul widget non deve attivare nulla.
+        card.addEventListener('click', (ev) => {
+            if (card.classList.contains('appena-spostato')) {
+                ev.stopPropagation(); ev.preventDefault();
+                card.classList.remove('appena-spostato');
+            }
+        }, true);
+    }
+
+    function trascinamento_piu() {
+        const grid = document.getElementById('dashGrid');
+        return grid ? grid.querySelector('.widget-aggiungi') : null;
+    }
+
+    function riordinaDaDOM() {
+        const grid = document.getElementById('dashGrid');
+        if (!grid) return;
+        const ordine = Array.prototype.slice.call(grid.querySelectorAll('.widget[data-id]'))
+            .map(c => c.dataset.id);
+        layout.sort((a, b) => ordine.indexOf(a.id) - ordine.indexOf(b.id));
+    }
+
+    /* ======================================================
        RENDER
        ====================================================== */
 
     function render() {
         if (!costruisciStruttura()) return;
 
-        const griglia = document.getElementById('dashGrid');
-        if (!griglia) return;
+        const grid = document.getElementById('dashGrid');
+        if (!grid) return;
 
-        Object.values(grafici).forEach(c => { try { c.destroy(); } catch (e) { /* niente */ } });
+        Object.keys(grafici).forEach(k => { try { grafici[k].destroy(); } catch (e) { /* niente */ } });
         grafici = {};
 
         const a = aggrega();
@@ -399,57 +506,67 @@
         if (et) {
             const p = { tutto: 'tutto lo storico', '7': 'ultimi 7 giorni', '30': 'ultimi 30 giorni', mese: 'mese corrente' }[filtri.periodo];
             const pr = { TUTTI: 'tutti i prodotti', PANETTONI: 'solo panettoni', PANDORI: 'solo pandori' }[filtri.prodotto];
-            et.textContent = `${p} · ${pr} · ${a.ordiniTotali} ordini`;
+            et.textContent = p + ' · ' + pr + ' · ' + a.ordiniTotali + ' ordini';
         }
 
         avvisoScorte(a);
-        griglia.innerHTML = '';
+        grid.innerHTML = '';
 
-        layout.forEach((w, i) => {
+        layout.forEach(w => {
             const card = document.createElement('div');
             card.className = 'widget size-' + w.size;
-            card.appendChild(strumenti(w, i));
+            card.dataset.id = w.id;
+
+            const maniglia = document.createElement('div');
+            maniglia.className = 'widget-maniglia';
+            maniglia.title = 'Trascina per spostare';
+            maniglia.textContent = '⠿';
+            card.appendChild(maniglia);
+
+            const azioni = document.createElement('div');
+            azioni.className = 'widget-azioni';
+            azioni.innerHTML = `<button type="button" data-cmd="size" title="Larghezza">${w.size.toUpperCase()}</button>
+                                <button type="button" data-cmd="via" title="Rimuovi" class="tool-danger">✕</button>`;
+            azioni.addEventListener('click', ev => {
+                const cmd = ev.target.dataset.cmd;
+                if (!cmd) return;
+                ev.stopPropagation();
+                if (cmd === 'size') {
+                    const o = ['s', 'm', 'l'];
+                    w.size = o[(o.indexOf(w.size) + 1) % 3];
+                } else if (cmd === 'via') {
+                    const i = layout.indexOf(w);
+                    if (i >= 0) layout.splice(i, 1);
+                }
+                salvaLayout();
+                render();
+            });
+            card.appendChild(azioni);
 
             const corpo = document.createElement('div');
             corpo.className = 'widget-body';
             card.appendChild(corpo);
-            griglia.appendChild(card);
+            grid.appendChild(card);
 
             try { disegna(w, corpo, a); }
             catch (e) { corpo.innerHTML = '<p class="widget-vuoto">Widget non disponibile.</p>'; }
+
+            abilitaTrascinamento(card);
         });
 
-        // Il "+" e' sempre l'ultima cella della griglia.
         const piu = document.createElement('button');
+        piu.type = 'button';
         piu.className = 'widget widget-aggiungi size-s';
         piu.innerHTML = '<span class="piu-segno">+</span><span class="piu-testo">Aggiungi widget</span>';
         piu.addEventListener('click', apriCatalogo);
-        griglia.appendChild(piu);
+        grid.appendChild(piu);
 
-        if (sicuro(window.applicaPermessi)) window.applicaPermessi();
+        if (esisteFn(window.applicaPermessi)) window.applicaPermessi();
     }
 
-    function strumenti(w, i) {
-        const barra = document.createElement('div');
-        barra.className = 'widget-tools';
-        barra.innerHTML = `
-            <button data-cmd="prima" title="Sposta prima"${i === 0 ? ' disabled' : ''}>◀</button>
-            <button data-cmd="dopo" title="Sposta dopo"${i === layout.length - 1 ? ' disabled' : ''}>▶</button>
-            <button data-cmd="size" title="Larghezza">${w.size.toUpperCase()}</button>
-            <button data-cmd="via" title="Rimuovi" class="tool-danger">✕</button>`;
-
-        barra.addEventListener('click', ev => {
-            const cmd = ev.target.dataset.cmd;
-            if (!cmd) return;
-            if (cmd === 'prima' && i > 0) { const t = layout[i - 1]; layout[i - 1] = layout[i]; layout[i] = t; }
-            else if (cmd === 'dopo' && i < layout.length - 1) { const t = layout[i + 1]; layout[i + 1] = layout[i]; layout[i] = t; }
-            else if (cmd === 'size') { const o = ['s', 'm', 'l']; w.size = o[(o.indexOf(w.size) + 1) % 3]; }
-            else if (cmd === 'via') { layout.splice(i, 1); }
-            salvaLayout();
-            render();
-        });
-        return barra;
-    }
+    /* ======================================================
+       PEZZI DI WIDGET
+       ====================================================== */
 
     function titolo(corpo, testo, sotto) {
         const d = document.createElement('div');
@@ -466,7 +583,7 @@
     }
 
     function grafico(w, corpo, cfg, altezza) {
-        if (typeof Chart === 'undefined') { vuoto(corpo, 'Libreria grafici non caricata.'); return; }
+        if (typeof Chart === 'undefined') return vuoto(corpo, 'Libreria grafici non caricata.');
         const wrap = document.createElement('div');
         wrap.className = 'widget-chart';
         wrap.style.height = (altezza || 200) + 'px';
@@ -480,9 +597,9 @@
     function lista(corpo, righe) {
         const ul = document.createElement('ul');
         ul.className = 'lista-widget';
-        righe.forEach(([sx, dx, sotto]) => {
+        righe.forEach(r => {
             const li = document.createElement('li');
-            li.innerHTML = `<span>${h(sx)}${sotto ? `<em>${h(sotto)}</em>` : ''}</span><strong>${h(dx)}</strong>`;
+            li.innerHTML = `<span>${h(r[0])}${r[2] ? `<em>${h(r[2])}</em>` : ''}</span><strong>${h(r[1])}</strong>`;
             ul.appendChild(li);
         });
         corpo.appendChild(ul);
@@ -506,10 +623,6 @@
         }, 220);
     }
 
-    /* ======================================================
-       WIDGET
-       ====================================================== */
-
     function disegna(w, corpo, a) {
         if (w.tipo === 'kpi') {
             const m = METRICHE[w.metrica];
@@ -522,9 +635,7 @@
             return;
         }
 
-        if (SERIE_ANDAMENTO[w.tipo]) {
-            return serieTemporale(w, corpo, a, SERIE_ANDAMENTO[w.tipo], CATALOGO[w.tipo].nome);
-        }
+        if (SERIE[w.tipo]) return serieTemporale(w, corpo, a, SERIE[w.tipo], CATALOGO[w.tipo].nome);
 
         switch (w.tipo) {
 
@@ -534,7 +645,8 @@
                 if (filtri.prodotto !== 'PANDORI') righe.push(['🥮 Panettoni', a.panettoni, parseInt(a.cfg.totalePanettoni) || 0]);
                 if (filtri.prodotto !== 'PANETTONI') righe.push(['🍞 Pandori', a.pandori, parseInt(a.cfg.totalePandori) || 0]);
 
-                righe.forEach(([nome, impegnati, totale]) => {
+                righe.forEach(r => {
+                    const nome = r[0], impegnati = r[1], totale = r[2];
                     const perc = totale > 0 ? Math.min(100, Math.round(impegnati / totale * 100)) : 0;
                     const rim = totale - impegnati;
                     const b = document.createElement('div');
@@ -551,7 +663,7 @@
                         <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${perc}%"></div></div>
                         <div class="stock-sub-val">${rim >= 0 ? 'Rimanenza: ' + rim + ' pz' : 'Sovrapprenotato di ' + Math.abs(rim) + ' pz'}</div>`;
                     b.querySelector('button').addEventListener('click', () => {
-                        if (sicuro(window.apriModaleStock)) window.apriModaleStock();
+                        if (esisteFn(window.apriModaleStock)) window.apriModaleStock();
                     });
                     corpo.appendChild(b);
                 });
@@ -569,14 +681,14 @@
                 ];
                 const grid = document.createElement('div');
                 grid.className = 'flow-grid';
-                voci.forEach(([nome, chiave, classe, filtro]) => {
+                voci.forEach(v => {
                     const c = document.createElement('div');
-                    c.className = 'flow-card ' + classe;
-                    c.innerHTML = `<div class="flow-card-title">${h(nome)}</div>
-                                   <div class="flow-card-count">${a.stati[chiave]}</div>
-                                   <div class="flow-card-sub">${a.statiPezzi[chiave]} pz</div>`;
+                    c.className = 'flow-card ' + v[2];
+                    c.innerHTML = `<div class="flow-card-title">${h(v[0])}</div>
+                                   <div class="flow-card-count">${a.stati[v[1]]}</div>
+                                   <div class="flow-card-sub">${a.statiPezzi[v[1]]} pz</div>`;
                     c.addEventListener('click', () => {
-                        if (sicuro(window.navigaVersoFiltro)) window.navigaVersoFiltro(filtro);
+                        if (esisteFn(window.navigaVersoFiltro)) window.navigaVersoFiltro(v[3]);
                     });
                     grid.appendChild(c);
                 });
@@ -584,7 +696,7 @@
                 break;
             }
 
-            case 'barStati': {
+            case 'barStati':
                 titolo(corpo, 'Ordini per stato');
                 grafico(w, corpo, {
                     type: 'bar',
@@ -598,7 +710,6 @@
                     options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
                 });
                 break;
-            }
 
             case 'barProdotti': {
                 titolo(corpo, 'Pezzi per prodotto');
@@ -650,9 +761,11 @@
 
             case 'classifica': {
                 titolo(corpo, 'Migliori clienti', 'per pezzi prenotati');
-                const top = Object.entries(a.classifica).sort((x, y) => y[1].pezzi - x[1].pezzi).slice(0, 8);
+                const top = Object.keys(a.classifica)
+                    .map(n => [n, a.classifica[n]])
+                    .sort((x, y) => y[1].pezzi - x[1].pezzi).slice(0, 8);
                 if (!top.length) return vuoto(corpo, 'Nessun ordine nel periodo.');
-                lista(corpo, top.map(([nome, v]) => [nome, v.pezzi + ' pz · ' + fmtEuro(v.importo)]));
+                lista(corpo, top.map(t => [t[0], t[1].pezzi + ' pz · ' + fmtEuro(t[1].importo)]));
                 break;
             }
 
@@ -671,7 +784,7 @@
                 break;
             }
 
-            case 'daFare': {
+            case 'daFare':
                 titolo(corpo, 'Cose da fare', 'ordini che aspettano un\u0027azione');
                 if (!a.daFare.length) return vuoto(corpo, 'Tutto in ordine.');
                 lista(corpo, a.daFare.slice(0, 10).map(v => [
@@ -680,7 +793,6 @@
                     v.ordine.codice || ''
                 ]));
                 break;
-            }
 
             case 'tabellaStati': {
                 titolo(corpo, 'Riepilogo per stato');
@@ -708,7 +820,7 @@
         if ((parseInt(a.cfg.totalePandori) || 0) - a.pandori <= 0) mancanti.push('pandori');
 
         if (mancanti.length && filtri.periodo === 'tutto') {
-            box.textContent = `⚠️ Scorte esaurite: ${mancanti.join(' e ')}. Chiudi le prenotazioni o aumenta lo stock.`;
+            box.textContent = '⚠️ Scorte esaurite: ' + mancanti.join(' e ') + '. Chiudi le prenotazioni o aumenta lo stock.';
             box.style.display = 'flex';
         } else {
             box.style.display = 'none';
@@ -719,7 +831,6 @@
        API PUBBLICA
        ====================================================== */
 
-    // Chiamata da app.js a ogni snapshot di ordini e impostazioni.
     function calcolaStatistiche(dati, config) {
         ultimiDati = Array.isArray(dati) ? dati : [];
         if (config) ultimaConfig = config;
@@ -742,12 +853,10 @@
     window.calcolaStatistiche = calcolaStatistiche;
     window.esportaPDF = esportaPDF;
     window.apriCatalogoWidget = apriCatalogo;
-
-    // Compatibilita' con eventuali onclick rimasti nell'HTML.
-    window.cambiaVistaDashboard = function (modo) { filtri.prodotto = modo; render(); };
+    window.cambiaVistaDashboard = function (m) { filtri.prodotto = m; render(); };
     window.impostaFiltroProdotto = function (v) { filtri.prodotto = v; render(); };
     window.impostaFiltroPeriodo = function (v) { filtri.periodo = v; render(); };
-    window.toggleModificaLayout = function () { /* non serve piu': i controlli sono sempre attivi */ };
+    window.toggleModificaLayout = function () { /* non serve piu' */ };
     window.ripristinaLayout = function () {
         if (!confirm('Ripristinare la dashboard predefinita?')) return;
         layout = normalizza(PREDEFINITO);
@@ -755,7 +864,10 @@
         render();
     };
 
-    // Il CSS della griglia viaggia con il file, cosi' non serve toccare il foglio di stile.
+    /* ======================================================
+       CSS (viaggia con il file)
+       ====================================================== */
+
     const stile = document.createElement('style');
     stile.textContent = `
 .dash-toolbar { display:flex; flex-wrap:wrap; gap:.8rem; align-items:center; justify-content:space-between; margin-bottom:.6rem; }
@@ -764,15 +876,20 @@
 .dash-select { padding:.5rem .8rem; border:2px solid var(--border-color); border-radius:10px; font-family:'Quicksand',sans-serif; font-weight:700; font-size:.8rem; background:var(--card-bg); color:var(--text-main); cursor:pointer; }
 .dash-etichetta { font-size:.78rem; color:var(--text-muted); font-weight:700; margin-bottom:1rem; font-family:'Quicksand',sans-serif; }
 .dash-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:1rem; margin-bottom:1.5rem; align-items:start; }
-.widget { background:var(--card-bg); border:2px solid var(--border-color); border-radius:20px; padding:2.4rem 1.1rem 1.1rem; position:relative; min-width:0; }
+.widget { background:var(--card-bg); border:2px solid var(--border-color); border-radius:20px; padding:2.3rem 1.1rem 1.1rem; position:relative; min-width:0; }
 .widget.size-s { grid-column:span 2; }
 .widget.size-m { grid-column:span 3; }
 .widget.size-l { grid-column:span 6; }
-.widget-tools { position:absolute; top:.5rem; right:.6rem; display:flex; gap:4px; opacity:.35; transition:opacity .15s; }
-.widget:hover .widget-tools, .widget-tools:focus-within { opacity:1; }
-.widget-tools button { background:#f0f4f1; border:1px solid var(--border-color); color:var(--primary-dark); min-width:28px; height:26px; border-radius:8px; cursor:pointer; font-size:.72rem; font-weight:800; font-family:'Quicksand',sans-serif; padding:0 5px; }
-.widget-tools button:disabled { opacity:.3; cursor:not-allowed; }
-.widget-tools .tool-danger { background:#fce8e6; color:#c53030; border-color:#f5c6cb; }
+.widget.in-trascinamento { opacity:.55; border-style:dashed; border-color:var(--primary); box-shadow:0 8px 24px rgba(91,142,114,.18); }
+body.sto-trascinando { user-select:none; cursor:grabbing; }
+body.sto-trascinando .widget { transition:transform .12s ease; }
+.widget-maniglia { position:absolute; top:.5rem; left:.7rem; color:#c3d3ca; font-size:1rem; line-height:1; cursor:grab; opacity:0; transition:opacity .15s; touch-action:none; padding:2px 4px; }
+.widget:hover .widget-maniglia { opacity:1; }
+.widget.in-trascinamento .widget-maniglia { cursor:grabbing; opacity:1; }
+.widget-azioni { position:absolute; top:.45rem; right:.6rem; display:flex; gap:4px; opacity:0; transition:opacity .15s; }
+.widget:hover .widget-azioni, .widget-azioni:focus-within { opacity:1; }
+.widget-azioni button { background:#f0f4f1; border:1px solid var(--border-color); color:var(--primary-dark); min-width:26px; height:24px; border-radius:8px; cursor:pointer; font-size:.7rem; font-weight:800; font-family:'Quicksand',sans-serif; padding:0 5px; }
+.widget-azioni .tool-danger { background:#fce8e6; color:#c53030; border-color:#f5c6cb; }
 .widget-head { display:flex; flex-direction:column; margin-bottom:.8rem; }
 .widget-title { font-family:'Quicksand',sans-serif; font-weight:800; font-size:.95rem; color:var(--text-main); }
 .widget-sub { font-size:.72rem; color:var(--text-muted); font-weight:700; }
@@ -793,13 +910,13 @@
 .lista-widget li:last-child { border-bottom:none; }
 .lista-widget em { display:block; font-size:.72rem; color:var(--text-muted); font-style:normal; font-weight:700; }
 .lista-widget strong { white-space:nowrap; color:var(--primary-dark); font-size:.82rem; }
-.modal-largo { max-width:560px; max-height:85vh; overflow-y:auto; }
-.catalogo-lista { display:grid; grid-template-columns:1fr 1fr; gap:.6rem; margin-bottom:1rem; }
+#widget-modal .modal-content { max-width:600px; max-height:85vh; overflow-y:auto; }
+.catalogo-lista { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:.6rem; margin-bottom:1.2rem; }
 .catalogo-item { text-align:left; background:#f7faf8; border:2px solid var(--border-color); border-radius:14px; padding:.7rem .8rem; cursor:pointer; display:flex; flex-direction:column; gap:2px; }
 .catalogo-item:hover { border-color:var(--primary); background:var(--accent-light); }
 .catalogo-item strong { font-family:'Quicksand',sans-serif; font-size:.88rem; color:var(--text-main); }
 .catalogo-item span { font-size:.73rem; color:var(--text-muted); font-weight:600; }
-.catalogo-titolo { font-family:'Quicksand',sans-serif; font-weight:800; font-size:.8rem; color:var(--text-muted); margin:0 0 .5rem; text-transform:none; }
+.catalogo-titolo { font-family:'Quicksand',sans-serif; font-weight:800; font-size:.8rem; color:var(--text-muted); margin:0 0 .5rem; }
 @media screen and (max-width:900px) {
   .dash-grid { grid-template-columns:repeat(2,1fr); }
   .widget.size-s { grid-column:span 1; }
@@ -808,12 +925,10 @@
 @media screen and (max-width:560px) {
   .dash-grid { grid-template-columns:1fr; }
   .widget.size-s, .widget.size-m, .widget.size-l { grid-column:span 1; }
-  .catalogo-lista { grid-template-columns:1fr; }
-  .widget-tools { opacity:1; }
+  .widget-maniglia, .widget-azioni { opacity:1; }
 }`;
     document.head.appendChild(stile);
 
-    // Se i dati arrivano tardi, la dashboard si mostra comunque appena il DOM e' pronto.
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => { if (!pronto) { pronto = true; caricaLayout(); } });
     } else {
