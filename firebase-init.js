@@ -18,25 +18,53 @@ if (!firebase.apps.length) {
 const db = firebase.firestore();
 const auth = (typeof firebase.auth === 'function') ? firebase.auth() : null;
 
-// Documento unico di configurazione: stock, prezzi, apertura prenotazioni.
-const CONFIG_REF = db.collection("impostazioni").doc("stock");
+// impostazioni/generali: campagna attiva, contatti di emergenza, referenti,
+// luoghi di ritiro, dati dell'informativa. Leggibile da tutti.
+const GENERALI_REF = db.collection("impostazioni").doc("generali");
 
-const CONFIG_DEFAULT = {
-    totalePanettoni: 500,
-    totalePandori: 500,
-    prezzoPanettone: 15,
-    prezzoPandoro: 15,
-    ordiniAperti: true
-};
+// impostazioni/messaggi: modelli dei messaggi. Solo staff.
+const MODELLI_REF = db.collection("impostazioni").doc("messaggi");
 
-// Legge i nuovi campi con fallback sui vecchi ("Totale Panettoni", ecc.)
-function normalizzaConfig(raw) {
+// impostazioni/stock: documento della versione precedente, letto solo
+// dalla migrazione per recuperare stock e prezzi storici.
+const STOCK_LEGACY_REF = db.collection("impostazioni").doc("stock");
+
+function campagnaRef(id) {
+    return db.collection("campagne").doc(id);
+}
+
+// Unisce i dati salvati ai predefiniti, cosi' un campo mancante non rompe le pagine.
+function normalizzaGenerali(raw) {
     const d = raw || {};
+    const def = Modello.GENERALI_DEFAULT;
     return {
-        totalePanettoni: parseInt(d.totalePanettoni ?? d["Totale Panettoni"]) || CONFIG_DEFAULT.totalePanettoni,
-        totalePandori: parseInt(d.totalePandori ?? d["Totale Pandori"]) || CONFIG_DEFAULT.totalePandori,
-        prezzoPanettone: Number(d.prezzoPanettone ?? CONFIG_DEFAULT.prezzoPanettone),
-        prezzoPandoro: Number(d.prezzoPandoro ?? CONFIG_DEFAULT.prezzoPandoro),
-        ordiniAperti: d.ordiniAperti !== false
+        campagnaAttiva: d.campagnaAttiva || def.campagnaAttiva,
+        contattiEmergenza: typeof d.contattiEmergenza === 'string' ? d.contattiEmergenza : def.contattiEmergenza,
+        referenti: Array.isArray(d.referenti) ? d.referenti : def.referenti.slice(),
+        luoghi: Array.isArray(d.luoghi) ? d.luoghi : def.luoghi.slice(),
+        privacy: Object.assign({}, def.privacy, d.privacy || {})
     };
+}
+
+function normalizzaModelli(raw) {
+    const d = raw || {};
+    const out = {};
+    Object.keys(Modello.MODELLI_DEFAULT).forEach(k => {
+        out[k] = Object.assign({}, Modello.MODELLI_DEFAULT[k], d[k] || {});
+    });
+    return out;
+}
+
+// Carica impostazioni generali e campagna attiva in un colpo solo.
+// Restituisce { generali, campagna, id, inizializzato }.
+function caricaCampagnaAttiva() {
+    return GENERALI_REF.get().then(doc => {
+        const generali = normalizzaGenerali(doc.exists ? doc.data() : null);
+        return campagnaRef(generali.campagnaAttiva).get().then(c => ({
+            generali: generali,
+            id: generali.campagnaAttiva,
+            campagna: c.exists ? c.data() : null,
+            inizializzato: doc.exists && c.exists
+        }));
+    });
 }

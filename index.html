@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prenotazione Dolci Solidali - WonderLAD</title>
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;750&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -20,53 +20,50 @@
             --text-main: #2c3e35;
             --text-muted: #6b7c73;
             --border-color: #e2ece9;
+            --danger: #c53030;
         }
+
+        * { box-sizing: border-box; }
 
         body {
             font-family: 'Nunito', sans-serif;
             background-color: var(--bg-main);
             color: var(--text-main);
+            margin: 0;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 0;
-            min-height: 100vh;
-            box-sizing: border-box;
         }
 
         .header-bar {
             width: 100%;
             background-color: var(--card-bg);
-            padding: 1.2rem 1rem;
+            padding: 1.1rem 1rem;
             display: flex;
             justify-content: center;
-            align-items: center;
             border-bottom: 2px solid var(--border-color);
-            box-shadow: 0 4px 15px rgba(107, 144, 128, 0.05);
-            margin-bottom: 2rem;
-            box-sizing: border-box;
+            margin-bottom: 1.8rem;
         }
-        .header-bar img { max-height: 48px; width: auto; }
+        .header-bar img { max-height: 46px; width: auto; }
 
         .form-container {
             background: var(--card-bg);
-            max-width: 450px;
-            width: 90%;
-            padding: 2.5rem 2rem;
+            max-width: 520px;
+            width: calc(100% - 32px);
+            padding: 2.2rem 1.8rem;
             border-radius: 24px;
             box-shadow: 0 10px 30px rgba(107, 144, 128, 0.08);
             border: 2px solid var(--border-color);
-            box-sizing: border-box;
-            margin-bottom: 3rem;
+            margin-bottom: 1.5rem;
         }
 
         h2 {
             text-align: center;
             color: var(--primary);
-            margin-top: 0;
-            font-weight: 750;
-            font-size: 1.8rem;
-            margin-bottom: 0.3rem;
+            margin: 0 0 0.3rem;
+            font-weight: 700;
+            font-size: 1.7rem;
             font-family: 'Quicksand', sans-serif;
         }
 
@@ -74,88 +71,140 @@
             text-align: center;
             color: var(--text-muted);
             font-size: 0.95rem;
-            margin-bottom: 2rem;
+            margin: 0 0 1.8rem;
             font-weight: 600;
         }
 
+        .sezione {
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--primary-dark);
+            margin: 1.6rem 0 0.8rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 2px solid var(--accent-light);
+        }
+        .sezione:first-of-type { margin-top: 0; }
+
+        .riga-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 0.8rem; }
+        .riga-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0 0.8rem; }
+
         label {
             display: block;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: 700;
             color: var(--text-muted);
             margin-bottom: 0.3rem;
         }
+        .obbl { color: var(--danger); }
 
-        input[type="text"], input[type="tel"], textarea {
+        input[type="text"], input[type="tel"], input[type="email"], input[type="number"], textarea {
             width: 100%;
-            margin-bottom: 1.1rem;
-            padding: 0.9rem 1rem;
+            margin-bottom: 1rem;
+            padding: 0.85rem 1rem;
             border: 2px solid var(--border-color);
             border-radius: 14px;
-            box-sizing: border-box;
             font-family: 'Nunito', sans-serif;
             font-size: 1rem;
-            transition: border-color 0.2s, box-shadow 0.2s;
             background-color: #fbfdfe;
             color: var(--text-main);
         }
         textarea { resize: vertical; min-height: 70px; }
-
         input:focus, textarea:focus {
             outline: none;
             border-color: var(--primary);
-            background-color: #ffffff;
+            background-color: #fff;
             box-shadow: 0 0 0 4px rgba(107, 144, 128, 0.12);
         }
+        input.errato { border-color: var(--danger); }
 
-        .product-selector {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        /* ---- prodotti ---- */
+        .prodotto {
             background-color: var(--accent-light);
             border: 2px solid var(--border-color);
             border-radius: 16px;
-            padding: 1rem;
-            margin-bottom: 1rem;
+            padding: 0.9rem 1rem;
+            margin-bottom: 0.8rem;
         }
-        .product-name { font-weight: 750; font-size: 1.1rem; color: var(--primary-dark); font-family: 'Quicksand', sans-serif; }
-        .product-price { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
-        .counter-group { display: flex; align-items: center; gap: 15px; }
+        .prodotto-riga { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .prodotto-nome { font-weight: 700; font-size: 1.08rem; color: var(--primary-dark); font-family: 'Quicksand', sans-serif; }
+        .prodotto-min { display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
+        .btn-info {
+            background: none; border: none; padding: 0; margin-top: 3px;
+            font-family: 'Nunito', sans-serif; font-size: 0.78rem; font-weight: 800;
+            color: var(--primary); cursor: pointer; text-decoration: underline;
+        }
+        .prodotto-dettagli {
+            display: none; margin-top: 0.7rem; padding-top: 0.7rem;
+            border-top: 1px dashed var(--accent-soft); font-size: 0.86rem; line-height: 1.45;
+        }
+        .prodotto-dettagli.aperto { display: block; }
+        .prodotto-dettagli dt { font-weight: 800; color: var(--primary-dark); margin-top: 0.4rem; }
+        .prodotto-dettagli dd { margin: 0; color: var(--text-main); }
 
+        .counter-group { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
         .btn-counter {
             background-color: var(--primary);
             color: white;
             border: none;
-            width: 38px;
-            height: 38px;
+            width: 38px; height: 38px;
             border-radius: 50%;
-            font-size: 1.3rem;
-            font-weight: bold;
+            font-size: 1.3rem; font-weight: bold;
             cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: flex; justify-content: center; align-items: center;
         }
         .btn-counter:hover { background-color: var(--primary-dark); }
-        .btn-counter:disabled { opacity: 0.35; cursor: not-allowed; }
         .count-display { font-size: 1.2rem; font-weight: 800; width: 28px; text-align: center; }
+
+        /* ---- offerta ---- */
+        .offerta-box {
+            border: 2px solid var(--accent-soft);
+            border-radius: 16px;
+            padding: 1rem 1rem 0.2rem;
+            background: #fbfefc;
+        }
+        .offerta-min { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 0.7rem; }
+        .offerta-min strong { font-family: 'Quicksand', sans-serif; color: var(--primary-dark); }
+        .euro-wrap { position: relative; }
+        .euro-wrap span {
+            position: absolute; left: 1rem; top: 0.85rem;
+            font-weight: 800; color: var(--text-muted); pointer-events: none;
+        }
+        .euro-wrap input { padding-left: 2.1rem; font-weight: 800; font-size: 1.15rem; }
+        .aiuto { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin: -0.6rem 0 0.9rem; }
+
+        /* ---- checkbox ---- */
+        .check {
+            display: flex; gap: 10px; align-items: flex-start;
+            font-size: 0.88rem; font-weight: 600; color: var(--text-main);
+            margin-bottom: 0.9rem; cursor: pointer; line-height: 1.4;
+        }
+        .check input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--primary); flex-shrink: 0; }
+        .check a { color: var(--primary-dark); font-weight: 800; }
+
+        #boxRicevuta {
+            display: none;
+            border-left: 3px solid var(--accent-soft);
+            padding-left: 0.9rem;
+            margin-bottom: 0.6rem;
+        }
 
         .totale-riga {
             display: flex; justify-content: space-between; align-items: baseline;
-            font-family: 'Quicksand', sans-serif; font-weight: 750;
-            padding: 0.8rem 0 1.2rem; font-size: 1.1rem; color: var(--primary-dark);
+            font-family: 'Quicksand', sans-serif; font-weight: 700;
+            padding: 1rem 0 1.1rem; font-size: 1.1rem; color: var(--primary-dark);
         }
         .totale-riga strong { font-size: 1.5rem; }
 
         button[type="submit"] {
             width: 100%;
-            padding: 1.1rem;
+            padding: 1.05rem;
             background-color: var(--primary);
             color: white;
             border: none;
             border-radius: 14px;
-            font-size: 1.15rem;
-            font-weight: 800;
+            font-size: 1.12rem;
+            font-weight: 700;
             cursor: pointer;
             font-family: 'Quicksand', sans-serif;
             box-shadow: 0 4px 12px rgba(107, 144, 128, 0.25);
@@ -164,8 +213,8 @@
         button[type="submit"]:disabled { background-color: var(--accent-soft); cursor: not-allowed; box-shadow: none; }
 
         #statusMsg { font-weight: 700; text-align: center; margin-bottom: 1rem; font-family: 'Quicksand', sans-serif; }
-        #statusMsg.errore { color: #c53030; }
-        #statusMsg.ok { color: var(--primary); }
+        #statusMsg:empty { display: none; }
+        #statusMsg.errore { color: var(--danger); }
 
         .conferma-box {
             display: none;
@@ -177,13 +226,43 @@
         }
         .conferma-box .codice {
             font-family: 'Quicksand', sans-serif;
-            font-size: 2rem; font-weight: 800; letter-spacing: 3px;
-            color: var(--primary-dark); margin: 0.5rem 0;
+            font-size: 2rem; font-weight: 700; letter-spacing: 3px;
+            color: var(--primary-dark); margin: 0.4rem 0 0.8rem;
         }
+        .conferma-box dl {
+            text-align: left; display: grid; grid-template-columns: auto 1fr; gap: 0.3rem 1rem;
+            background: #fff; border-radius: 12px; padding: 0.9rem 1rem; margin: 0 0 1rem; font-size: 0.92rem;
+        }
+        .conferma-box dt { font-weight: 800; color: var(--text-muted); }
+        .conferma-box dd { margin: 0; font-weight: 700; }
         .btn-secondario {
             background: none; border: 2px solid var(--accent-soft); color: var(--primary-dark);
             padding: 0.7rem 1.2rem; border-radius: 12px; font-weight: 700; cursor: pointer;
-            font-family: 'Quicksand', sans-serif; margin-top: 1rem;
+            font-family: 'Quicksand', sans-serif; margin-top: 0.4rem;
+        }
+
+        .chiuso { text-align: center; color: var(--text-muted); font-weight: 700; line-height: 1.5; }
+
+        .emergenza {
+            max-width: 520px;
+            width: calc(100% - 32px);
+            background: #fffaf0;
+            border: 2px solid #f6e3b8;
+            border-radius: 18px;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            white-space: pre-line;
+            display: none;
+        }
+        .emergenza strong { font-family: 'Quicksand', sans-serif; color: #8a5a00; display: block; margin-bottom: 0.2rem; }
+
+        .piede { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 2.5rem; text-align: center; }
+        .piede a { color: var(--primary-dark); font-weight: 700; }
+
+        @media (max-width: 480px) {
+            .form-container { padding: 1.7rem 1.1rem; }
+            .riga-2, .riga-3 { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -194,138 +273,332 @@
     </div>
 
     <div class="form-container">
-        <h2>Prenota i tuoi dolci</h2>
-        <p class="subtitle">Sostieni i nostri progetti con dolcezza</p>
+        <h2 id="titoloForm">Prenota i tuoi dolci</h2>
+        <p class="subtitle" id="sottotitoloForm">Sostieni i nostri progetti con dolcezza</p>
 
         <div id="statusMsg" role="status" aria-live="polite"></div>
+
+        <p class="chiuso" id="caricamento">Caricamento…</p>
+        <p class="chiuso" id="boxChiuso" style="display:none;"></p>
 
         <div class="conferma-box" id="confermaBox">
             <div>Prenotazione registrata. Il tuo codice:</div>
             <div class="codice" id="codiceConferma"></div>
+            <dl>
+                <dt>Dolci</dt><dd id="confRiepilogo"></dd>
+                <dt>Offerta</dt><dd id="confOfferta"></dd>
+                <dt>Ricevuta</dt><dd id="confRicevuta"></dd>
+            </dl>
             <div style="font-size:0.9rem; color:var(--text-muted); font-weight:600;">
-                Conservalo: ti servirà al ritiro. Ti contatteremo al numero indicato.
+                Conserva il codice: ti servirà al ritiro. Ti contatteremo per indicarti giorno e luogo.
             </div>
-            <button type="button" class="btn-secondario" id="btnNuovoOrdine">Prenota altri dolci</button>
+            <button type="button" class="btn-secondario" id="btnNuovoOrdine">Fai un'altra prenotazione</button>
         </div>
 
-        <form id="ordineForm" novalidate>
-            <label for="nome">Nome</label>
-            <input type="text" id="nome" maxlength="60" autocomplete="given-name" required>
+        <form id="ordineForm" novalidate style="display:none;">
 
-            <label for="cognome">Cognome</label>
-            <input type="text" id="cognome" maxlength="60" autocomplete="family-name" required>
-
-            <label for="telefono">Telefono</label>
-            <input type="tel" id="telefono" inputmode="numeric" maxlength="15"
-                   autocomplete="tel" placeholder="es. 3331234567" required>
-
-            <div class="product-selector">
-                <span>
-                    <span class="product-name">Panettoni</span>
-                    <span class="product-price" id="prezzoPanettoneLbl"></span>
-                </span>
-                <div class="counter-group">
-                    <button type="button" class="btn-counter" data-prodotto="panettoni" data-delta="-1" aria-label="Togli un panettone">−</button>
-                    <span id="panettoni-display" class="count-display">0</span>
-                    <button type="button" class="btn-counter" data-prodotto="panettoni" data-delta="1" aria-label="Aggiungi un panettone">+</button>
+            <div class="sezione">I tuoi dati</div>
+            <div class="riga-2">
+                <div>
+                    <label for="nome">Nome <span class="obbl">*</span></label>
+                    <input type="text" id="nome" maxlength="60" autocomplete="given-name" required>
+                </div>
+                <div>
+                    <label for="cognome">Cognome <span class="obbl">*</span></label>
+                    <input type="text" id="cognome" maxlength="60" autocomplete="family-name" required>
+                </div>
+            </div>
+            <div class="riga-2">
+                <div>
+                    <label for="telefono">Telefono <span class="obbl">*</span></label>
+                    <input type="tel" id="telefono" inputmode="tel" maxlength="20" autocomplete="tel" placeholder="es. 333 1234567" required>
+                </div>
+                <div>
+                    <label for="email">Email <span class="obbl">*</span></label>
+                    <input type="email" id="email" maxlength="120" autocomplete="email" placeholder="nome@esempio.it" required>
                 </div>
             </div>
 
-            <div class="product-selector">
-                <span>
-                    <span class="product-name">Pandori</span>
-                    <span class="product-price" id="prezzoPandoroLbl"></span>
-                </span>
-                <div class="counter-group">
-                    <button type="button" class="btn-counter" data-prodotto="pandori" data-delta="-1" aria-label="Togli un pandoro">−</button>
-                    <span id="pandori-display" class="count-display">0</span>
-                    <button type="button" class="btn-counter" data-prodotto="pandori" data-delta="1" aria-label="Aggiungi un pandoro">+</button>
+            <div class="sezione">Scegli i dolci</div>
+            <div id="listaProdotti"></div>
+
+            <div class="sezione">La tua offerta</div>
+            <div class="offerta-box">
+                <div class="offerta-min"><span>Donazione minima</span><strong id="minimoLbl">€ 0,00</strong></div>
+                <label for="offerta">Offerta che desideri donare</label>
+                <div class="euro-wrap">
+                    <span>€</span>
+                    <input type="number" id="offerta" min="0" step="0.50" inputmode="decimal">
+                </div>
+                <p class="aiuto">Puoi donare più del minimo: ogni euro in più sostiene i nostri progetti.</p>
+            </div>
+
+            <div class="sezione">Ricevuta</div>
+            <label class="check">
+                <input type="checkbox" id="chkRicevuta">
+                <span>Desidero la ricevuta della donazione</span>
+            </label>
+            <div id="boxRicevuta">
+                <label for="cf">Codice fiscale <span class="obbl">*</span></label>
+                <input type="text" id="cf" maxlength="16" autocomplete="off" style="text-transform:uppercase">
+                <label for="indirizzo">Indirizzo di residenza <span class="obbl">*</span></label>
+                <input type="text" id="indirizzo" maxlength="120" autocomplete="street-address" placeholder="Via e numero civico">
+                <div class="riga-3">
+                    <div>
+                        <label for="comune">Comune <span class="obbl">*</span></label>
+                        <input type="text" id="comune" maxlength="60" autocomplete="address-level2">
+                    </div>
+                    <div>
+                        <label for="cap">CAP <span class="obbl">*</span></label>
+                        <input type="text" id="cap" maxlength="5" inputmode="numeric" autocomplete="postal-code">
+                    </div>
+                    <div>
+                        <label for="provincia">Prov. <span class="obbl">*</span></label>
+                        <input type="text" id="provincia" maxlength="2" style="text-transform:uppercase">
+                    </div>
                 </div>
             </div>
 
-            <label for="note">Note (facoltative)</label>
-            <textarea id="note" maxlength="300" placeholder="Es. ritiro il pomeriggio, consegna a…"></textarea>
+            <div class="sezione">Note</div>
+            <textarea id="note" aria-label="Note" maxlength="300" placeholder="Facoltative: preferenze per il ritiro, richieste…"></textarea>
+
+            <div class="sezione">Privacy</div>
+            <label class="check">
+                <input type="checkbox" id="chkPrivacy">
+                <span>Ho letto l'<a href="privacy.html" target="_blank" rel="noopener">informativa sulla privacy</a> e acconsento al trattamento dei miei dati per la gestione della prenotazione. <span class="obbl">*</span></span>
+            </label>
+            <label class="check">
+                <input type="checkbox" id="chkMarketing">
+                <span>Desidero essere informato sulle prossime campagne solidali (facoltativo).</span>
+            </label>
 
             <div class="totale-riga">
-                <span>Totale</span>
-                <strong id="totaleOrdine">€ 0</strong>
+                <span>Totale offerta</span>
+                <strong id="totaleOrdine">€ 0,00</strong>
             </div>
 
             <button type="submit" id="btnInvia">Conferma prenotazione</button>
         </form>
     </div>
 
+    <div class="emergenza" id="boxEmergenza">
+        <strong>Contatti per urgenze</strong>
+        <span id="testoEmergenza"></span>
+    </div>
+
+    <p class="piede"><a href="privacy.html">Informativa sulla privacy</a></p>
+
+    <script src="modello.js"></script>
     <script src="firebase-init.js"></script>
     <script>
+        const M = Modello;
         const MAX_PEZZI_PRODOTTO = 50;
-        let config = { ...CONFIG_DEFAULT };
-        let conteggi = { panettoni: 0, pandori: 0 };
-        let invioInCorso = false;
-
         const el = (id) => document.getElementById(id);
 
-        // ---- configurazione (prezzi / apertura prenotazioni) ----
-        CONFIG_REF.get()
-            .then(doc => { config = normalizzaConfig(doc.exists ? doc.data() : null); })
-            .catch(() => { config = { ...CONFIG_DEFAULT }; })
-            .finally(() => {
-                el('prezzoPanettoneLbl').textContent = `€ ${config.prezzoPanettone} cad.`;
-                el('prezzoPandoroLbl').textContent = `€ ${config.prezzoPandoro} cad.`;
-                if (!config.ordiniAperti) {
-                    el('ordineForm').style.display = 'none';
-                    mostraMessaggio("Le prenotazioni sono chiuse. Grazie del sostegno!", 'errore');
+        let stato = { generali: null, campagna: null, id: null };
+        let prodotti = [];
+        let conteggi = {};
+        let offertaToccata = false;
+        let invioInCorso = false;
+
+        /* ---------- avvio ---------- */
+
+        caricaCampagnaAttiva()
+            .then(s => {
+                stato = s;
+                mostraEmergenza(s.generali.contattiEmergenza);
+                el('caricamento').style.display = 'none';
+
+                if (!s.campagna) {
+                    return chiudi("Le prenotazioni non sono ancora disponibili. Riprova tra poco.");
                 }
-                aggiornaTotale();
+                el('titoloForm').textContent = s.campagna.titoloForm || 'Prenota i tuoi dolci';
+                el('sottotitoloForm').textContent = s.campagna.sottotitoloForm || '';
+                document.title = (s.campagna.nome || 'Prenotazione') + ' - WonderLAD';
+
+                if (s.campagna.ordiniAperti === false) {
+                    return chiudi("Le prenotazioni per " + (s.campagna.nome || 'questa campagna') + " sono chiuse. Grazie del sostegno!");
+                }
+
+                prodotti = M.prodottiOrdinati(s.campagna, true);
+                if (!prodotti.length) return chiudi("Nessun prodotto disponibile al momento.");
+
+                prodotti.forEach(p => { conteggi[p.chiave] = 0; });
+                disegnaProdotti();
+                aggiornaTotali();
+                el('ordineForm').style.display = 'block';
+            })
+            .catch(() => {
+                el('caricamento').style.display = 'none';
+                chiudi("Impossibile caricare il modulo. Controlla la connessione e riprova.");
             });
+
+        function chiudi(testo) {
+            el('boxChiuso').textContent = testo;
+            el('boxChiuso').style.display = 'block';
+        }
+
+        function mostraEmergenza(testo) {
+            const t = String(testo || '').trim();
+            if (!t) return;
+            el('testoEmergenza').textContent = t;
+            el('boxEmergenza').style.display = 'block';
+        }
 
         function mostraMessaggio(testo, classe) {
             const m = el('statusMsg');
             m.textContent = testo;
             m.className = classe || '';
+            if (testo) m.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
-        function aggiornaTotale() {
-            const tot = conteggi.panettoni * config.prezzoPanettone + conteggi.pandori * config.prezzoPandoro;
-            el('totaleOrdine').textContent = `€ ${tot.toLocaleString('it-IT')}`;
-        }
+        /* ---------- prodotti ---------- */
 
-        document.querySelectorAll('.btn-counter').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const p = btn.dataset.prodotto;
-                const delta = parseInt(btn.dataset.delta, 10);
-                conteggi[p] = Math.max(0, Math.min(MAX_PEZZI_PRODOTTO, conteggi[p] + delta));
-                el(p + '-display').textContent = conteggi[p];
-                aggiornaTotale();
+        function disegnaProdotti() {
+            const box = el('listaProdotti');
+            box.innerHTML = '';
+            prodotti.forEach(p => {
+                const dettagli = [
+                    ['Descrizione', p.descrizione], ['Peso', p.peso],
+                    ['Ingredienti', p.ingredienti], ['Allergeni', p.allergeni]
+                ].filter(d => String(d[1] || '').trim());
+
+                const card = document.createElement('div');
+                card.className = 'prodotto';
+                card.innerHTML = `
+                    <div class="prodotto-riga">
+                        <span>
+                            <span class="prodotto-nome">${M.esc(p.emoji || '')} ${M.esc(p.nome)}</span>
+                            <span class="prodotto-min">Donazione minima ${M.esc(M.euro(p.donazioneMinima))} cad.</span>
+                            ${dettagli.length ? '<button type="button" class="btn-info">Informazioni e allergeni</button>' : ''}
+                        </span>
+                        <div class="counter-group">
+                            <button type="button" class="btn-counter" data-delta="-1" aria-label="Togli ${M.esc(p.nome)}">−</button>
+                            <span class="count-display" aria-live="polite">0</span>
+                            <button type="button" class="btn-counter" data-delta="1" aria-label="Aggiungi ${M.esc(p.nome)}">+</button>
+                        </div>
+                    </div>
+                    ${dettagli.length ? `<dl class="prodotto-dettagli">${dettagli.map(d =>
+                        `<dt>${M.esc(d[0])}</dt><dd>${M.esc(d[1])}</dd>`).join('')}</dl>` : ''}`;
+
+                const display = card.querySelector('.count-display');
+                card.querySelectorAll('.btn-counter').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const delta = parseInt(btn.dataset.delta, 10);
+                        conteggi[p.chiave] = Math.max(0, Math.min(MAX_PEZZI_PRODOTTO, conteggi[p.chiave] + delta));
+                        display.textContent = conteggi[p.chiave];
+                        aggiornaTotali();
+                    });
+                });
+                const info = card.querySelector('.btn-info');
+                if (info) info.addEventListener('click', () => card.querySelector('.prodotto-dettagli').classList.toggle('aperto'));
+                box.appendChild(card);
             });
+        }
+
+        function righeCorrenti() {
+            return prodotti
+                .filter(p => conteggi[p.chiave] > 0)
+                .map(p => ({ prodotto: p.chiave, quantita: conteggi[p.chiave], minimo: Number(p.donazioneMinima) || 0 }));
+        }
+
+        function minimoCorrente() {
+            return M.arrotonda(righeCorrenti().reduce((s, r) => s + r.quantita * r.minimo, 0));
+        }
+
+        function aggiornaTotali() {
+            const minimo = minimoCorrente();
+            el('minimoLbl').textContent = M.euro(minimo);
+            const campo = el('offerta');
+            campo.min = minimo;
+            // L'offerta segue il minimo finche' il sostenitore non la modifica,
+            // e non scende mai sotto il minimo.
+            if (!offertaToccata || (Number(campo.value) || 0) < minimo) campo.value = minimo.toFixed(2);
+            el('totaleOrdine').textContent = M.euro(Number(campo.value) || 0);
+        }
+
+        el('offerta').addEventListener('input', () => {
+            offertaToccata = true;
+            el('offerta').classList.remove('errato');
+            el('totaleOrdine').textContent = M.euro(Number(el('offerta').value) || 0);
+        });
+        el('offerta').addEventListener('blur', () => {
+            const minimo = minimoCorrente();
+            if ((Number(el('offerta').value) || 0) < minimo) {
+                el('offerta').value = minimo.toFixed(2);
+                el('totaleOrdine').textContent = M.euro(minimo);
+            }
         });
 
+        el('chkRicevuta').addEventListener('change', () => {
+            el('boxRicevuta').style.display = el('chkRicevuta').checked ? 'block' : 'none';
+        });
+
+        el('cf').addEventListener('input', () => el('cf').classList.remove('errato'));
+
+        /* ---------- invio ---------- */
+
         function generaCodice() {
-            const alfabeto = "ACDEFGHJKLMNPQRSTUVWXYZ23456789"; // niente caratteri ambigui
-            let out = "";
+            const alfabeto = "ACDEFGHJKLMNPQRSTUVWXYZ23456789";
             const buf = new Uint32Array(6);
             crypto.getRandomValues(buf);
+            let out = "";
             for (let i = 0; i < 6; i++) out += alfabeto[buf[i] % alfabeto.length];
             return out;
+        }
+
+        function errore(testo, campo) {
+            if (campo) { campo.classList.add('errato'); campo.focus(); }
+            mostraMessaggio(testo, 'errore');
         }
 
         el('btnNuovoOrdine').addEventListener('click', () => {
             el('confermaBox').style.display = 'none';
             el('ordineForm').style.display = 'block';
             mostraMessaggio('', '');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
 
         el('ordineForm').addEventListener('submit', function (e) {
             e.preventDefault();
             if (invioInCorso) return;
+            document.querySelectorAll('.errato').forEach(x => x.classList.remove('errato'));
 
             const nome = el('nome').value.trim();
             const cognome = el('cognome').value.trim();
-            const telefono = el('telefono').value.replace(/\D/g, '');
+            const telefono = el('telefono').value.replace(/[^\d+]/g, '').replace(/^\+/, '00').replace(/\D/g, '');
+            const email = el('email').value.trim().toLowerCase();
             const note = el('note').value.trim();
+            const righe = righeCorrenti();
+            const pezzi = righe.reduce((s, r) => s + r.quantita, 0);
+            const minimo = minimoCorrente();
+            const offerta = M.arrotonda(Number(el('offerta').value) || 0);
+            const ricevuta = el('chkRicevuta').checked;
 
-            if (!nome || !cognome) return mostraMessaggio("Inserisci nome e cognome.", 'errore');
-            if (!/^[0-9]{8,15}$/.test(telefono)) return mostraMessaggio("Inserisci un numero di telefono valido (solo cifre).", 'errore');
-            if (conteggi.panettoni + conteggi.pandori < 1) return mostraMessaggio("Seleziona almeno un panettone o un pandoro.", 'errore');
+            if (!nome) return errore("Inserisci il nome.", el('nome'));
+            if (!cognome) return errore("Inserisci il cognome.", el('cognome'));
+            if (!/^[0-9]{8,15}$/.test(telefono)) return errore("Inserisci un numero di telefono valido.", el('telefono'));
+            if (!M.validaEmail(email)) return errore("Inserisci un indirizzo email valido.", el('email'));
+            if (pezzi < 1) return errore("Seleziona almeno un dolce.");
+            if (offerta < minimo) return errore("L'offerta non può essere inferiore alla donazione minima di " + M.euro(minimo) + ".", el('offerta'));
+
+            let datiRicevuta = { cf: '', indirizzo: '', cap: '', comune: '', provincia: '' };
+            if (ricevuta) {
+                datiRicevuta = {
+                    cf: M.normalizzaCF(el('cf').value),
+                    indirizzo: el('indirizzo').value.trim(),
+                    cap: el('cap').value.trim(),
+                    comune: el('comune').value.trim(),
+                    provincia: el('provincia').value.trim().toUpperCase()
+                };
+                if (!M.validaCodiceFiscale(datiRicevuta.cf)) return errore("Il codice fiscale non è valido.", el('cf'));
+                if (!datiRicevuta.indirizzo) return errore("Inserisci l'indirizzo di residenza.", el('indirizzo'));
+                if (!datiRicevuta.comune) return errore("Inserisci il comune.", el('comune'));
+                if (!/^[0-9]{5}$/.test(datiRicevuta.cap)) return errore("Inserisci un CAP valido.", el('cap'));
+                if (!/^[A-Z]{2}$/.test(datiRicevuta.provincia)) return errore("Inserisci la sigla della provincia.", el('provincia'));
+            }
+
+            if (!el('chkPrivacy').checked) return errore("Per prenotare è necessario accettare l'informativa sulla privacy.");
 
             invioInCorso = true;
             const btn = el('btnInvia');
@@ -334,39 +607,59 @@
             mostraMessaggio('', '');
 
             const codice = generaCodice();
-
-            db.collection("ordini").add({
+            const ordine = {
+                campagnaId: stato.id,
                 nome: nome,
                 cognome: cognome,
                 telefono: telefono,
-                panettoni: conteggi.panettoni,
-                pandori: conteggi.pandori,
+                email: email,
+                righe: righe,
+                pezzi: pezzi,
+                minimoTotale: minimo,
+                offerta: offerta,
                 note: note,
                 codice: codice,
                 status: "Prenotato - Da Pagare",
                 metodoPagamento: "-",
                 origine: "web",
+                ricevuta: ricevuta,
+                cf: datiRicevuta.cf,
+                indirizzo: datiRicevuta.indirizzo,
+                cap: datiRicevuta.cap,
+                comune: datiRicevuta.comune,
+                provincia: datiRicevuta.provincia,
+                consensoPrivacy: true,
+                privacyVersione: parseInt(stato.generali.privacy.versione, 10) || 1,
+                consensoMarketing: el('chkMarketing').checked,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            })
-            .then(() => {
-                el('ordineForm').reset();
-                conteggi = { panettoni: 0, pandori: 0 };
-                el('panettoni-display').textContent = "0";
-                el('pandori-display').textContent = "0";
-                aggiornaTotale();
+            };
 
-                el('codiceConferma').textContent = codice;
-                el('ordineForm').style.display = 'none';
-                el('confermaBox').style.display = 'block';
-            })
-            .catch(() => {
-                mostraMessaggio("Non è stato possibile registrare la prenotazione. Riprova tra qualche istante.", 'errore');
-            })
-            .finally(() => {
-                invioInCorso = false;
-                btn.disabled = false;
-                btn.textContent = "Conferma prenotazione";
-            });
+            db.collection("ordini").add(ordine)
+                .then(() => {
+                    el('codiceConferma').textContent = codice;
+                    el('confRiepilogo').textContent = M.riepilogoRighe(ordine, stato.campagna);
+                    el('confOfferta').textContent = M.euro(offerta);
+                    el('confRicevuta').textContent = ricevuta ? 'richiesta' : 'non richiesta';
+
+                    el('ordineForm').reset();
+                    prodotti.forEach(p => { conteggi[p.chiave] = 0; });
+                    document.querySelectorAll('.count-display').forEach(d => { d.textContent = '0'; });
+                    el('boxRicevuta').style.display = 'none';
+                    offertaToccata = false;
+                    aggiornaTotali();
+
+                    el('ordineForm').style.display = 'none';
+                    el('confermaBox').style.display = 'block';
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                })
+                .catch(() => {
+                    mostraMessaggio("Non è stato possibile registrare la prenotazione. Riprova tra qualche istante.", 'errore');
+                })
+                .finally(() => {
+                    invioInCorso = false;
+                    btn.disabled = false;
+                    btn.textContent = "Conferma prenotazione";
+                });
         });
     </script>
 </body>

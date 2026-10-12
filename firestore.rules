@@ -1,7 +1,7 @@
 rules_version = '2';
 
 // WonderLAD - Gestione Dolci Solidali
-// Ruoli: Administrator (tutto) | Manager (vede e modifica solo gli ordini)
+// Ruoli: Administrator (tutto) | Manager (ordini, ritiri, messaggi)
 // Il ruolo vive in /utenti/{uid}.ruolo e NON e' scrivibile dall'utente stesso.
 
 service cloud.firestore {
@@ -16,8 +16,7 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/utenti/$(request.auth.uid)).data;
     }
 
-    // Staff = utente autenticato CON una scheda in /utenti. Un account Auth
-    // senza scheda non puo' fare nulla: niente auto-promozione.
+    // Staff = utente autenticato CON una scheda in /utenti.
     function isStaff() {
       return isAuth()
         && exists(/databases/$(database)/documents/utenti/$(request.auth.uid));
@@ -25,6 +24,10 @@ service cloud.firestore {
 
     function isAdmin() {
       return isStaff() && profilo().ruolo == 'Administrator';
+    }
+
+    function generali() {
+      return get(/databases/$(database)/documents/impostazioni/generali).data;
     }
 
     function statiValidi() {
@@ -36,59 +39,102 @@ service cloud.firestore {
       return ['-', 'Cash', 'Bonifico', 'POS'];
     }
 
+    function testo(v, min, max) {
+      return v is string && v.size() >= min && v.size() <= max;
+    }
+
     // ---------- ordini ----------
-    // create pubblico ma con schema chiuso e quantita' limitate.
     match /ordini/{ordineId} {
 
-      function campiOrdine() {
-        return ['nome', 'cognome', 'telefono', 'panettoni', 'pandori',
-                'note', 'codice', 'status', 'metodoPagamento', 'origine', 'timestamp'];
+      function campiPubblici() {
+        return ['campagnaId', 'nome', 'cognome', 'telefono', 'email', 'righe', 'pezzi',
+                'minimoTotale', 'offerta', 'note', 'codice', 'status', 'metodoPagamento',
+                'origine', 'ricevuta', 'cf', 'indirizzo', 'cap', 'comune', 'provincia',
+                'consensoPrivacy', 'privacyVersione', 'consensoMarketing', 'timestamp'];
       }
 
-      function datiClienteValidi(d) {
-        return d.nome is string && d.nome.size() > 0 && d.nome.size() <= 60
-          && d.cognome is string && d.cognome.size() > 0 && d.cognome.size() <= 60
+      // Codice fiscale: controllo di formato (il carattere di controllo lo verifica il modulo).
+      function datiRicevutaValidi(d) {
+        return (d.ricevuta == true
+            && d.cf is string
+            && d.cf.matches('^[A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]$')
+            && testo(d.indirizzo, 1, 120)
+            && d.cap is string && d.cap.matches('^[0-9]{5}$')
+            && testo(d.comune, 1, 60)
+            && d.provincia is string && d.provincia.matches('^[A-Z]{2}$'))
+          || (d.ricevuta == false
+            && d.cf == '' && d.indirizzo == '' && d.cap == '' && d.comune == '' && d.provincia == '');
+      }
+
+      // Prenotazione pubblica: schema chiuso, campagna attiva e aperta,
+      // offerta non inferiore alla donazione minima.
+      function prenotazioneValida(d) {
+        let camp = get(/databases/$(database)/documents/campagne/$(d.campagnaId)).data;
+        return d.campagnaId == generali().campagnaAttiva
+          && camp.ordiniAperti == true
+          && testo(d.nome, 1, 60)
+          && testo(d.cognome, 1, 60)
           && d.telefono is string && d.telefono.matches('^[0-9]{8,15}$')
-          && d.panettoni is int && d.panettoni >= 0 && d.panettoni <= 50
-          && d.pandori is int && d.pandori >= 0 && d.pandori <= 50
-          && (d.panettoni + d.pandori) >= 1
-          && (d.panettoni + d.pandori) <= 100
-          && d.note is string && d.note.size() <= 300
-          && d.codice is string && d.codice.size() == 6;
+          && testo(d.email, 5, 120) && d.email.matches('^[^@ ]+@[^@ ]+[.][^@ ]+$')
+          && d.righe is list && d.righe.size() >= 1 && d.righe.size() <= 10
+          && d.pezzi is int && d.pezzi >= 1 && d.pezzi <= 100
+          && d.minimoTotale is number
+          && d.minimoTotale + 0.01 >= d.pezzi * camp.get('minimoPezzo', 0)
+          && d.offerta is number && d.offerta >= d.minimoTotale && d.offerta <= 100000
+          && testo(d.note, 0, 300)
+          && testo(d.codice, 6, 6)
+          && d.status == 'Prenotato - Da Pagare'
+          && d.metodoPagamento == '-'
+          && d.origine == 'web'
+          && d.ricevuta is bool
+          && datiRicevutaValidi(d)
+          && d.consensoPrivacy == true
+          && d.privacyVersione is int
+          && d.consensoMarketing is bool
+          && d.timestamp == request.time;
       }
 
-      allow create: if request.resource.data.keys().hasOnly(campiOrdine())
-        && request.resource.data.keys().hasAll(campiOrdine())
-        && datiClienteValidi(request.resource.data)
-        && request.resource.data.status == 'Prenotato - Da Pagare'
-        && request.resource.data.metodoPagamento == '-'
-        && request.resource.data.origine == 'web'
-        && request.resource.data.timestamp == request.time;
+      allow create: if request.resource.data.keys().hasOnly(campiPubblici())
+        && request.resource.data.keys().hasAll(campiPubblici())
+        && prenotazioneValida(request.resource.data);
 
       allow read: if isStaff();
 
-      // Il Manager puo' modificare gli ordini ma non riscrivere data e origine.
-      allow update: if isStaff()
+      // Il Manager modifica gli ordini ma non campagna, codice, data, origine e consensi.
+      // L'Administrator puo' tutto (serve anche alla migrazione degli ordini storici).
+      allow update: if isAdmin() || (isStaff()
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['nome', 'cognome', 'telefono', 'panettoni', 'pandori',
-                       'note', 'status', 'metodoPagamento'])
-        && request.resource.data.panettoni is int
-        && request.resource.data.panettoni >= 0 && request.resource.data.panettoni <= 200
-        && request.resource.data.pandori is int
-        && request.resource.data.pandori >= 0 && request.resource.data.pandori <= 200
+             .hasOnly(['nome', 'cognome', 'telefono', 'email', 'righe', 'pezzi', 'minimoTotale',
+                       'offerta', 'note', 'status', 'metodoPagamento', 'ritiro', 'ricevuta',
+                       'cf', 'indirizzo', 'cap', 'comune', 'provincia', 'messaggi'])
         && request.resource.data.status in statiValidi()
-        && request.resource.data.metodoPagamento in metodiValidi();
+        && request.resource.data.metodoPagamento in metodiValidi()
+        && (!('offerta' in request.resource.data) || request.resource.data.offerta is number)
+        && (!('righe' in request.resource.data) || request.resource.data.righe is list)
+        && (!('messaggi' in request.resource.data) || (request.resource.data.messaggi is list && request.resource.data.messaggi.size() <= 200)));
 
-      // Cancellare un ordine e' definitivo: solo Administrator.
-      // Per annullare si usa lo stato "Annullato".
+      // Cancellare e' definitivo: solo Administrator. Di norma si usa "Annullato".
       allow delete: if isAdmin();
     }
 
-    // ---------- impostazioni (stock + prezzi) ----------
-    // Lettura pubblica: index.html mostra prezzi e disponibilita'.
-    // Contiene solo numeri, nessun dato personale.
-    match /impostazioni/{docId} {
+    // ---------- campagne ----------
+    // Lettura pubblica: il modulo mostra prodotti, descrizioni e donazioni minime.
+    match /campagne/{campagnaId} {
       allow read: if true;
+      allow write: if isAdmin()
+        && request.resource.data.nome is string
+        && request.resource.data.prodotti is map
+        && request.resource.data.ordiniAperti is bool
+        && request.resource.data.minimoPezzo is number;
+      allow delete: if isAdmin();
+    }
+
+    // ---------- impostazioni ----------
+    // generali (campagna attiva, contatti, informativa): lettura pubblica.
+    // messaggi (modelli): solo staff. Scrittura: solo Administrator.
+    // stock: documento della versione precedente, letto solo dalla migrazione.
+    match /impostazioni/{docId} {
+      allow read: if docId != 'messaggi' || isStaff();
       allow write: if isAdmin();
     }
 
@@ -105,7 +151,6 @@ service cloud.firestore {
     }
 
     // ---------- logs ----------
-    // Append-only, scritti solo dallo staff, letti solo dagli Administrator.
     match /logs/{logId} {
       allow create: if isStaff()
         && request.resource.data.keys().hasOnly(['timestamp', 'categoria', 'utente', 'dettaglio'])
@@ -118,13 +163,12 @@ service cloud.firestore {
     }
 
     // ---------- preferenze personali (layout dashboard) ----------
-    // Ognuno legge e scrive solo le proprie. Nessun dato sensibile.
     match /preferenze/{uid} {
       allow read, delete: if isAuth() && request.auth.uid == uid;
       allow create, update: if isAuth() && request.auth.uid == uid
         && request.resource.data.keys().hasOnly(['dashboard', 'aggiornato'])
         && request.resource.data.dashboard is list
-        && request.resource.data.dashboard.size() <= 24;
+        && request.resource.data.dashboard.size() <= 30;
     }
 
     // Tutto il resto e' chiuso.

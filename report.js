@@ -2,14 +2,15 @@
 // Impagina un documento A4 verticale in forma di prospetto: intestazione,
 // dettaglio voci, totali, ripartizioni. Sempre una pagina sola.
 //
-// Nota tecnica: la pagina viene costruita a coordinate valide (0,0) e resa
-// invisibile con opacity:0. Metterla fuori schermo con left negativo faceva
-// uscire html2canvas dall'area del documento e il PDF veniva bianco.
+// Nota tecnica: html2pdf clona l'elemento in un suo contenitore e disegna
+// quella copia. Per questo la pagina non va nascosta con regole sul suo id
+// (la copia le erediterebbe e il PDF verrebbe bianco): la si nasconde
+// mettendola dentro un contenitore a dimensione zero, che non viene clonato.
 
 (function () {
     'use strict';
 
-    const A4 = { larghezza: 794, altezza: 1123 };   // pixel a 96 dpi
+    const A4 = { larghezza: 793, altezza: 1122 };   // pixel a 96 dpi, appena sotto 210x297 mm
 
     const euro = (n) => '€ ' + (Math.round((Number(n) || 0) * 100) / 100).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const euroTondo = (n) => '€ ' + Math.round(Number(n) || 0).toLocaleString('it-IT');
@@ -32,123 +33,53 @@
             } catch (e) { /* si ricalcola sotto */ }
         }
         const ordini = (typeof datiGlobali !== 'undefined' && Array.isArray(datiGlobali)) ? datiGlobali : [];
-        const cfg = (typeof configGlobale !== 'undefined' && configGlobale) ? configGlobale
-                  : { totalePanettoni: 0, totalePandori: 0, prezzoPanettone: 15, prezzoPandoro: 15 };
-        return { dati: aggregaMinimo(ordini, cfg), filtri: { prodotto: 'TUTTI', periodo: 'tutto' } };
-    }
-
-    function aggregaMinimo(ordini, cfg) {
-        const pPan = Number(cfg.prezzoPanettone) || 0;
-        const pPand = Number(cfg.prezzoPandoro) || 0;
-
-        const a = {
-            cfg: cfg,
-            stati: { prenotato: 0, preparazione: 0, da_consegnare: 0, consegnato: 0, annullato: 0 },
-            statiPezzi: { prenotato: 0, preparazione: 0, da_consegnare: 0, consegnato: 0, annullato: 0 },
-            statiImporto: { prenotato: 0, preparazione: 0, da_consegnare: 0, consegnato: 0, annullato: 0 },
-            metodi: {}, perGiorno: {}, classifica: {},
-            incassato: 0, daIncassare: 0, valoreTotale: 0,
-            panettoni: 0, pandori: 0, pezziTotali: 0,
-            ordiniTotali: 0, ordiniAttivi: 0, pagati: 0,
-            clienti: new Set(), ultimi: [], daFare: []
-        };
-
-        ordini.forEach(o => {
-            const pan = parseInt(o.panettoni) || 0;
-            const pand = parseInt(o.pandori) || 0;
-            if (pan + pand <= 0) return;
-
-            const s = String(o.status || '').toLowerCase();
-            const bl = s.includes('annullato') ? 'annullato'
-                     : s.includes('consegnato') ? 'consegnato'
-                     : s.includes('da consegnare') ? 'da_consegnare'
-                     : s.includes('preparazione') ? 'preparazione' : 'prenotato';
-            const pagato = !s.includes('annullato') && (s.includes('pagato') || s.includes('consegnato'));
-            const importo = pan * pPan + pand * pPand;
-
-            a.ordiniTotali++;
-            a.stati[bl]++;
-            a.statiPezzi[bl] += pan + pand;
-            a.statiImporto[bl] += importo;
-            if (bl === 'annullato') return;
-
-            a.ordiniAttivi++;
-            a.panettoni += pan;
-            a.pandori += pand;
-            a.pezziTotali += pan + pand;
-            a.valoreTotale += importo;
-            a.clienti.add(((o.nome || '') + '|' + (o.telefono || '')).toLowerCase());
-
-            if (pagato) {
-                a.pagati++;
-                a.incassato += importo;
-                const m = (o.metodoPagamento && o.metodoPagamento !== '-') ? o.metodoPagamento : 'Non indicato';
-                a.metodi[m] = (a.metodi[m] || 0) + importo;
-            } else {
-                a.daIncassare += importo;
-                a.daFare.push({ motivo: 'da incassare' });
-            }
-
-            const d = (o.timestamp && typeof o.timestamp.toDate === 'function') ? o.timestamp.toDate() : null;
-            if (d) {
-                const k = d.toISOString().slice(0, 10);
-                if (!a.perGiorno[k]) a.perGiorno[k] = { ordini: 0, pezzi: 0, incasso: 0 };
-                a.perGiorno[k].ordini++;
-                a.perGiorno[k].pezzi += pan + pand;
-                a.perGiorno[k].incasso += importo;
-            }
-
-            const nome = ((o.nome || '') + ' ' + (o.cognome || '')).trim() || '—';
-            if (!a.classifica[nome]) a.classifica[nome] = { pezzi: 0, importo: 0 };
-            a.classifica[nome].pezzi += pan + pand;
-            a.classifica[nome].importo += importo;
-        });
-
-        a.clientiUnici = a.clienti.size;
-        a.ticketMedio = a.ordiniAttivi ? a.valoreTotale / a.ordiniAttivi : 0;
-        a.percPagato = a.ordiniAttivi ? Math.round(a.pagati / a.ordiniAttivi * 100) : 0;
-        a.percConsegnato = a.ordiniAttivi ? Math.round(a.stati.consegnato / a.ordiniAttivi * 100) : 0;
-        return a;
+        const campagna = (typeof campagnaSel === 'function') ? campagnaSel() : null;
+        const filtri = { prodotto: 'TUTTI', periodo: 'tutto' };
+        return { dati: Modello.aggrega(ordini, campagna, filtri), filtri: filtri };
     }
 
     /* ======================================================
        BLOCCHI DEL DOCUMENTO
        ====================================================== */
 
+    function vociProdotto(a) {
+        return Object.keys(a.perProdotto)
+            .filter(k => a.filtri.prodotto === 'TUTTI' || k === a.filtri.prodotto)
+            .map(k => a.perProdotto[k])
+            .filter(pp => pp.pezzi > 0 || pp.stock > 0);
+    }
+
     function tabellaVoci(a) {
-        const pPan = Number(a.cfg.prezzoPanettone) || 0;
-        const pPand = Number(a.cfg.prezzoPandoro) || 0;
-
-        const voci = [];
-        if (a.panettoni > 0 || a.pandori === 0) {
-            voci.push(['Panettone artigianale', 'Dolce solidale · campagna natalizia', a.panettoni, pPan]);
-        }
-        if (a.pandori > 0 || a.panettoni === 0) {
-            voci.push(['Pandoro artigianale', 'Dolce solidale · campagna natalizia', a.pandori, pPand]);
-        }
-
-        const righe = voci.map((v, i) => `
+        const nomeCampagna = (a.campagna && a.campagna.nome) || '';
+        const righe = vociProdotto(a).map((pp, i) => {
+            const p = Modello.prodotto(a.campagna, pp.chiave);
+            const desc = [p.peso, 'dolce solidale' + (nomeCampagna ? ' · ' + nomeCampagna : '')].filter(Boolean).join(' · ');
+            return `
             <tr>
                 <td class="rp-c">${i + 1}</td>
-                <td><b>${h(v[0])}</b><div class="rp-desc">${h(v[1])}</div></td>
-                <td class="rp-n">${num(v[2])}</td>
-                <td class="rp-n">${h(euro(v[3]))}</td>
-                <td class="rp-n"><b>${h(euro(v[2] * v[3]))}</b></td>
-            </tr>`).join('');
+                <td><b>${h(pp.nome)}</b><div class="rp-desc">${h(desc)}</div></td>
+                <td class="rp-n">${num(pp.pezzi)}</td>
+                <td class="rp-n">${h(euro(pp.donazioneMinima))}</td>
+                <td class="rp-n">${h(euro(pp.minimo))}</td>
+                <td class="rp-n"><b>${h(euro(pp.offerta))}</b></td>
+            </tr>`;
+        }).join('');
 
         return `<table class="rp-voci">
             <thead><tr>
-                <th class="rp-c" style="width:26px">#</th>
+                <th class="rp-c" style="width:24px">#</th>
                 <th>Descrizione</th>
-                <th class="rp-n" style="width:70px">Q.tà</th>
-                <th class="rp-n" style="width:80px">Prezzo</th>
-                <th class="rp-n" style="width:92px">Importo</th>
+                <th class="rp-n" style="width:56px">Q.tà</th>
+                <th class="rp-n" style="width:84px">Min. cad.</th>
+                <th class="rp-n" style="width:92px">Minimo</th>
+                <th class="rp-n" style="width:96px">Offerte</th>
             </tr></thead>
-            <tbody>${righe}
+            <tbody>${righe || '<tr><td></td><td colspan="5">Nessun prodotto.</td></tr>'}
                 <tr class="rp-riga-tot">
                     <td></td><td>Totale prenotato</td>
                     <td class="rp-n">${num(a.pezziTotali)}</td>
                     <td></td>
+                    <td class="rp-n">${h(euro(a.minimoTotale))}</td>
                     <td class="rp-n">${h(euro(a.valoreTotale))}</td>
                 </tr>
             </tbody></table>`;
@@ -156,10 +87,11 @@
 
     function blocchoTotali(a) {
         return `<table class="rp-totali">
-            <tr><td>Valore prenotato</td><td class="rp-n">${h(euro(a.valoreTotale))}</td></tr>
+            <tr><td>Donazioni minime</td><td class="rp-n">${h(euro(a.minimoTotale))}</td></tr>
+            <tr class="rp-ok"><td>Donato oltre il minimo</td><td class="rp-n">${h(euro(a.extra))}</td></tr>
             <tr class="rp-ok"><td>Già incassato</td><td class="rp-n">${h(euro(a.incassato))}</td></tr>
             <tr class="rp-ko"><td>Ancora da incassare</td><td class="rp-n">${h(euro(a.daIncassare))}</td></tr>
-            <tr class="rp-grande"><td>Netto atteso</td><td class="rp-n">${h(euro(a.valoreTotale))}</td></tr>
+            <tr class="rp-grande"><td>Totale offerte</td><td class="rp-n">${h(euro(a.valoreTotale))}</td></tr>
         </table>
         <div class="rp-nota">Documento non fiscale. Gli ordini annullati sono esclusi da importi, quantità e disponibilità.</div>`;
     }
@@ -214,7 +146,7 @@
 
     function tabellaSostenitori(a) {
         const top = Object.keys(a.classifica).map(k => [k, a.classifica[k]])
-            .sort((x, y) => y[1].importo - x[1].importo).slice(0, 6);
+            .sort((x, y) => y[1].importo - x[1].importo).slice(0, 5);
         if (!top.length) return '<p class="rp-vuoto">Nessun ordine.</p>';
         return `<table class="rp-tab">
             <thead><tr><th>Sostenitore</th><th class="rp-n">Pezzi</th><th class="rp-n">Importo</th></tr></thead>
@@ -234,7 +166,7 @@
             const v = a.perGiorno[g].pezzi;
             return `<div class="rp-col">
                         <div class="rp-col-val">${num(v)}</div>
-                        <div class="rp-col-barra" style="height:${Math.max(3, Math.round(v / max * 52))}px"></div>
+                        <div class="rp-col-barra" style="height:${Math.max(3, Math.round(v / max * 44))}px"></div>
                         <div class="rp-col-lbl">${g.slice(8, 10)}/${g.slice(5, 7)}</div>
                     </div>`;
         }).join('')}</div>`;
@@ -251,9 +183,12 @@
                          + '-' + p2(ora.getHours()) + p2(ora.getMinutes());
 
         const periodo = { tutto: 'Tutto lo storico', '7': 'Ultimi 7 giorni', '30': 'Ultimi 30 giorni', mese: 'Mese corrente' }[filtri.periodo] || 'Tutto lo storico';
-        const prodotto = { TUTTI: 'Panettoni e pandori', PANETTONI: 'Solo panettoni', PANDORI: 'Solo pandori' }[filtri.prodotto] || 'Panettoni e pandori';
+        const prodotto = filtri.prodotto === 'TUTTI'
+            ? (a.prodotti.map(p => p.plurale || p.nome).join(', ') || '—')
+            : 'Solo ' + String(Modello.prodotto(a.campagna, filtri.prodotto).plurale || filtri.prodotto).toLowerCase();
+        const nomeCampagna = (a.campagna && a.campagna.nome) || '—';
         const chi = (typeof utenteCorrente !== 'undefined' && utenteCorrente && utenteCorrente.email) ? utenteCorrente.email : '—';
-        const prenotazioni = a.cfg.ordiniAperti === false ? 'chiuse' : 'aperte';
+        const prenotazioni = a.campagna && a.campagna.ordiniAperti === false ? 'chiuse' : 'aperte';
 
         const daIncassareOrd = a.daFare.filter(v => v.motivo === 'da incassare').length;
         const daConsegnareOrd = a.stati.prenotato + a.stati.preparazione + a.stati.da_consegnare;
@@ -276,6 +211,7 @@
             <div class="rp-info">
                 <div class="rp-info-col">
                     <div class="rp-info-tit">Campagna</div>
+                    <div><span>Nome</span><b>${h(nomeCampagna)}</b></div>
                     <div><span>Periodo</span><b>${h(periodo)}</b></div>
                     <div><span>Prodotti</span><b>${h(prodotto)}</b></div>
                     <div><span>Prenotazioni</span><b>${h(prenotazioni)}</b></div>
@@ -285,12 +221,14 @@
                     <div><span>Ordini attivi</span><b>${num(a.ordiniAttivi)}</b></div>
                     <div><span>Sostenitori</span><b>${num(a.clientiUnici)}</b></div>
                     <div><span>Media per ordine</span><b>${h(euro(a.ticketMedio))}</b></div>
+                    <div><span>Ricevute richieste</span><b>${num(a.ricevute)}</b></div>
                 </div>
                 <div class="rp-info-col">
                     <div class="rp-info-tit">Emissione</div>
                     <div><span>Operatore</span><b>${h(chi)}</b></div>
                     <div><span>Ordini esaminati</span><b>${num(a.ordiniTotali)}</b></div>
                     <div><span>Di cui annullati</span><b>${num(a.stati.annullato)}</b></div>
+                    <div><span>Ritiri assegnati</span><b>${num(a.ritiriProgrammati)}</b></div>
                 </div>
             </div>
 
@@ -300,8 +238,7 @@
             <div class="rp-due">
                 <div class="rp-col-sx">
                     <div class="rp-sez-tit">Disponibilità a magazzino</div>
-                    ${barraStock('Panettoni', a.panettoni, parseInt(a.cfg.totalePanettoni) || 0)}
-                    ${barraStock('Pandori', a.pandori, parseInt(a.cfg.totalePandori) || 0)}
+                    ${vociProdotto(a).map(pp => barraStock(pp.plurale, pp.pezzi, pp.stock)).join('')}
                 </div>
                 <div class="rp-col-dx">
                     ${blocchoTotali(a)}
@@ -319,12 +256,16 @@
                 </div>
             </div>
 
-            <div class="rp-sez-tit">Pezzi prenotati per giorno <span class="rp-mini">— ultimi 14 giorni con ordini</span></div>
-            ${andamento(a)}
+            ${vociProdotto(a).length >= 5 ? '' : `<div class="rp-sez-tit">Pezzi prenotati per giorno <span class="rp-mini">— ultimi 14 giorni con ordini</span></div>
+            ${andamento(a)}`}
 
-            <div class="rp-sez-tit">Migliori sostenitori <span class="rp-mini">— per importo prenotato</span></div>
-            ${tabellaSostenitori(a)}
-
+            <div class="rp-due">
+                <div class="rp-col-meta">
+                    <div class="rp-sez-tit">Migliori sostenitori <span class="rp-mini">— per importo</span></div>
+                    ${tabellaSostenitori(a)}
+                </div>
+                <div class="rp-col-meta">
+                    <div class="rp-sez-tit">Cosa resta da fare</div>
             <div class="rp-azioni">
                 <div class="rp-azione">
                     <div class="rp-azione-num">${num(daIncassareOrd)}</div>
@@ -339,6 +280,8 @@
                     <div><b>campagna conclusa</b><br>${num(a.stati.consegnato)} ordini già consegnati</div>
                 </div>
             </div>
+                </div>
+            </div>
 
             <div class="rp-piede">
                 Prospetto generato automaticamente dal gestionale WonderLAD · ${h(protocollo)} · pagina 1 di 1
@@ -347,11 +290,21 @@
     }
 
     const CSS = `
-#rp-pagina { position:fixed; top:0; left:0; width:${A4.larghezza}px; height:${A4.altezza}px;
+#rp-contenitore { position:fixed; left:0; top:0; width:0; height:0; overflow:hidden; pointer-events:none; }
+#rp-pagina { position:relative; width:${A4.larghezza}px; height:${A4.altezza}px;
     box-sizing:border-box; padding:26px 34px 40px; background:#fff; color:#2c3e35;
-    font-family:'Nunito',Arial,Helvetica,sans-serif; font-size:10.5px; overflow:hidden;
-    opacity:0; pointer-events:none; z-index:-1; }
+    font-family:'Nunito',Arial,Helvetica,sans-serif; font-size:10.5px; overflow:hidden; }
 #rp-pagina * { box-sizing:border-box; }
+/* Neutralizza gli stili delle tabelle del pannello (anche quelli per smartphone):
+   :where() ha specificita' zero, cosi' le regole .rp-* sotto restano valide. */
+:where(#rp-pagina) table { display:table; width:100%; border-collapse:collapse; background:transparent;
+    border:none; border-radius:0; box-shadow:none; overflow:visible; font-size:inherit; }
+:where(#rp-pagina) thead { display:table-header-group; }
+:where(#rp-pagina) tbody { display:table-row-group; }
+:where(#rp-pagina) tr { display:table-row; background:none; margin:0; padding:0; border:none; border-radius:0; box-shadow:none; }
+:where(#rp-pagina) th, :where(#rp-pagina) td { display:table-cell; font-size:inherit; padding:0; border:none;
+    background:transparent; text-align:left; position:static; }
+:where(#rp-pagina) td::before { content:none; }
 #rp-pagina table { border-collapse:collapse; width:100%; }
 
 .rp-head { display:flex; justify-content:space-between; align-items:flex-end;
@@ -376,7 +329,7 @@
 
 .rp-voci th { background:#eaf4f0; color:#4d6a5b; font-size:9px; text-transform:uppercase;
     letter-spacing:.4px; text-align:left; padding:5px 7px; border-bottom:1.5px solid #cddfd7; }
-.rp-voci td { padding:6px 7px; border-bottom:1px solid #eef3f1; vertical-align:top; }
+.rp-voci td { padding:4px 7px; border-bottom:1px solid #eef3f1; vertical-align:top; line-height:1.3; }
 .rp-desc { font-size:9px; color:#8a9a92; font-weight:600; margin-top:1px; }
 .rp-voci .rp-riga-tot td { background:#f6fbf8; font-weight:800; color:#4d6a5b;
     border-top:1.5px solid #cddfd7; border-bottom:none; }
@@ -388,14 +341,14 @@
 .rp-col-dx { width:48%; padding-top:14px; }
 .rp-col-meta { width:50%; }
 
-.rp-totali td { padding:5px 8px; border-bottom:1px solid #eef3f1; }
+.rp-totali td { padding:4px 8px; border-bottom:1px solid #eef3f1; }
 .rp-totali .rp-ok td { color:#2e7d32; }
 .rp-totali .rp-ko td { color:#c53030; }
 .rp-totali .rp-grande td { font-family:'Quicksand',Arial,sans-serif; font-size:14px; font-weight:800;
     color:#2c3e35; background:#eaf4f0; border-top:2px solid #6b9080; border-bottom:none; }
 .rp-nota { font-size:8.5px; color:#8a9a92; font-weight:600; margin-top:6px; line-height:1.35; }
 
-.rp-stock { margin-bottom:9px; }
+.rp-stock { margin-bottom:7px; }
 .rp-stock-top { display:flex; justify-content:space-between; font-size:10.5px; font-weight:700; margin-bottom:3px; }
 .rp-barra { height:9px; background:#eaf4f0; border-radius:5px; overflow:hidden; }
 .rp-barra-int { height:100%; background:#6b9080; }
@@ -408,18 +361,18 @@
 .rp-tab .rp-riga-tot td { font-weight:800; color:#4d6a5b; border-top:1.5px solid #e2ece9; border-bottom:none; }
 .rp-vuoto { color:#8a9a92; font-size:10px; margin:6px 0; }
 
-.rp-istogramma { display:flex; align-items:flex-end; gap:5px; height:80px;
+.rp-istogramma { display:flex; align-items:flex-end; gap:5px; height:72px;
     border:1.5px solid #e2ece9; border-radius:8px; padding:6px 8px; }
 .rp-col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
 .rp-col-val { font-size:8px; color:#6b7c73; font-weight:800; margin-bottom:2px; }
 .rp-col-barra { width:100%; background:#94bdad; border-radius:3px 3px 0 0; }
 .rp-col-lbl { font-size:7.5px; color:#8a9a92; font-weight:700; margin-top:3px; }
 
-.rp-azioni { display:flex; gap:10px; margin-top:11px; }
+.rp-azioni { display:flex; flex-direction:column; gap:7px; }
 .rp-azione { flex:1; display:flex; align-items:center; gap:9px; border:1.5px solid #e2ece9;
-    background:#f6fbf8; border-radius:8px; padding:9px 11px; font-size:9.5px;
+    background:#f6fbf8; border-radius:8px; padding:6px 10px; font-size:9.5px;
     color:#4d6a5b; font-weight:600; line-height:1.4; }
-.rp-azione-num { font-family:'Quicksand',Arial,sans-serif; font-size:22px; font-weight:800;
+.rp-azione-num { font-family:'Quicksand',Arial,sans-serif; font-size:19px; font-weight:800; min-width:44px;
     color:#6b9080; line-height:1; white-space:nowrap; }
 
 .rp-piede { position:absolute; left:34px; right:34px; bottom:16px;
@@ -445,13 +398,16 @@
         if (!pacco.dati.ordiniTotali) return alert('Nessun ordine da riepilogare con i filtri attivi.');
 
         iniettaCSS();
-        const vecchia = document.getElementById('rp-pagina');
-        if (vecchia) vecchia.remove();
+        const vecchio = document.getElementById('rp-contenitore');
+        if (vecchio) vecchio.remove();
 
+        const contenitore = document.createElement('div');
+        contenitore.id = 'rp-contenitore';
         const pagina = costruisciPagina(pacco.dati, pacco.filtri || { prodotto: 'TUTTI', periodo: 'tutto' });
-        document.body.appendChild(pagina);
+        contenitore.appendChild(pagina);
+        document.body.appendChild(contenitore);
 
-        const ripulisci = () => { try { pagina.remove(); } catch (e) { /* niente */ } };
+        const ripulisci = () => { try { contenitore.remove(); } catch (e) { /* niente */ } };
 
         return html2pdf().set({
             margin: 0,
@@ -463,19 +419,13 @@
                 backgroundColor: '#ffffff',
                 scrollX: 0,
                 scrollY: 0,
-                // La pagina e' trasparente nel documento vero: qui la si rende
-                // visibile solo nella copia che html2canvas disegna.
-                onclone: function (doc) {
-                    const c = doc.getElementById('rp-pagina');
-                    if (c) {
-                        c.style.opacity = '1';
-                        c.style.zIndex = '0';
-                        c.style.position = 'absolute';
-                    }
-                }
+                // Larghezza da desktop: su smartphone le regole mobili non entrano nel PDF.
+                windowWidth: 1280
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: 'avoid-all' }
+            // Nessuna gestione delle interruzioni: la pagina misura gia' un A4.
+            // Con 'avoid-all' html2pdf spingeva tutto su una seconda pagina.
+            pagebreak: { mode: [] }
         }).from(pagina).save()
           .then(() => {
               ripulisci();

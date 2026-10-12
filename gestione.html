@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Gestione WonderLAD</title>
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;750&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="gestionestyle.css">
 
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
@@ -34,15 +34,23 @@
     <div class="header">
         <div class="header-brand">
             <img src="https://www.wonderlad.org/wp-content/uploads/2020/05/logo-wonderlad.png" alt="WonderLAD" onerror="this.style.display='none'">
-            <span>Gestione</span>
+            <span class="header-titolo">Gestione</span>
         </div>
         <div class="header-actions-right">
+            <label for="selCampagna" class="sr-only">Campagna</label>
+            <select id="selCampagna" class="sel-campagna" onchange="selezionaCampagna(this.value)"></select>
             <span id="user-badge" class="user-badge"></span>
             <button class="btn-logout" onclick="effettuaLogout()">Esci</button>
         </div>
     </div>
 
     <div class="container" id="main-container">
+        <div class="striscia-emergenza" id="stripEmergenza" style="display:none;">
+            <strong>Contatti per urgenze</strong>
+            <span id="stripEmergenzaTesto"></span>
+        </div>
+        <div class="striscia-avviso" id="stripAvviso" style="display:none;"></div>
+
         <div id="loadingMsg">Caricamento…</div>
 
         <!-- Dashboard: contenuto generato da dashboard.js -->
@@ -52,7 +60,7 @@
         <div id="view-ordini" class="view">
             <div class="controls-panel">
                 <label for="searchOrdini" class="sr-only">Cerca ordini</label>
-                <input type="text" id="searchOrdini" class="search-input" placeholder="Cerca nome, telefono o codice…" onkeyup="filtraOrdini()">
+                <input type="text" id="searchOrdini" class="search-input" placeholder="Cerca nome, telefono, email, codice o codice fiscale…" oninput="filtraOrdini()">
                 <div class="filter-chips">
                     <button class="chip active" data-stato="Tutti" onclick="setFiltroStato('Tutti', this)">Tutti</button>
                     <button class="chip" data-stato="Prenotato - Da Pagare" onclick="setFiltroStato('Prenotato - Da Pagare', this)">Da pagare</button>
@@ -62,25 +70,146 @@
                     <button class="chip" data-stato="Consegnato" onclick="setFiltroStato('Consegnato', this)">Consegnati</button>
                     <button class="chip" data-stato="Annullato" onclick="setFiltroStato('Annullato', this)">Annullati</button>
                 </div>
+                <div class="filtri-extra">
+                    <label for="filtroExtra">Mostra</label>
+                    <select id="filtroExtra" onchange="filtraOrdini()">
+                        <option value="tutti">tutti gli ordini</option>
+                        <option value="senzaRitiro">ritiro da assegnare</option>
+                        <option value="conRitiro">ritiro assegnato</option>
+                        <option value="ricevuta">ricevuta richiesta</option>
+                        <option value="extra">offerta sopra il minimo</option>
+                        <option value="marketing">consenso campagne future</option>
+                    </select>
+                </div>
             </div>
 
             <div class="table-controls">
                 <h3 style="margin:0; font-family:'Quicksand', sans-serif;">Ordini</h3>
-                <button class="btn-action" onclick="esportaExcel()">📥 Esporta Excel</button>
+                <div class="table-controls-dx">
+                    <button class="btn-action" onclick="esportaExcel()">📥 Esporta Excel</button>
+                </div>
+            </div>
+
+            <div class="barra-selezione" id="barraSelezione">
+                <span id="contaSelezionati">0 selezionati</span>
+                <button class="btn-action" onclick="apriModaleRitiro()">📅 Assegna ritiro</button>
+                <button class="btn-edit" onclick="deselezionaTutti()">Annulla selezione</button>
             </div>
 
             <div class="table-responsive">
-                <table>
+                <table class="tab-ordini">
                     <thead>
                         <tr>
+                            <th class="col-sel"><input type="checkbox" id="selTutti" aria-label="Seleziona tutti" onchange="selezionaVisibili(this.checked)"></th>
                             <th>Data</th><th>Codice</th><th>Cliente</th><th>Telefono</th>
-                            <th>Pan</th><th>Pand</th><th>Stato</th><th>Pagamento</th><th>Azioni</th>
+                            <th>Dolci</th><th>Offerta</th><th>Stato</th><th>Pagamento</th><th>Ritiro</th><th>Azioni</th>
                         </tr>
                     </thead>
                     <tbody id="corpoTabella"></tbody>
                 </table>
             </div>
             <div id="contatoreOrdini"></div>
+        </div>
+
+        <!-- ============ IMPOSTAZIONI (Administrator) ============ -->
+        <div id="view-impostazioni" class="view admin-only">
+
+            <div class="card-imp" id="cardManutenzione">
+                <h3>Manutenzione</h3>
+                <p class="imp-aiuto" id="statoManutenzione">Verifica in corso…</p>
+                <div class="imp-azioni">
+                    <button class="btn-action" id="btnInizializza" onclick="inizializzaConfigurazione()">Inizializza configurazione</button>
+                    <button class="btn-action" id="btnMigra" onclick="migraOrdiniStorici()">Migra ordini storici</button>
+                    <button class="btn-edit" onclick="verificaManutenzione()">Ricontrolla</button>
+                </div>
+            </div>
+
+            <div class="card-imp">
+                <h3>Campagna attiva</h3>
+                <p class="imp-aiuto">È la campagna mostrata nel modulo pubblico. Cambiandola, il form passa subito ai prodotti della nuova campagna.</p>
+                <div class="imp-riga">
+                    <div>
+                        <label for="impCampagnaAttiva">Campagna</label>
+                        <select id="impCampagnaAttiva"></select>
+                    </div>
+                    <div class="imp-riga-btn">
+                        <button class="btn-action" onclick="impostaCampagnaAttiva()">Rendi attiva</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-imp">
+                <div class="card-imp-testa">
+                    <h3>Campagne e prodotti</h3>
+                    <button class="btn-edit" onclick="nuovaCampagna()">➕ Nuova campagna</button>
+                </div>
+                <div id="elencoCampagne" class="elenco-campagne"></div>
+                <div id="editorCampagna" class="editor-campagna" style="display:none;"></div>
+            </div>
+
+            <div class="card-imp">
+                <h3>Ritiro</h3>
+                <div class="imp-due">
+                    <div>
+                        <label for="impReferenti">Referenti (uno per riga)</label>
+                        <textarea id="impReferenti" rows="4" placeholder="Federica&#10;Monica"></textarea>
+                    </div>
+                    <div>
+                        <label for="impLuoghi">Luoghi di ritiro (uno per riga)</label>
+                        <textarea id="impLuoghi" rows="4" placeholder="Sede di via …"></textarea>
+                    </div>
+                </div>
+                <div class="imp-azioni"><button class="btn-action" onclick="salvaRitiro()">Salva</button></div>
+            </div>
+
+            <div class="card-imp">
+                <h3>Contatti per emergenza</h3>
+                <p class="imp-aiuto">Compaiono nel modulo pubblico, nella conferma, nei messaggi e in cima al pannello.</p>
+                <textarea id="impEmergenza" rows="3" maxlength="500" placeholder="Es. Federica 333 1234567 · Monica 340 7654321"></textarea>
+                <div class="imp-azioni"><button class="btn-action" onclick="salvaEmergenza()">Salva</button></div>
+            </div>
+
+            <div class="card-imp">
+                <h3>Informativa privacy</h3>
+                <p class="imp-aiuto">Dati del titolare mostrati in <a href="privacy.html" target="_blank" rel="noopener">privacy.html</a>. Versione attuale: <strong id="impPrivacyVersione">1</strong>.</p>
+                <div class="imp-due">
+                    <div>
+                        <label for="impTitolare">Titolare (ragione sociale)</label>
+                        <input type="text" id="impTitolare" maxlength="120">
+                    </div>
+                    <div>
+                        <label for="impCfEnte">Codice fiscale dell'ente</label>
+                        <input type="text" id="impCfEnte" maxlength="20">
+                    </div>
+                    <div>
+                        <label for="impSede">Sede legale</label>
+                        <input type="text" id="impSede" maxlength="160">
+                    </div>
+                    <div>
+                        <label for="impEmailPrivacy">Email per la privacy</label>
+                        <input type="email" id="impEmailPrivacy" maxlength="120">
+                    </div>
+                </div>
+                <label for="impConservazione">Tempi di conservazione</label>
+                <textarea id="impConservazione" rows="3" maxlength="800"></textarea>
+                <label for="impPrivacyExtra">Ulteriori informazioni (facoltativo)</label>
+                <textarea id="impPrivacyExtra" rows="3" maxlength="2000"></textarea>
+                <label class="imp-check">
+                    <input type="checkbox" id="impPrivacyNuovaVersione">
+                    <span>Modifica sostanziale: aumenta la versione (i nuovi ordini registrano la versione accettata)</span>
+                </label>
+                <div class="imp-azioni"><button class="btn-action" onclick="salvaPrivacy()">Salva</button></div>
+            </div>
+
+            <div class="card-imp">
+                <h3>Modelli dei messaggi</h3>
+                <p class="imp-aiuto">Segnaposto disponibili: <span id="elencoSegnaposto"></span></p>
+                <div id="editorModelli"></div>
+                <div class="imp-azioni">
+                    <button class="btn-action" onclick="salvaModelli()">Salva modelli</button>
+                    <button class="btn-edit" onclick="ripristinaModelli()">Ripristina testi predefiniti</button>
+                </div>
+            </div>
         </div>
 
         <!-- ============ UTENTI (Administrator) ============ -->
@@ -90,7 +219,7 @@
                 <button class="btn-action" onclick="apriModaleNuovoUtente()">➕ Nuovo utente</button>
             </div>
             <p style="color:var(--text-muted); font-size:0.85rem; margin-top:0;">
-                Il Manager vede e modifica gli ordini. L'Administrator gestisce anche prezzi, stock, staff e log.
+                Il Manager vede e modifica gli ordini, invia messaggi e assegna i ritiri. L'Administrator gestisce anche campagne, prodotti, impostazioni, staff e log.
             </p>
             <div class="table-responsive">
                 <table>
@@ -104,13 +233,14 @@
         <div id="view-log" class="view admin-only">
             <div class="controls-panel">
                 <label for="searchLog" class="sr-only">Cerca nei log</label>
-                <input type="text" id="searchLog" class="search-input" placeholder="Cerca nei log…" onkeyup="filtraLog()">
+                <input type="text" id="searchLog" class="search-input" placeholder="Cerca nei log…" oninput="filtraLog()">
                 <div class="filter-chips" id="logFilterChips">
                     <button class="chip active" onclick="setFiltroLogCat('Tutti', this)">Tutti</button>
                     <button class="chip" onclick="setFiltroLogCat('LOGIN', this)">Accessi</button>
                     <button class="chip" onclick="setFiltroLogCat('MODIFICA', this)">Modifiche</button>
+                    <button class="chip" onclick="setFiltroLogCat('MESSAGGIO', this)">Messaggi</button>
                     <button class="chip" onclick="setFiltroLogCat('UTENTE', this)">Staff</button>
-                    <button class="chip" onclick="setFiltroLogCat('STOCK', this)">Stock e prezzi</button>
+                    <button class="chip" onclick="setFiltroLogCat('IMPOSTAZIONI', this)">Impostazioni</button>
                     <button class="chip" onclick="setFiltroLogCat('EXPORT', this)">Export</button>
                 </div>
             </div>
@@ -126,55 +256,110 @@
     <nav class="bottom-nav">
         <button class="nav-item active" data-view="dashboard" onclick="switchView('dashboard', this)"><span class="nav-icon">📊</span>Dashboard</button>
         <button class="nav-item" data-view="ordini" onclick="switchView('ordini', this)"><span class="nav-icon">📋</span>Ordini</button>
+        <button class="nav-item admin-only" data-view="impostazioni" onclick="switchView('impostazioni', this)"><span class="nav-icon">⚙️</span>Impostazioni</button>
         <button class="nav-item admin-only" data-view="utenti" onclick="switchView('utenti', this)"><span class="nav-icon">👥</span>Staff</button>
         <button class="nav-item admin-only" data-view="log" onclick="switchView('log', this)"><span class="nav-icon">📜</span>Log</button>
     </nav>
 
     <!-- ============ MODALI ============ -->
     <div id="edit-modal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content modal-ampio">
             <h3>Modifica ordine</h3>
-            <p id="edit-cliente" style="margin-top:-0.5rem; color:var(--text-muted); font-weight:700;"></p>
+            <p id="edit-cliente" class="modal-sotto"></p>
 
-            <label for="edit-pan">Panettoni</label>
-            <input type="number" id="edit-pan" min="0" max="200">
+            <div class="modal-sez">Dolci</div>
+            <div id="edit-righe" class="edit-righe"></div>
 
-            <label for="edit-pand">Pandori</label>
-            <input type="number" id="edit-pand" min="0" max="200">
+            <div class="modal-griglia">
+                <div>
+                    <label for="edit-offerta">Offerta (€)</label>
+                    <input type="number" id="edit-offerta" min="0" step="0.5">
+                    <div class="modal-nota" id="edit-minimo"></div>
+                </div>
+                <div>
+                    <label for="edit-status">Stato</label>
+                    <select id="edit-status"></select>
+                </div>
+                <div>
+                    <label for="edit-metodo">Metodo di pagamento</label>
+                    <select id="edit-metodo"></select>
+                </div>
+            </div>
 
-            <label for="edit-status">Stato</label>
-            <select id="edit-status">
-                <option value="Prenotato">Prenotato</option>
-                <option value="Prenotato - Da Pagare">Prenotato - Da Pagare</option>
-                <option value="Prenotato - Pagato">Prenotato - Pagato</option>
-                <option value="In Preparazione">In Preparazione</option>
-                <option value="Da Consegnare">Da Consegnare</option>
-                <option value="Consegnato">Consegnato</option>
-                <option value="Annullato">Annullato</option>
-            </select>
+            <div class="modal-sez">Contatti</div>
+            <div class="modal-griglia">
+                <div>
+                    <label for="edit-telefono">Telefono</label>
+                    <input type="tel" id="edit-telefono" maxlength="20">
+                </div>
+                <div>
+                    <label for="edit-email">Email</label>
+                    <input type="email" id="edit-email" maxlength="120">
+                </div>
+            </div>
 
-            <label for="edit-metodo">Metodo di pagamento</label>
-            <select id="edit-metodo">
-                <option value="-">Non specificato</option>
-                <option value="Cash">Contanti</option>
-                <option value="Bonifico">Bonifico</option>
-                <option value="POS">POS / Carta</option>
-            </select>
+            <div class="modal-sez">Ritiro</div>
+            <div class="modal-griglia">
+                <div>
+                    <label for="edit-ritiro-data">Data e ora</label>
+                    <input type="datetime-local" id="edit-ritiro-data">
+                </div>
+                <div>
+                    <label for="edit-ritiro-luogo">Luogo</label>
+                    <input type="text" id="edit-ritiro-luogo" list="listaLuoghi" maxlength="120">
+                </div>
+                <div>
+                    <label for="edit-ritiro-referente">Referente</label>
+                    <input type="text" id="edit-ritiro-referente" list="listaReferenti" maxlength="60">
+                </div>
+            </div>
+
+            <div class="modal-sez">Ricevuta</div>
+            <label class="checkbox-row">
+                <input type="checkbox" id="edit-ricevuta" onchange="document.getElementById('edit-box-ricevuta').style.display = this.checked ? 'grid' : 'none'">
+                <span>Ricevuta richiesta</span>
+            </label>
+            <div class="modal-griglia" id="edit-box-ricevuta">
+                <div>
+                    <label for="edit-cf">Codice fiscale</label>
+                    <input type="text" id="edit-cf" maxlength="16" style="text-transform:uppercase">
+                </div>
+                <div class="span-2">
+                    <label for="edit-indirizzo">Indirizzo</label>
+                    <input type="text" id="edit-indirizzo" maxlength="120">
+                </div>
+                <div>
+                    <label for="edit-comune">Comune</label>
+                    <input type="text" id="edit-comune" maxlength="60">
+                </div>
+                <div>
+                    <label for="edit-cap">CAP</label>
+                    <input type="text" id="edit-cap" maxlength="5">
+                </div>
+                <div>
+                    <label for="edit-provincia">Provincia</label>
+                    <input type="text" id="edit-provincia" maxlength="2" style="text-transform:uppercase">
+                </div>
+            </div>
 
             <label for="edit-note">Note</label>
             <input type="text" id="edit-note" maxlength="300">
+
+            <div class="modal-nota" id="edit-consensi"></div>
 
             <input type="hidden" id="edit-doc-id">
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="chiudiModale('edit-modal')">Annulla</button>
                 <button class="btn-save" onclick="salvaModificaOrdine()">Salva</button>
             </div>
+            <button class="btn-elimina admin-only" onclick="eliminaOrdine()">Elimina definitivamente l'ordine</button>
         </div>
     </div>
 
     <div id="pay-modal" class="modal">
         <div class="modal-content">
             <h3>Registra il pagamento</h3>
+            <p class="modal-sotto" id="pay-importo"></p>
             <label for="pay-method-select">Metodo</label>
             <select id="pay-method-select">
                 <option value="Cash">Contanti</option>
@@ -189,29 +374,47 @@
         </div>
     </div>
 
-    <div id="stock-modal" class="modal">
+    <div id="ritiro-modal" class="modal">
         <div class="modal-content">
-            <h3>Stock e prezzi</h3>
-            <label for="input-tot-pan">Panettoni disponibili</label>
-            <input type="number" id="input-tot-pan" min="0">
-
-            <label for="input-tot-pand">Pandori disponibili</label>
-            <input type="number" id="input-tot-pand" min="0">
-
-            <label for="input-prezzo-pan">Prezzo panettone (€)</label>
-            <input type="number" id="input-prezzo-pan" min="0" step="0.5">
-
-            <label for="input-prezzo-pand">Prezzo pandoro (€)</label>
-            <input type="number" id="input-prezzo-pand" min="0" step="0.5">
-
+            <h3>Assegna ritiro</h3>
+            <p class="modal-sotto" id="ritiro-quanti"></p>
+            <label for="ritiro-data">Data e ora</label>
+            <input type="datetime-local" id="ritiro-data">
+            <label for="ritiro-luogo">Luogo</label>
+            <input type="text" id="ritiro-luogo" list="listaLuoghi" maxlength="120">
+            <label for="ritiro-referente">Referente</label>
+            <input type="text" id="ritiro-referente" list="listaReferenti" maxlength="60">
             <label class="checkbox-row">
-                <input type="checkbox" id="input-ordini-aperti">
-                <span>Prenotazioni aperte al pubblico</span>
+                <input type="checkbox" id="ritiro-stato">
+                <span>Imposta anche lo stato "Da Consegnare"</span>
             </label>
-
             <div class="modal-actions">
-                <button class="btn-cancel" onclick="chiudiModale('stock-modal')">Annulla</button>
-                <button class="btn-save" onclick="salvaStock()">Salva</button>
+                <button class="btn-cancel" onclick="chiudiModale('ritiro-modal')">Annulla</button>
+                <button class="btn-save" onclick="salvaRitiroMassivo()">Assegna</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="msg-modal" class="modal">
+        <div class="modal-content modal-ampio">
+            <h3>Invia un messaggio</h3>
+            <p class="modal-sotto" id="msg-destinatario"></p>
+            <label for="msg-modello">Modello</label>
+            <select id="msg-modello" onchange="compilaMessaggio()"></select>
+            <div class="modal-nota avviso" id="msg-avviso"></div>
+            <label for="msg-oggetto">Oggetto (solo email)</label>
+            <input type="text" id="msg-oggetto" maxlength="150">
+            <label for="msg-testo">Testo</label>
+            <textarea id="msg-testo" rows="8" maxlength="1500"></textarea>
+            <div class="msg-canali">
+                <button class="btn-canale canale-wa" id="msg-wa" onclick="inviaMessaggio('whatsapp')">WhatsApp</button>
+                <button class="btn-canale canale-sms" id="msg-sms" onclick="inviaMessaggio('sms')">SMS</button>
+                <button class="btn-canale canale-mail" id="msg-mail" onclick="inviaMessaggio('email')">Email</button>
+            </div>
+            <div class="msg-storico" id="msg-storico"></div>
+            <input type="hidden" id="msg-doc-id">
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="chiudiModale('msg-modal')">Chiudi</button>
             </div>
         </div>
     </div>
@@ -227,7 +430,7 @@
 
             <label for="user-role-input">Ruolo</label>
             <select id="user-role-input">
-                <option value="Manager">Manager — vede e modifica gli ordini</option>
+                <option value="Manager">Manager — ordini, ritiri, messaggi</option>
                 <option value="Administrator">Administrator — accesso completo</option>
             </select>
 
@@ -238,9 +441,15 @@
         </div>
     </div>
 
+    <datalist id="listaLuoghi"></datalist>
+    <datalist id="listaReferenti"></datalist>
+
+    <script src="modello.js"></script>
     <script src="firebase-init.js"></script>
     <script src="dashboard.js"></script>
     <script src="app.js"></script>
+    <script src="impostazioni.js"></script>
     <script src="report.js"></script>
+    <script src="export.js"></script>
 </body>
 </html>

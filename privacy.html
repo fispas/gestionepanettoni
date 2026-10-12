@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informativa privacy - WonderLAD</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --primary: #6b9080;
+            --primary-dark: #4d6a5b;
+            --accent-light: #eaf4f0;
+            --bg-main: #f6fff8;
+            --text-main: #2c3e35;
+            --text-muted: #6b7c73;
+            --border-color: #e2ece9;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--bg-main);
+            color: var(--text-main);
+            margin: 0;
+            line-height: 1.6;
+        }
+        main {
+            max-width: 760px;
+            margin: 2rem auto 3rem;
+            background: #fff;
+            border: 2px solid var(--border-color);
+            border-radius: 22px;
+            padding: 2.2rem 2rem;
+            width: calc(100% - 32px);
+        }
+        h1 { font-family: 'Quicksand', sans-serif; color: var(--primary-dark); font-size: 1.6rem; margin: 0 0 0.3rem; }
+        h2 { font-family: 'Quicksand', sans-serif; color: var(--primary-dark); font-size: 1.08rem; margin: 1.6rem 0 0.4rem; }
+        p, li { font-size: 0.95rem; }
+        ul { padding-left: 1.2rem; }
+        .meta { color: var(--text-muted); font-size: 0.85rem; font-weight: 700; margin-bottom: 1.4rem; }
+        .titolare { background: var(--accent-light); border-radius: 14px; padding: 0.9rem 1.1rem; white-space: pre-line; }
+        a { color: var(--primary-dark); font-weight: 700; }
+        .indietro { display: inline-block; margin-top: 1.6rem; }
+        @media (max-width: 480px) { main { padding: 1.6rem 1.1rem; } }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Informativa sul trattamento dei dati personali</h1>
+    <div class="meta" id="meta">Ai sensi degli artt. 13 e 14 del Regolamento (UE) 2016/679 (GDPR)</div>
+
+    <h2>1. Titolare del trattamento</h2>
+    <div class="titolare" id="titolare">—</div>
+
+    <h2>2. Dati trattati</h2>
+    <p>Per gestire la prenotazione trattiamo nome, cognome, numero di telefono, indirizzo email, i dolci prenotati, l’offerta indicata, eventuali note e lo stato del ritiro e del pagamento.
+       Solo se richiedi la ricevuta della donazione trattiamo anche codice fiscale e indirizzo di residenza.</p>
+
+    <h2>3. Finalità e base giuridica</h2>
+    <ul>
+        <li><strong>Gestione della prenotazione</strong>, del ritiro e delle comunicazioni ad essa collegate (conferma, appuntamento, promemoria), via email, SMS o WhatsApp: esecuzione della tua richiesta (art. 6.1.b GDPR).</li>
+        <li><strong>Rilascio della ricevuta</strong> e adempimenti contabili e fiscali: obbligo di legge (art. 6.1.c GDPR).</li>
+        <li><strong>Informazioni sulle prossime campagne solidali</strong>: solo con il tuo consenso facoltativo (art. 6.1.a GDPR), revocabile in qualsiasi momento senza conseguenze sulla prenotazione.</li>
+    </ul>
+
+    <h2>4. Modalità e destinatari</h2>
+    <p>I dati sono trattati con strumenti informatici dai volontari dell’associazione autorizzati alla gestione delle prenotazioni, tenuti alla riservatezza.
+       I dati sono conservati sulla piattaforma Google Firebase, il cui fornitore opera come responsabile del trattamento; eventuali trasferimenti fuori dall’Unione Europea avvengono sulla base delle garanzie previste dal GDPR, come le clausole contrattuali standard.
+       I dati non sono diffusi né ceduti a terzi per finalità commerciali. L’invio di messaggi tramite WhatsApp avviene dal dispositivo del volontario e comporta il trattamento del numero da parte del relativo servizio.</p>
+
+    <h2>5. Conservazione</h2>
+    <p id="conservazione">—</p>
+
+    <h2>6. Natura del conferimento</h2>
+    <p>I dati contrassegnati come obbligatori sono necessari per registrare la prenotazione: senza di essi non è possibile procedere. Codice fiscale e residenza sono necessari solo se richiedi la ricevuta.</p>
+
+    <h2>7. I tuoi diritti</h2>
+    <p>Puoi chiedere in qualsiasi momento l’accesso ai tuoi dati, la rettifica, la cancellazione, la limitazione del trattamento, la portabilità e opporti al trattamento (artt. 15-22 GDPR), e revocare il consenso alle comunicazioni sulle prossime campagne.
+       Per esercitare i diritti scrivi a <span id="contattoDiritti">—</span>.
+       Hai inoltre diritto di proporre reclamo al Garante per la protezione dei dati personali (<a href="https://www.garanteprivacy.it" target="_blank" rel="noopener">www.garanteprivacy.it</a>).</p>
+
+    <div id="aggiuntivo"></div>
+
+    <a class="indietro" href="index.html">← Torna alla prenotazione</a>
+</main>
+
+<script src="modello.js"></script>
+<script src="firebase-init.js"></script>
+<script>
+    function testo(id, valore) { document.getElementById(id).textContent = valore; }
+
+    function disegna(generali) {
+        const p = generali.privacy;
+        const righe = [
+            p.titolare || 'WonderLAD',
+            p.cfEnte ? 'Codice fiscale: ' + p.cfEnte : '',
+            p.sede ? 'Sede: ' + p.sede : '',
+            p.emailPrivacy ? 'Email: ' + p.emailPrivacy : ''
+        ].filter(Boolean);
+        testo('titolare', righe.join('\n'));
+        testo('conservazione', p.conservazione || Modello.GENERALI_DEFAULT.privacy.conservazione);
+        testo('meta', 'Ai sensi degli artt. 13 e 14 del Regolamento (UE) 2016/679 (GDPR) · versione ' + (p.versione || 1));
+
+        const contatto = document.getElementById('contattoDiritti');
+        if (p.emailPrivacy) {
+            contatto.innerHTML = '';
+            const a = document.createElement('a');
+            a.href = 'mailto:' + p.emailPrivacy;
+            a.textContent = p.emailPrivacy;
+            contatto.appendChild(a);
+        } else {
+            contatto.textContent = 'il titolare ai recapiti indicati sopra';
+        }
+
+        const extra = String(p.testoAggiuntivo || '').trim();
+        if (extra) {
+            const box = document.getElementById('aggiuntivo');
+            const h = document.createElement('h2');
+            h.textContent = '8. Ulteriori informazioni';
+            const par = document.createElement('p');
+            par.style.whiteSpace = 'pre-line';
+            par.textContent = extra;
+            box.appendChild(h);
+            box.appendChild(par);
+        }
+    }
+
+    GENERALI_REF.get()
+        .then(doc => disegna(normalizzaGenerali(doc.exists ? doc.data() : null)))
+        .catch(() => disegna(normalizzaGenerali(null)));
+</script>
+</body>
+</html>

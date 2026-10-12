@@ -9,15 +9,6 @@
        FALLBACK
        ====================================================== */
 
-    const CFG_FALLBACK = {
-        totalePanettoni: 500, totalePandori: 500,
-        prezzoPanettone: 15, prezzoPandoro: 15, ordiniAperti: true
-    };
-
-    function configDefault() {
-        return (typeof CONFIG_DEFAULT !== 'undefined') ? CONFIG_DEFAULT : CFG_FALLBACK;
-    }
-
     function utente() {
         try { return (typeof utenteCorrente !== 'undefined' && utenteCorrente) ? utenteCorrente : null; }
         catch (e) { return null; }
@@ -41,7 +32,7 @@
     let filtri = { prodotto: 'TUTTI', periodo: 'tutto' };
     let grafici = {};
     let ultimiDati = [];
-    let ultimaConfig = null;
+    let ultimaCampagna = null;
     let pronto = false;
     let uidCaricato = null;
 
@@ -61,14 +52,19 @@
         pezziMedi:      { titolo: 'Pezzi per ordine',    formato: 'num',  colore: '#3a6250' },
         percConsegnato: { titolo: '% consegnato',        formato: 'perc', colore: '#2e7d32' },
         percPagato:     { titolo: '% pagato',            formato: 'perc', colore: '#276749' },
-        percStock:      { titolo: '% stock impegnato',   formato: 'perc', colore: '#b7791f' }
+        percStock:      { titolo: '% stock impegnato',   formato: 'perc', colore: '#b7791f' },
+        extra:          { titolo: 'Donato oltre il minimo', formato: 'euro', colore: '#2e7d32' },
+        minimoTotale:   { titolo: 'Donazioni minime',    formato: 'euro', colore: '#3a6250' },
+        ricevute:       { titolo: 'Ricevute richieste',  formato: 'num',  colore: '#6b46c1' },
+        ritiriProgrammati: { titolo: 'Ritiri assegnati', formato: 'num',  colore: '#2b6cb0' },
+        consensiMarketing: { titolo: 'Consensi campagne future', formato: 'num', colore: '#2c7a7b' }
     };
 
     const CATALOGO = {
         stock:            { nome: 'Stock',               desc: 'Pezzi impegnati sul disponibile',   size: 'm' },
         flusso:           { nome: 'Flusso logistico',    desc: 'Conteggi per stato, cliccabili',    size: 'l' },
         barStati:         { nome: 'Ordini per stato',    desc: 'Grafico a barre',                   size: 'm' },
-        barProdotti:      { nome: 'Pezzi per prodotto',  desc: 'Panettoni contro pandori',          size: 'm' },
+        barProdotti:      { nome: 'Pezzi per prodotto',  desc: 'Confronto fra i dolci',              size: 'm' },
         tortaPagamenti:   { nome: 'Metodi di pagamento', desc: 'Ripartizione degli incassi',        size: 'm' },
         andamentoPezzi:   { nome: 'Pezzi al giorno',     desc: 'Serie storica',                     size: 'l' },
         andamentoOrdini:  { nome: 'Ordini al giorno',    desc: 'Serie storica',                     size: 'l' },
@@ -160,11 +156,7 @@
 
         vista.innerHTML = `
             <div class="dash-toolbar">
-                <div class="dash-selector-bar" id="dashFiltroProdotto">
-                    <button class="dash-tab-btn active" data-prodotto="TUTTI">Tutti</button>
-                    <button class="dash-tab-btn" data-prodotto="PANETTONI">🥮 Panettoni</button>
-                    <button class="dash-tab-btn" data-prodotto="PANDORI">🍞 Pandori</button>
-                </div>
+                <div class="dash-selector-bar" id="dashFiltroProdotto"></div>
                 <div class="dash-toolbar-right">
                     <select id="dashPeriodo" class="dash-select" aria-label="Periodo">
                         <option value="tutto">Tutto lo storico</option>
@@ -280,120 +272,29 @@
        AGGREGAZIONE
        ====================================================== */
 
-    function bucketLog(status) {
-        const s = String(status || '').toLowerCase();
-        if (s.includes('annullato')) return 'annullato';
-        if (s.includes('consegnato')) return 'consegnato';
-        if (s.includes('da consegnare')) return 'da_consegnare';
-        if (s.includes('preparazione')) return 'preparazione';
-        return 'prenotato';
-    }
-
-    function bucketPag(status) {
-        const s = String(status || '').toLowerCase();
-        if (s.includes('annullato')) return null;
-        if (s.includes('pagato') || s.includes('consegnato')) return 'pagato';
-        return 'da_pagare';
-    }
-
-    function dataDi(o) {
-        return (o && o.timestamp && typeof o.timestamp.toDate === 'function') ? o.timestamp.toDate() : null;
-    }
-
-    function nelPeriodo(o) {
-        if (filtri.periodo === 'tutto') return true;
-        const d = dataDi(o);
-        if (!d) return false;
-        const ora = new Date();
-        if (filtri.periodo === 'mese') return d.getFullYear() === ora.getFullYear() && d.getMonth() === ora.getMonth();
-        return (ora - d) <= parseInt(filtri.periodo, 10) * 86400000;
-    }
+    function dataDi(o) { return Modello.dataDi(o); }
 
     function aggrega() {
-        const cfg = ultimaConfig || configDefault();
-        const pPan = Number(cfg.prezzoPanettone) || 0;
-        const pPand = Number(cfg.prezzoPandoro) || 0;
+        return Modello.aggrega(ultimiDati, ultimaCampagna, filtri);
+    }
 
-        const a = {
-            cfg: cfg,
-            stati: { prenotato: 0, preparazione: 0, da_consegnare: 0, consegnato: 0, annullato: 0 },
-            statiPezzi: { prenotato: 0, preparazione: 0, da_consegnare: 0, consegnato: 0, annullato: 0 },
-            statiImporto: { prenotato: 0, preparazione: 0, da_consegnare: 0, consegnato: 0, annullato: 0 },
-            metodi: {}, perGiorno: {}, classifica: {},
-            incassato: 0, daIncassare: 0, valoreTotale: 0,
-            panettoni: 0, pandori: 0, pezziTotali: 0,
-            ordiniTotali: 0, ordiniAttivi: 0, pagati: 0,
-            clienti: new Set(), ultimi: [], daFare: []
-        };
-
-        (ultimiDati || []).filter(nelPeriodo).forEach(o => {
-            const panTot = parseInt(o.panettoni) || 0;
-            const pandTot = parseInt(o.pandori) || 0;
-            const pan = filtri.prodotto === 'PANDORI' ? 0 : panTot;
-            const pand = filtri.prodotto === 'PANETTONI' ? 0 : pandTot;
-            if (pan + pand <= 0) return;
-
-            const bl = bucketLog(o.status);
-            const bp = bucketPag(o.status);
-            const pezzi = pan + pand;
-            const importo = pan * pPan + pand * pPand;
-
-            a.ordiniTotali++;
-            a.stati[bl]++;
-            a.statiPezzi[bl] += pezzi;
-            a.statiImporto[bl] += importo;
-            a.ultimi.push(o);
-
-            if (bl === 'annullato') return;
-
-            a.ordiniAttivi++;
-            a.panettoni += pan;
-            a.pandori += pand;
-            a.pezziTotali += pezzi;
-            a.valoreTotale += importo;
-            a.clienti.add(((o.nome || '') + '|' + (o.telefono || '')).toLowerCase());
-
-            if (bp === 'pagato') {
-                a.pagati++;
-                a.incassato += importo;
-                const metodo = (o.metodoPagamento && o.metodoPagamento !== '-') ? o.metodoPagamento : 'Non indicato';
-                a.metodi[metodo] = (a.metodi[metodo] || 0) + importo;
-            } else {
-                a.daIncassare += importo;
-                a.daFare.push({ ordine: o, motivo: 'da incassare' });
-            }
-
-            if (bl === 'da_consegnare') a.daFare.push({ ordine: o, motivo: 'da consegnare' });
-
-            const d = dataDi(o);
-            if (d) {
-                const k = d.toISOString().slice(0, 10);
-                if (!a.perGiorno[k]) a.perGiorno[k] = { ordini: 0, pezzi: 0, incasso: 0 };
-                a.perGiorno[k].ordini++;
-                a.perGiorno[k].pezzi += pezzi;
-                a.perGiorno[k].incasso += importo;
-            }
-
-            const nome = ((o.nome || '') + ' ' + (o.cognome || '')).trim() || '—';
-            if (!a.classifica[nome]) a.classifica[nome] = { pezzi: 0, importo: 0 };
-            a.classifica[nome].pezzi += pezzi;
-            a.classifica[nome].importo += importo;
+    // I pulsanti dei prodotti seguono la campagna visualizzata.
+    function aggiornaFiltroProdotti() {
+        const barra = document.getElementById('dashFiltroProdotto');
+        if (!barra) return;
+        const prodotti = Modello.prodottiOrdinati(ultimaCampagna);
+        if (filtri.prodotto !== 'TUTTI' && !prodotti.some(p => p.chiave === filtri.prodotto)) filtri.prodotto = 'TUTTI';
+        const firma = prodotti.map(p => p.chiave + p.nome + (p.emoji || '')).join('|') + '#' + filtri.prodotto;
+        if (barra.dataset.firma === firma) return;
+        barra.dataset.firma = firma;
+        barra.innerHTML = '';
+        [{ chiave: 'TUTTI', nome: 'Tutti', emoji: '' }].concat(prodotti).forEach(p => {
+            const b = document.createElement('button');
+            b.className = 'dash-tab-btn' + (filtri.prodotto === p.chiave ? ' active' : '');
+            b.dataset.prodotto = p.chiave;
+            b.textContent = (p.emoji ? p.emoji + ' ' : '') + (p.chiave === 'TUTTI' ? p.nome : (p.plurale || p.nome));
+            barra.appendChild(b);
         });
-
-        const stockTot = filtri.prodotto === 'PANETTONI' ? (parseInt(cfg.totalePanettoni) || 0)
-                       : filtri.prodotto === 'PANDORI' ? (parseInt(cfg.totalePandori) || 0)
-                       : (parseInt(cfg.totalePanettoni) || 0) + (parseInt(cfg.totalePandori) || 0);
-
-        a.ticketMedio = a.ordiniAttivi ? Math.round(a.valoreTotale / a.ordiniAttivi) : 0;
-        a.pezziMedi = a.ordiniAttivi ? Math.round(a.pezziTotali / a.ordiniAttivi * 10) / 10 : 0;
-        a.clientiUnici = a.clienti.size;
-        a.daConsegnare = a.statiPezzi.prenotato + a.statiPezzi.preparazione + a.statiPezzi.da_consegnare;
-        a.percConsegnato = a.ordiniAttivi ? Math.round(a.stati.consegnato / a.ordiniAttivi * 100) : 0;
-        a.percPagato = a.ordiniAttivi ? Math.round(a.pagati / a.ordiniAttivi * 100) : 0;
-        a.percStock = stockTot ? Math.round(a.pezziTotali / stockTot * 100) : 0;
-        a.ultimi.sort((x, y) => (dataDi(y) || 0) - (dataDi(x) || 0));
-
-        return a;
     }
 
     /* ======================================================
@@ -508,13 +409,14 @@
         Object.keys(grafici).forEach(k => { try { grafici[k].destroy(); } catch (e) { /* niente */ } });
         grafici = {};
 
+        aggiornaFiltroProdotti();
         const a = aggrega();
 
         const et = document.getElementById('dashEtichetta');
         if (et) {
             const p = { tutto: 'tutto lo storico', '7': 'ultimi 7 giorni', '30': 'ultimi 30 giorni', mese: 'mese corrente' }[filtri.periodo];
-            const pr = { TUTTI: 'tutti i prodotti', PANETTONI: 'solo panettoni', PANDORI: 'solo pandori' }[filtri.prodotto];
-            et.textContent = p + ' · ' + pr + ' · ' + a.ordiniTotali + ' ordini';
+            const pr = filtri.prodotto === 'TUTTI' ? 'tutti i prodotti' : 'solo ' + String(Modello.prodotto(ultimaCampagna, filtri.prodotto).plurale || filtri.prodotto).toLowerCase();
+            et.textContent = ((ultimaCampagna && ultimaCampagna.nome) ? ultimaCampagna.nome + ' · ' : '') + p + ' · ' + pr + ' · ' + a.ordiniTotali + ' ordini';
         }
 
         avvisoScorte(a);
@@ -649,9 +551,13 @@
 
             case 'stock': {
                 titolo(corpo, 'Stock');
-                const righe = [];
-                if (filtri.prodotto !== 'PANDORI') righe.push(['🥮 Panettoni', a.panettoni, parseInt(a.cfg.totalePanettoni) || 0]);
-                if (filtri.prodotto !== 'PANETTONI') righe.push(['🍞 Pandori', a.pandori, parseInt(a.cfg.totalePandori) || 0]);
+                const righe = Object.keys(a.perProdotto)
+                    .filter(k => filtri.prodotto === 'TUTTI' || k === filtri.prodotto)
+                    .map(k => {
+                        const pp = a.perProdotto[k];
+                        return [((pp.emoji || '') + ' ' + pp.plurale).trim(), pp.pezzi, pp.stock];
+                    });
+                if (!righe.length) return vuoto(corpo, 'Nessun prodotto nella campagna.');
 
                 righe.forEach(r => {
                     const nome = r[0], impegnati = r[1], totale = r[2];
@@ -721,9 +627,11 @@
 
             case 'barProdotti': {
                 titolo(corpo, 'Pezzi per prodotto');
-                const et = [], vl = [], col = [];
-                if (filtri.prodotto !== 'PANDORI') { et.push('Panettoni'); vl.push(a.panettoni); col.push('#5b8e72'); }
-                if (filtri.prodotto !== 'PANETTONI') { et.push('Pandori'); vl.push(a.pandori); col.push('#94bdad'); }
+                const palette = ['#5b8e72', '#94bdad', '#b7791f', '#6b46c1', '#2b6cb0', '#c05621'];
+                const chiavi = Object.keys(a.perProdotto).filter(k => filtri.prodotto === 'TUTTI' || k === filtri.prodotto);
+                const et = chiavi.map(k => a.perProdotto[k].plurale);
+                const vl = chiavi.map(k => a.perProdotto[k].pezzi);
+                const col = chiavi.map((k, i) => palette[i % palette.length]);
                 grafico(w, corpo, {
                     type: 'bar',
                     data: { labels: et, datasets: [{ data: vl, backgroundColor: col, borderRadius: 10 }] },
@@ -750,9 +658,7 @@
                 if (!giorni.length) return vuoto(corpo, 'Nessun dato nel periodo selezionato.');
                 let somma = 0;
                 const serie = giorni.map(g => (somma += a.perGiorno[g].pezzi));
-                const obiettivo = filtri.prodotto === 'PANETTONI' ? (parseInt(a.cfg.totalePanettoni) || 0)
-                                : filtri.prodotto === 'PANDORI' ? (parseInt(a.cfg.totalePandori) || 0)
-                                : (parseInt(a.cfg.totalePanettoni) || 0) + (parseInt(a.cfg.totalePandori) || 0);
+                const obiettivo = a.stockTotale;
                 grafico(w, corpo, {
                     type: 'line',
                     data: {
@@ -785,7 +691,7 @@
                     const d = dataDi(o);
                     return [
                         ((o.nome || '') + ' ' + (o.cognome || '')).trim() || '—',
-                        ((parseInt(o.panettoni) || 0) + (parseInt(o.pandori) || 0)) + ' pz',
+                        Modello.pezziOrdine(o) + ' pz',
                         d ? d.toLocaleDateString('it-IT') : ''
                     ];
                 }));
@@ -823,9 +729,9 @@
     function avvisoScorte(a) {
         const box = document.getElementById('alertScorte');
         if (!box) return;
-        const mancanti = [];
-        if ((parseInt(a.cfg.totalePanettoni) || 0) - a.panettoni <= 0) mancanti.push('panettoni');
-        if ((parseInt(a.cfg.totalePandori) || 0) - a.pandori <= 0) mancanti.push('pandori');
+        const mancanti = Object.keys(a.perProdotto)
+            .filter(k => a.perProdotto[k].stock > 0 && a.perProdotto[k].pezzi >= a.perProdotto[k].stock)
+            .map(k => String(a.perProdotto[k].plurale).toLowerCase());
 
         if (mancanti.length && filtri.periodo === 'tutto') {
             box.textContent = '⚠️ Scorte esaurite: ' + mancanti.join(' e ') + '. Chiudi le prenotazioni o aumenta lo stock.';
@@ -839,9 +745,9 @@
        API PUBBLICA
        ====================================================== */
 
-    function calcolaStatistiche(dati, config) {
+    function calcolaStatistiche(dati, campagna) {
         ultimiDati = Array.isArray(dati) ? dati : [];
-        if (config) ultimaConfig = config;
+        ultimaCampagna = campagna || null;
 
         // Al login (o al cambio utente) si ricaricano le preferenze di chi entra.
         const u = utente();
