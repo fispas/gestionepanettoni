@@ -25,6 +25,7 @@
             el('impLuoghi').value = generaliGlobali.luoghi.join('\n');
         }
         if (!sporche.has('emergenza')) el('impEmergenza').value = generaliGlobali.contattiEmergenza;
+        if (!sporche.has('automazioni')) riempiAutomazioni();
         if (!sporche.has('privacy')) riempiPrivacy();
         if (!sporche.has('modelli')) disegnaModelli();
         if (el('view-impostazioni').classList.contains('active') && !window.__manutenzioneVerificata) {
@@ -41,6 +42,8 @@
     }
     segnaSporca('ritiro', ['impReferenti', 'impLuoghi']);
     segnaSporca('emergenza', ['impEmergenza']);
+    segnaSporca('automazioni', ['autoConferma', 'autoRitiro', 'autoPronto', 'autoPromemoria', 'impEmailRisposta']);
+    ['autoConferma', 'autoRitiro', 'autoPronto', 'autoPromemoria'].forEach(id => el(id).addEventListener('change', () => sporche.add('automazioni')));
     segnaSporca('privacy', ['impTitolare', 'impCfEnte', 'impSede', 'impEmailPrivacy', 'impConservazione', 'impPrivacyExtra']);
 
     el('elencoSegnaposto').innerHTML = Modello.SEGNAPOSTO.map(s => `<code>{${s}}</code>`).join(' ');
@@ -354,6 +357,52 @@
     window.salvaEmergenza = function () {
         const t = el('impEmergenza').value.trim().slice(0, 500);
         salvaGenerali({ contattiEmergenza: t }, 'Contatti di emergenza aggiornati', 'emergenza');
+    };
+
+    /* ======================================================
+       EMAIL AUTOMATICHE
+       ====================================================== */
+
+    function riempiAutomazioni() {
+        const a = generaliGlobali.automazioni || {};
+        el('autoConferma').checked = a.conferma !== false;
+        el('autoRitiro').checked = a.ritiro !== false;
+        el('autoPronto').checked = a.pronto !== false;
+        el('autoPromemoria').checked = a.promemoria !== false;
+        el('impEmailRisposta').value = generaliGlobali.emailRisposta || '';
+    }
+
+    window.salvaAutomazioni = function () {
+        const risposta = el('impEmailRisposta').value.trim();
+        if (risposta && !Modello.validaEmail(risposta)) return alert("L'indirizzo di risposta non è valido.");
+        const automazioni = {
+            conferma: el('autoConferma').checked,
+            ritiro: el('autoRitiro').checked,
+            pronto: el('autoPronto').checked,
+            promemoria: el('autoPromemoria').checked
+        };
+        salvaGenerali({ automazioni: automazioni, emailRisposta: risposta },
+            'Email automatiche: ' + (Object.keys(automazioni).filter(k => automazioni[k]).join(', ') || 'nessuna'), 'automazioni');
+    };
+
+    window.inviaEmailProva = function () {
+        const esito = el('esitoEmailProva');
+        const btn = el('btnEmailProva');
+        if (typeof firebase.functions !== 'function') {
+            esito.textContent = 'Libreria delle funzioni non caricata: ricarica la pagina.';
+            return;
+        }
+        btn.disabled = true;
+        esito.textContent = 'Invio in corso…';
+        firebase.app().functions(REGIONE_FUNZIONI).httpsCallable('inviaEmail')({ prova: true })
+            .then(r => { esito.textContent = `Email di prova inviata a ${r.data.destinatario}. Controlla anche nello spam.`; })
+            .catch(err => {
+                const codice = String(err && err.code || '');
+                esito.textContent = /not-found|internal$/.test(codice) && !/Invio non riuscito/.test(err.message || '')
+                    ? 'Il servizio email non risponde: le Cloud Functions non sono ancora pubblicate o la regione non coincide (vedi README).'
+                    : 'Invio non riuscito: ' + (err && err.message || err);
+            })
+            .finally(() => { btn.disabled = false; });
     };
 
     function riempiPrivacy() {

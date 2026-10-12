@@ -15,6 +15,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-functions-compat.js"></script>
 </head>
 <body>
 
@@ -79,6 +80,9 @@
                         <option value="ricevuta">ricevuta richiesta</option>
                         <option value="extra">offerta sopra il minimo</option>
                         <option value="marketing">consenso campagne future</option>
+                        <option value="nonConfermati">conferma non inviata</option>
+                        <option value="nonAvvisatiRitiro">ritiro assegnato ma non avvisati</option>
+                        <option value="falliti">invii non riusciti</option>
                     </select>
                 </div>
             </div>
@@ -93,6 +97,7 @@
             <div class="barra-selezione" id="barraSelezione">
                 <span id="contaSelezionati">0 selezionati</span>
                 <button class="btn-action" onclick="apriModaleRitiro()">📅 Assegna ritiro</button>
+                <button class="btn-action btn-wa" onclick="apriCodaWhatsApp()">💬 WhatsApp in coda</button>
                 <button class="btn-edit" onclick="deselezionaTutti()">Annulla selezione</button>
             </div>
 
@@ -102,7 +107,7 @@
                         <tr>
                             <th class="col-sel"><input type="checkbox" id="selTutti" aria-label="Seleziona tutti" onchange="selezionaVisibili(this.checked)"></th>
                             <th>Data</th><th>Codice</th><th>Cliente</th><th>Telefono</th>
-                            <th>Dolci</th><th>Offerta</th><th>Stato</th><th>Pagamento</th><th>Ritiro</th><th>Azioni</th>
+                            <th>Dolci</th><th>Offerta</th><th>Stato</th><th>Pagamento</th><th>Ritiro</th><th>Avvisi</th><th>Azioni</th>
                         </tr>
                     </thead>
                     <tbody id="corpoTabella"></tbody>
@@ -167,6 +172,22 @@
                 <p class="imp-aiuto">Compaiono nel modulo pubblico, nella conferma, nei messaggi e in cima al pannello.</p>
                 <textarea id="impEmergenza" rows="3" maxlength="500" placeholder="Es. Federica 333 1234567 · Monica 340 7654321"></textarea>
                 <div class="imp-azioni"><button class="btn-action" onclick="salvaEmergenza()">Salva</button></div>
+            </div>
+
+            <div class="card-imp">
+                <h3>Email automatiche</h3>
+                <p class="imp-aiuto">Le spediscono le Cloud Functions con i testi dei modelli qui sotto. Ogni invio, riuscito o no, compare nella colonna «Avvisi» degli ordini.</p>
+                <label class="imp-check"><input type="checkbox" id="autoConferma"><span>Conferma al momento della prenotazione</span></label>
+                <label class="imp-check"><input type="checkbox" id="autoRitiro"><span>Appuntamento quando si assegna o si cambia il ritiro</span></label>
+                <label class="imp-check"><input type="checkbox" id="autoPronto"><span>«Ordine pronto» quando passa a Da Consegnare senza ritiro assegnato</span></label>
+                <label class="imp-check"><input type="checkbox" id="autoPromemoria"><span>Promemoria alle 17 del giorno prima del ritiro</span></label>
+                <label for="impEmailRisposta">Indirizzo a cui rispondono i sostenitori (facoltativo)</label>
+                <input type="email" id="impEmailRisposta" maxlength="120" placeholder="es. info@wonderlad.org">
+                <div class="imp-azioni">
+                    <button class="btn-action" onclick="salvaAutomazioni()">Salva</button>
+                    <button class="btn-edit" id="btnEmailProva" onclick="inviaEmailProva()">✉️ Invia un'email di prova a me</button>
+                </div>
+                <p class="imp-aiuto" id="esitoEmailProva" style="margin-top:0.6rem;"></p>
             </div>
 
             <div class="card-imp">
@@ -409,12 +430,36 @@
             <div class="msg-canali">
                 <button class="btn-canale canale-wa" id="msg-wa" onclick="inviaMessaggio('whatsapp')">WhatsApp</button>
                 <button class="btn-canale canale-sms" id="msg-sms" onclick="inviaMessaggio('sms')">SMS</button>
-                <button class="btn-canale canale-mail" id="msg-mail" onclick="inviaMessaggio('email')">Email</button>
+                <button class="btn-canale canale-mail" id="msg-mail" onclick="inviaMessaggio('email')">Invia email</button>
+            </div>
+            <div class="msg-conferma" id="msg-conferma">
+                <span id="msg-conferma-testo">Hai inviato il messaggio?</span>
+                <button class="btn-save" onclick="confermaInvioManuale(true)">✓ Sì, inviato</button>
+                <button class="btn-edit" onclick="confermaInvioManuale(false)">No</button>
             </div>
             <div class="msg-storico" id="msg-storico"></div>
             <input type="hidden" id="msg-doc-id">
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="chiudiModale('msg-modal')">Chiudi</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="coda-modal" class="modal">
+        <div class="modal-content modal-ampio">
+            <h3>WhatsApp in coda</h3>
+            <p class="modal-sotto" id="coda-progresso"></p>
+            <label for="coda-modello">Modello</label>
+            <select id="coda-modello" onchange="disegnaCoda()"></select>
+            <div class="coda-scheda" id="coda-scheda"></div>
+            <div class="coda-azioni">
+                <button class="btn-canale canale-wa" id="coda-apri" onclick="codaApri()">1 · Apri WhatsApp</button>
+                <button class="btn-save" id="coda-ok" onclick="codaEsito(true)">2 · ✓ Inviato, avanti</button>
+                <button class="btn-edit" id="coda-salta" onclick="codaEsito(false)">Salta</button>
+            </div>
+            <div class="coda-lista" id="coda-lista"></div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="chiudiModale('coda-modal')">Chiudi</button>
             </div>
         </div>
     </div>

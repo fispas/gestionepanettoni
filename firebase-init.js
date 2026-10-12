@@ -16,6 +16,9 @@ if (!firebase.apps.length) {
 }
 
 const db = firebase.firestore();
+
+// Regione delle Cloud Functions: deve coincidere con REGIONE in functions/index.js.
+const REGIONE_FUNZIONI = "europe-west1";
 const auth = (typeof firebase.auth === 'function') ? firebase.auth() : null;
 
 // impostazioni/generali: campagna attiva, contatti di emergenza, referenti,
@@ -42,6 +45,8 @@ function normalizzaGenerali(raw) {
         contattiEmergenza: typeof d.contattiEmergenza === 'string' ? d.contattiEmergenza : def.contattiEmergenza,
         referenti: Array.isArray(d.referenti) ? d.referenti : def.referenti.slice(),
         luoghi: Array.isArray(d.luoghi) ? d.luoghi : def.luoghi.slice(),
+        automazioni: Object.assign({}, def.automazioni, d.automazioni || {}),
+        emailRisposta: typeof d.emailRisposta === 'string' ? d.emailRisposta : '',
         privacy: Object.assign({}, def.privacy, d.privacy || {})
     };
 }

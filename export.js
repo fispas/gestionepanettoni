@@ -237,6 +237,12 @@
                 privacy: o.consensoPrivacy ? ('v. ' + (o.privacyVersione || 1)) : 'non registrato',
                 messaggi: msg.length,
                 ultimoMsg: ultimo ? `${ultimo.canale} · ${ultimo.modello} · ${new Date(ultimo.quando).toLocaleDateString('it-IT')}` : '',
+                avvisi: (function () {
+                    const st = M.statoAvvisi(o);
+                    return Object.keys(st).map(k => `${k}: ${M.CANALI[st[k].canale] || st[k].canale} ${M.invioRiuscito(st[k]) ? '✓' : '✗'}`).join(' · ');
+                })(),
+                confermaInviata: siNo(M.avvisato(o, ['conferma'])),
+                ritiroAvvisato: siNo(M.avvisato(o, ['ritiro', 'promemoria'])),
                 note: o.note || '',
                 origine: o.origine || '',
                 dolci: M.riepilogoRighe(o, campagna)
@@ -290,7 +296,9 @@
             { titolo: 'Consenso campagne future', chiave: 'marketing', larghezza: 11, allinea: 'center', stile: (c, r) => stileSiNo(c, r, 'marketing') },
             { titolo: 'Informativa', chiave: 'privacy', larghezza: 12 },
             { titolo: 'Messaggi inviati', chiave: 'messaggi', larghezza: 10, fmt: FMT.intero, totale: 'somma' },
-            { titolo: 'Ultimo messaggio', chiave: 'ultimoMsg', larghezza: 26 },
+            { titolo: 'Conferma inviata', chiave: 'confermaInviata', larghezza: 10, allinea: 'center', stile: (c, r) => stileSiNo(c, r, 'confermaInviata') },
+            { titolo: 'Avvisato del ritiro', chiave: 'ritiroAvvisato', larghezza: 10, allinea: 'center', stile: (c, r) => stileSiNo(c, r, 'ritiroAvvisato') },
+            { titolo: 'Avvisi (ultimo esito per modello)', chiave: 'avvisi', larghezza: 34, aCapo: true },
             { titolo: 'Note', chiave: 'note', larghezza: 30, aCapo: true },
             { titolo: 'Origine', chiave: 'origine', larghezza: 9 }
         );
@@ -389,7 +397,7 @@
             { titolo: 'Stato', chiave: 'stato', larghezza: 19, stile: stileStato },
             { titolo: 'Ritiro', chiave: 'ritiro', larghezza: 16, fmt: FMT.dataOra },
             { titolo: 'Referente', chiave: 'referente', larghezza: 13 },
-            { titolo: 'Messaggi inviati', chiave: 'messaggi', larghezza: 10, fmt: FMT.intero }
+            { titolo: 'Avvisi', chiave: 'avvisi', larghezza: 30, aCapo: true }
         ], daIncassare.slice().sort((a, b) => a.cognome.localeCompare(b.cognome)));
 
         /* ---------- Da consegnare (lista stampabile per il ritiro) ---------- */
@@ -402,7 +410,8 @@
             { titolo: 'Referente', chiave: 'referente', larghezza: 13 },
             { titolo: 'Codice', chiave: 'codice', larghezza: 10, allinea: 'center' },
             { titolo: 'Cliente', chiave: 'cliente', larghezza: 24 },
-            { titolo: 'Telefono', chiave: 'telefono', larghezza: 14 }
+            { titolo: 'Telefono', chiave: 'telefono', larghezza: 14 },
+            { titolo: 'Avvisato', chiave: 'ritiroAvvisato', larghezza: 9, allinea: 'center', stile: (c, r) => stileSiNo(c, r, 'ritiroAvvisato') }
         ];
         prodotti.forEach(pr => colConsegna.push({ titolo: pr.plurale || pr.nome, chiave: 'q_' + pr.chiave, larghezza: 10, fmt: FMT.intero, totale: 'somma' }));
         colConsegna.push(

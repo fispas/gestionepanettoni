@@ -1,0 +1,12 @@
+{
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": ["node_modules", ".git", "*.local", "firebase-debug.log"],
+      "predeploy": [
+        "node -e \"const p=require('path'),d=process.env.RESOURCE_DIR;require('fs').copyFileSync(p.join(d,'..','modello.js'),p.join(d,'modello.js'))\""
+      ]
+    }
+  ]
+}

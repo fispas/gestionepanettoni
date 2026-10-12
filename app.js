@@ -342,12 +342,36 @@ function ritiroCompatto(o) {
            (r.luogo ? `<span class="sotto">${esc(r.luogo)}</span>` : '');
 }
 
+const ETICHETTE_AVVISI = { conferma: 'Conferma', ritiro: 'Ritiro', pronto: 'Pronto', promemoria: 'Promem.', sollecito: 'Sollecito', libero: 'Libero' };
+const ICONE_CANALI = { email: '📧', whatsapp: '💬', sms: '📱' };
+
+function descriviInvio(m) {
+    const d = new Date(m.quando);
+    const quando = isNaN(d.getTime()) ? '' : d.toLocaleDateString('it-IT') + ' ' + d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    const chi = m.automatico ? 'automatico' : (m.utente || '');
+    const esito = m.esito === 'errore' ? 'NON riuscito' + (m.dettaglio ? ': ' + m.dettaglio : '')
+                : m.esito === 'confermato' ? 'inviato (confermato dall\'operatore)' : 'inviato';
+    return `${M.CANALI[m.canale] || m.canale} · ${quando} · ${chi} · ${esito}`;
+}
+
+function avvisiCompatti(o) {
+    const stato = M.statoAvvisi(o);
+    const chiavi = ['conferma', 'ritiro', 'pronto', 'promemoria', 'sollecito', 'libero'].filter(k => stato[k]);
+    if (!chiavi.length) return '<span class="muto">—</span>';
+    return chiavi.map(k => {
+        const m = stato[k];
+        const ok = M.invioRiuscito(m);
+        return `<span class="avviso ${ok ? 'avviso-ok' : 'avviso-ko'}" title="${esc(descriviInvio(m))}">` +
+               `${ICONE_CANALI[m.canale] || '•'} ${esc(ETICHETTE_AVVISI[k] || k)} ${ok ? '✓' : '✗'}</span>`;
+    }).join('');
+}
+
 function popolaTabellaOrdini(dati) {
     const tbody = el('corpoTabella');
     tbody.innerHTML = '';
 
     if (dati.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; color:var(--text-muted);">Nessun ordine per questa campagna.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color:var(--text-muted);">Nessun ordine per questa campagna.</td></tr>`;
         aggiornaBarraSelezione();
         return;
     }
@@ -377,6 +401,9 @@ function popolaTabellaOrdini(dati) {
         tr.dataset.ricevuta = o.ricevuta ? '1' : '0';
         tr.dataset.extra = extra > 0.009 ? '1' : '0';
         tr.dataset.marketing = o.consensoMarketing ? '1' : '0';
+        tr.dataset.confermato = M.avvisato(o, ['conferma']) ? '1' : '0';
+        tr.dataset.avvisatoRitiro = M.avvisato(o, ['ritiro', 'promemoria']) ? '1' : '0';
+        tr.dataset.fallito = Object.values(M.statoAvvisi(o)).some(m => !M.invioRiuscito(m)) ? '1' : '0';
         if (selezionati.has(o.id)) tr.classList.add('selezionata');
 
         tr.innerHTML = `
@@ -396,6 +423,7 @@ function popolaTabellaOrdini(dati) {
             <td data-label="Stato"><span class="badge-status ${getBadgeClass(stato)}">${esc(stato)}</span></td>
             <td data-label="Pagamento"><span>${o.metodoPagamento && o.metodoPagamento !== '-' ? esc(M.NOMI_METODI[o.metodoPagamento] || o.metodoPagamento) : '<span class="muto">—</span>'}</span></td>
             <td data-label="Ritiro"><span class="cella-ritiro">${ritiroCompatto(o)}</span></td>
+            <td data-label="Avvisi"><span class="cella-avvisi">${avvisiCompatti(o)}</span></td>
             <td data-label="Azioni"><span class="cella-azioni">
                 ${azioneRapida}
                 <button class="btn-msg" data-azione="messaggio" data-id="${esc(o.id)}" title="Invia un messaggio">✉️</button>
@@ -481,7 +509,10 @@ function filtraOrdini() {
             || (extra === 'conRitiro' && tr.dataset.ritiro === '1')
             || (extra === 'ricevuta' && tr.dataset.ricevuta === '1')
             || (extra === 'extra' && tr.dataset.extra === '1')
-            || (extra === 'marketing' && tr.dataset.marketing === '1');
+            || (extra === 'marketing' && tr.dataset.marketing === '1')
+            || (extra === 'nonConfermati' && tr.dataset.confermato === '0' && tr.dataset.stato !== 'Annullato')
+            || (extra === 'nonAvvisatiRitiro' && tr.dataset.ritiro === '1' && tr.dataset.avvisatoRitiro === '0' && tr.dataset.stato !== 'Annullato')
+            || (extra === 'falliti' && tr.dataset.fallito === '1');
         tr.style.display = (matchTesto && matchStato && matchExtra) ? '' : 'none';
     });
     aggiornaBarraSelezione();
@@ -739,6 +770,8 @@ function modelloSuggerito(o) {
 function apriModaleMessaggio(docId) {
     const o = datiGlobali.find(x => x.id === docId);
     if (!o) return;
+    invioInSospeso = null;
+    el('msg-conferma').style.display = 'none';
     el('msg-doc-id').value = docId;
 
     const recapiti = [o.telefono, o.email].filter(Boolean).join(' · ') || 'nessun recapito';
@@ -784,15 +817,46 @@ function compilaMessaggio() {
 
 function disegnaStoricoMessaggi(o) {
     const box = el('msg-storico');
-    const lista = (o.messaggi || []).slice(-6).reverse();
+    const lista = (o.messaggi || []).slice(-8).reverse();
     if (!lista.length) { box.innerHTML = '<span class="muto">Nessun messaggio inviato finora.</span>'; return; }
-    const nomi = { whatsapp: 'WhatsApp', sms: 'SMS', email: 'Email' };
-    box.innerHTML = '<strong>Ultimi invii</strong>' + lista.map(m => {
-        const d = new Date(m.quando);
-        const quando = isNaN(d.getTime()) ? '' : d.toLocaleDateString('it-IT') + ' ' + d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-        const titolo = (modelliGlobali[m.modello] && modelliGlobali[m.modello].titolo) || m.modello;
-        return `<div>${esc(quando)} · ${esc(nomi[m.canale] || m.canale)} · ${esc(titolo)} · <span class="muto">${esc(m.utente || '')}</span></div>`;
+    box.innerHTML = '<strong>Storico invii</strong>' + lista.map(m => {
+        const titolo = (modelliGlobali[m.modello] && modelliGlobali[m.modello].titolo) || ETICHETTE_AVVISI[m.modello] || m.modello;
+        const ok = M.invioRiuscito(m);
+        return `<div class="${ok ? '' : 'storico-ko'}">${ok ? '✓' : '✗'} ${esc(titolo)} · ${esc(descriviInvio(m))}</div>`;
     }).join('');
+}
+
+// Invio WhatsApp/SMS in attesa di conferma da parte dell'operatore.
+let invioInSospeso = null;
+
+function linkCanale(canale, o, testo) {
+    const tel = M.telefonoInternazionale(o.telefono);
+    if (canale === 'whatsapp') return tel ? `https://wa.me/${tel}?text=${encodeURIComponent(testo)}` : '';
+    // "?&body=" e' la forma accettata sia da iOS sia da Android.
+    if (canale === 'sms') return tel ? `sms:+${tel}?&body=${encodeURIComponent(testo)}` : '';
+    return '';
+}
+
+function registraInvioManuale(o, modello, canale) {
+    const voce = {
+        modello: modello,
+        canale: canale,
+        automatico: false,
+        utente: utenteCorrente.email,
+        quando: new Date().toISOString(),
+        esito: 'confermato'
+    };
+    return db.collection("ordini").doc(o.id).update({
+        messaggi: firebase.firestore.FieldValue.arrayUnion(voce)
+    }).then(() => {
+        scriviLog("MESSAGGIO", `${M.CANALI[canale]} «${modello}» a ${M.nomeCompleto(o)} (${o.codice || o.id})`);
+        return voce;
+    });
+}
+
+function funzioneInviaEmail() {
+    if (typeof firebase.functions !== 'function') return null;
+    return firebase.app().functions(REGIONE_FUNZIONI).httpsCallable('inviaEmail');
 }
 
 function inviaMessaggio(canale) {
@@ -801,36 +865,160 @@ function inviaMessaggio(canale) {
     const testo = el('msg-testo').value.trim();
     if (!testo) return alert("Il messaggio è vuoto.");
     const oggetto = el('msg-oggetto').value.trim() || 'WonderLAD';
-    const tel = M.telefonoInternazionale(o.telefono);
+    const modello = el('msg-modello').value;
 
-    let url = '';
-    if (canale === 'whatsapp') {
-        if (!tel) return alert("Numero di telefono mancante.");
-        url = `https://wa.me/${tel}?text=${encodeURIComponent(testo)}`;
-        window.open(url, '_blank', 'noopener');
-    } else if (canale === 'sms') {
-        if (!tel) return alert("Numero di telefono mancante.");
-        // "?&body=" e' la forma accettata sia da iOS sia da Android.
-        url = `sms:+${tel}?&body=${encodeURIComponent(testo)}`;
-        window.location.href = url;
-    } else if (canale === 'email') {
-        if (!o.email) return alert("Email mancante.");
-        url = `mailto:${encodeURIComponent(o.email)}?subject=${encodeURIComponent(oggetto)}&body=${encodeURIComponent(testo)}`;
-        window.location.href = url;
-    }
+    if (canale === 'email') return inviaEmailDalPannello(o, modello, oggetto, testo);
 
-    const voce = {
-        modello: el('msg-modello').value,
-        canale: canale,
-        utente: utenteCorrente.email,
-        quando: new Date().toISOString()
+    const url = linkCanale(canale, o, testo);
+    if (!url) return alert("Numero di telefono mancante.");
+    if (canale === 'whatsapp') window.open(url, '_blank', 'noopener');
+    else window.location.href = url;
+
+    // Non si puo' sapere se l'operatore ha davvero premuto Invia: lo si chiede.
+    invioInSospeso = { id: o.id, modello: modello, canale: canale };
+    el('msg-conferma-testo').textContent = `Hai inviato il messaggio ${canale === 'whatsapp' ? 'WhatsApp' : 'SMS'} a ${o.nome || ''}?`;
+    el('msg-conferma').style.display = 'flex';
+}
+
+function confermaInvioManuale(inviato) {
+    const p = invioInSospeso;
+    invioInSospeso = null;
+    el('msg-conferma').style.display = 'none';
+    if (!p || !inviato) return;
+    const o = datiGlobali.find(x => x.id === p.id);
+    if (!o) return;
+    registraInvioManuale(o, p.modello, p.canale)
+        .then(voce => disegnaStoricoMessaggi(Object.assign({}, o, { messaggi: (o.messaggi || []).concat([voce]) })))
+        .catch(err => alert("Registrazione non riuscita: " + err.message));
+}
+
+function inviaEmailDalPannello(o, modello, oggetto, testo) {
+    if (!o.email) return alert("Email mancante.");
+    const chiama = funzioneInviaEmail();
+    const btn = el('msg-mail');
+    const fallback = (motivo) => {
+        if (!confirm(`Invio automatico non disponibile (${motivo}).\n\nAprire il programma di posta del dispositivo?`)) return;
+        window.location.href = `mailto:${encodeURIComponent(o.email)}?subject=${encodeURIComponent(oggetto)}&body=${encodeURIComponent(testo)}`;
+        invioInSospeso = { id: o.id, modello: modello, canale: 'email' };
+        el('msg-conferma-testo').textContent = `Hai inviato l'email a ${o.nome || ''}?`;
+        el('msg-conferma').style.display = 'flex';
     };
-    db.collection("ordini").doc(o.id).update({
-        messaggi: firebase.firestore.FieldValue.arrayUnion(voce)
-    }).then(() => {
-        scriviLog("MESSAGGIO", `${voce.canale} «${voce.modello}» a ${M.nomeCompleto(o)} (${o.codice || o.id})`);
-        disegnaStoricoMessaggi(Object.assign({}, o, { messaggi: (o.messaggi || []).concat([voce]) }));
-    }).catch(() => { /* l'invio e' comunque partito dal dispositivo */ });
+    if (!chiama) return fallback('funzioni non caricate');
+
+    btn.disabled = true;
+    btn.textContent = 'Invio in corso…';
+    chiama({ ordineId: o.id, modello: modello, oggetto: oggetto, testo: testo })
+        .then(r => {
+            mostraToast(`Email inviata a ${(r.data && r.data.destinatario) || o.email}`);
+            chiudiModale('msg-modal');
+        })
+        .catch(err => {
+            const msg = String(err && err.message || err);
+            const codice = String((err && err.code) || '');
+            // Errore spiegato dalla funzione (es. SMTP rifiutato): e' gia' registrato sull'ordine.
+            if (/^Invio non riuscito|Email mancante|Utente non abilitato|Testo vuoto/i.test(msg)) {
+                alert("Email non inviata: " + msg);
+            } else if (/not-found|internal|unavailable|deadline/i.test(codice)) {
+                // Funzione non ancora pubblicata o non raggiungibile: si offre il client di posta.
+                fallback('servizio email non attivo');
+            } else {
+                alert("Email non inviata: " + msg);
+            }
+        })
+        .finally(() => { btn.disabled = !o.email; btn.textContent = 'Invia email'; });
+}
+
+function mostraToast(testo) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = testo;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2600);
+}
+
+/* ==========================================================
+   CODA WHATSAPP
+   ========================================================== */
+
+let coda = { ids: [], indice: 0, esiti: {} };
+
+function apriCodaWhatsApp() {
+    const ids = Array.from(selezionati).filter(id => {
+        const o = datiGlobali.find(x => x.id === id);
+        return o && o.telefono && o.status !== 'Annullato';
+    });
+    if (!ids.length) return alert("Nessuno degli ordini selezionati ha un numero di telefono.");
+
+    // Ordine della coda: come in tabella.
+    const ordine = datiGlobali.map(o => o.id);
+    ids.sort((a, b) => ordine.indexOf(a) - ordine.indexOf(b));
+    coda = { ids: ids, indice: 0, esiti: {}, aperto: false };
+
+    const chiavi = Object.keys(modelliGlobali);
+    const etichette = {};
+    chiavi.forEach(k => { etichette[k] = modelliGlobali[k].titolo || k; });
+    riempiSelect('coda-modello', chiavi, etichette);
+    const conRitiro = ids.filter(id => M.dataRitiro(datiGlobali.find(x => x.id === id))).length;
+    el('coda-modello').value = conRitiro > ids.length / 2 ? 'ritiro' : 'conferma';
+
+    disegnaCoda();
+    el('coda-modal').style.display = 'flex';
+}
+
+function ordineCorrenteCoda() {
+    return datiGlobali.find(x => x.id === coda.ids[coda.indice]);
+}
+
+function testoCoda(o) {
+    const m = modelliGlobali[el('coda-modello').value];
+    return M.compilaModello(m.testo, o, campagnaDi(o), generaliGlobali);
+}
+
+function disegnaCoda() {
+    const tot = coda.ids.length;
+    const fatti = Object.values(coda.esiti).filter(Boolean).length;
+    const finita = coda.indice >= tot;
+    el('coda-progresso').textContent = finita
+        ? `Coda completata: ${fatti} inviati su ${tot}.`
+        : `Messaggio ${coda.indice + 1} di ${tot} · ${fatti} inviati finora`;
+
+    const scheda = el('coda-scheda');
+    if (finita) {
+        scheda.innerHTML = '<p class="muto">Fine della coda. Gli invii confermati sono registrati sugli ordini.</p>';
+    } else {
+        const o = ordineCorrenteCoda();
+        scheda.innerHTML = `<div class="coda-dest"><strong>${esc(M.nomeCompleto(o))}</strong> · ${esc(o.telefono)} · <code>${esc(o.codice || '')}</code></div>
+            <div class="coda-testo">${esc(testoCoda(o))}</div>`;
+    }
+    el('coda-apri').disabled = finita;
+    el('coda-ok').disabled = finita || !coda.aperto;
+    el('coda-salta').disabled = finita;
+
+    el('coda-lista').innerHTML = coda.ids.map((id, i) => {
+        const o = datiGlobali.find(x => x.id === id);
+        const e = coda.esiti[id];
+        const stato = e === true ? '✓ inviato' : e === false ? 'saltato' : (i === coda.indice ? '→ in corso' : 'in attesa');
+        return `<div class="${i === coda.indice ? 'corrente' : ''}"><span>${esc(o ? M.nomeCompleto(o) : id)}</span><span>${esc(stato)}</span></div>`;
+    }).join('');
+}
+
+function codaApri() {
+    const o = ordineCorrenteCoda();
+    if (!o) return;
+    window.open(linkCanale('whatsapp', o, testoCoda(o)), '_blank', 'noopener');
+    coda.aperto = true;
+    disegnaCoda();
+}
+
+function codaEsito(inviato) {
+    const o = ordineCorrenteCoda();
+    if (!o) return;
+    const avanti = () => { coda.indice++; coda.aperto = false; disegnaCoda(); };
+    coda.esiti[o.id] = inviato;
+    if (!inviato) return avanti();
+    registraInvioManuale(o, el('coda-modello').value, 'whatsapp')
+        .then(avanti)
+        .catch(err => { delete coda.esiti[o.id]; alert("Registrazione non riuscita: " + err.message); });
 }
 
 /* ==========================================================

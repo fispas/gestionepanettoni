@@ -56,6 +56,14 @@
         contattiEmergenza: '',
         referenti: ['Federica', 'Monica'],
         luoghi: [],
+        // Email automatiche spedite dalle Cloud Functions.
+        automazioni: {
+            conferma: true,      // alla prenotazione
+            ritiro: true,        // quando si assegna o cambia il ritiro
+            pronto: true,        // quando l'ordine passa a "Da Consegnare" senza ritiro assegnato
+            promemoria: true     // il giorno prima del ritiro
+        },
+        emailRisposta: '',       // indirizzo a cui rispondono i sostenitori
         privacy: {
             titolare: 'WonderLAD',
             cfEnte: '',
@@ -86,6 +94,12 @@
             oggetto: 'Il tuo ordine WonderLAD è pronto',
             testo: 'Ciao {nome}, il tuo ordine è pronto! Ti ricordiamo di venire a recuperare {riepilogo} ' +
                    '{quandoRitiro}.\nCodice prenotazione: {codice}\n\nPer urgenze: {contattiEmergenza}'
+        },
+        promemoria: {
+            titolo: 'Promemoria del ritiro',
+            oggetto: 'Domani il ritiro dei tuoi dolci WonderLAD',
+            testo: 'Ciao {nome}, ti ricordiamo che domani, {dataRitiro} alle {oraRitiro}, puoi ritirare {riepilogo} presso {luogo}. ' +
+                   'Chiedi di {referente}.\nCodice prenotazione: {codice}\n\nSe non riesci a venire: {contattiEmergenza}'
         },
         sollecito: {
             titolo: 'Promemoria offerta',
@@ -348,6 +362,36 @@
     }
 
     /* ======================================================
+       STORICO DEI MESSAGGI
+       ====================================================== */
+
+    const CANALI = { email: 'Email', whatsapp: 'WhatsApp', sms: 'SMS' };
+
+    // Un invio conta se e' andato a buon fine: email spedita dal server
+    // oppure WhatsApp/SMS confermato dall'operatore.
+    function invioRiuscito(m) {
+        return m && (m.esito === 'inviato' || m.esito === 'confermato' || m.esito == null);
+    }
+
+    // Per ogni modello l'ultimo invio, riuscito o fallito.
+    function statoAvvisi(o) {
+        const out = {};
+        (Array.isArray(o && o.messaggi) ? o.messaggi : []).forEach(m => {
+            if (!m || !m.modello) return;
+            const prec = out[m.modello];
+            // Un errore non cancella un invio riuscito precedente.
+            if (prec && invioRiuscito(prec) && !invioRiuscito(m)) return;
+            out[m.modello] = m;
+        });
+        return out;
+    }
+
+    function avvisato(o, modelli) {
+        const s = statoAvvisi(o);
+        return (modelli || []).some(k => s[k] && invioRiuscito(s[k]));
+    }
+
+    /* ======================================================
        AGGREGAZIONE (dashboard, PDF, Excel)
        ====================================================== */
 
@@ -500,6 +544,7 @@
         dataRitiro, testoGiorno, testoOra,
         telefonoInternazionale, normalizzaCF, validaCodiceFiscale, validaEmail,
         valoriSegnaposto, compilaModello,
+        CANALI, invioRiuscito, statoAvvisi, avvisato,
         nelPeriodo, aggrega
     };
 
